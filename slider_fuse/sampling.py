@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+from pathlib import Path
 import time
 import uuid
 
@@ -112,7 +113,8 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
 
     started = time.perf_counter()
     run_id = uuid.uuid4().hex[:12]
-    report = {"run_id": run_id, "mask_mode": mask_mode, "seed": seed, "steps": steps,
+    report = {"run_id": run_id, "extension_version": "0.1.1", "lora_file_name": Path(lora_path).name,
+              "mask_mode": mask_mode, "seed": seed, "steps": steps,
               "cfg": cfg, "sampler": "euler", "scheduler": "simple", "strength": strength,
               "adapter_groups": {"target": 1, "protected": 0, "background": 0},
               "text_delta_policy": "zero", "outside_target_direct_delta_policy": "zero",
@@ -194,6 +196,8 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
             report["observation"] = collector.observation if mask_mode == "auto" else None
             bank["masks"] = {k: v.detach().cpu() for k, v in bank["masks"].items()}
             report["masks"] = bank["diagnostics"]
+            report["raw_maps_available"] = bool(bank.get("raw_maps"))
+            report["map_diagnostics"] = bank.get("map_diagnostics")
             result = latent.copy()
             result.pop("downscale_ratio_spacial", None); result.pop("downscale_ratio_temporal", None)
             result["samples"] = samples

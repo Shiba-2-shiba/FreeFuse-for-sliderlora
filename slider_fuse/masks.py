@@ -27,8 +27,68 @@ def _bank(masks: dict[str, torch.Tensor], grid: tuple[int, int], **extra) -> dic
         if indices.numel():
             low = indices.amin(0).tolist(); high = (indices.amax(0) + 1).tolist()
             bounds = [low[1], low[0], high[1], high[0]]
-        diagnostics[name] = {"coverage": float(mask.float().mean()), "bbox_xyxy": bounds}
+        sizes = _component_sizes(mask[0])
+        count = sum(sizes)
+        diagnostics[name] = {"coverage": float(mask.float().mean()), "bbox_xyxy": bounds,
+                             "component_count_8": len(sizes), "foreground_tokens": count,
+                             "largest_component_tokens": max(sizes, default=0),
+                             "largest_component_fraction": max(sizes, default=0) / count if count else 0.}
     return {"masks": masks, "grid": grid, "diagnostics": diagnostics, **extra}
+
+
+def _component_sizes(mask: torch.Tensor) -> list[int]:
+    """Diagnostic only: 8-connected components do not alter routing masks."""
+    rows = mask.detach().cpu().bool().tolist()
+    h, w = mask.shape
+    seen = set(); sizes = []
+    for y in range(h):
+        for x in range(w):
+            if not rows[y][x] or (y, x) in seen:
+                continue
+            stack = [(y, x)]; seen.add((y, x)); size = 0
+            while stack:
+                v, u = stack.pop(); size += 1
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        ny, nx = v + dy, u + dx
+                        if (0 <= ny < h and 0 <= nx < w and rows[ny][nx] and (ny, nx) not in seen):
+                            seen.add((ny, nx)); stack.append((ny, nx))
+            sizes.append(size)
+    return sizes
+
+
+def _map_diagnostics(maps: dict[str, torch.Tensor]) -> dict:
+    values = {name: value.detach().cpu().double().reshape(-1) for name, value in maps.items()}
+    result = {}
+    for name, vector in values.items():
+        low, high, mean = float(vector.min()), float(vector.max()), float(vector.mean())
+        probabilities = vector.clamp_min(0)
+        mass = probabilities.sum()
+        entropy = None
+        if mass > 0 and vector.numel() > 1:
+            probabilities = probabilities / mass
+            entropy = float(-(probabilities * probabilities.clamp_min(1e-300).log()).sum() / torch.log(vector.new_tensor(vector.numel())))
+        result[name] = {"min": low, "max": high, "mean": mean, "range": high - low,
+                        "range_over_mean": (high - low) / max(abs(mean), 1e-300), "normalized_entropy": entropy}
+    target = values["target"] - values["target"].mean()
+    protected = values["protected"] - values["protected"].mean()
+    denominator = target.norm() * protected.norm()
+    result["target_protected_correlation"] = float((target * protected).sum() / denominator) if denominator > 0 else None
+    return result
+
+
+def similarity_preview(bank: dict, name: str) -> torch.Tensor:
+    """Independent min/max display, not a segmentation or calibrated confidence."""
+    mask = bank["masks"][name]
+    raw = bank.get("raw_maps", {}).get(name)
+    if raw is None:
+        return torch.zeros_like(mask)
+    values = raw.detach().cpu().float()
+    if values.numel() != mask.numel() or not torch.isfinite(values).all():
+        raise ValueError("Raw similarity preview does not match the mask grid")
+    low, high = values.min(), values.max()
+    normalized = (values - low) / (high - low) if high > low else torch.zeros_like(values)
+    return normalized.reshape_as(mask)
 
 
 def generate_masks(maps: dict[str, torch.Tensor], grid: tuple[int, int]) -> dict:
@@ -59,7 +119,8 @@ def generate_masks(maps: dict[str, torch.Tensor], grid: tuple[int, int]) -> dict
         if not mask.any():
             raise ValueError(f"Automatic {name} mask is empty; use manual masks or another collection setting")
     masks["background"] = 1 - masks["target"] - masks["protected"]
-    return _bank(masks, grid, mode="auto", raw_maps={k: v.detach().cpu() for k, v in maps.items()})
+    return _bank(masks, grid, mode="auto", raw_maps={k: v.detach().cpu() for k, v in maps.items()},
+                 map_diagnostics=_map_diagnostics(maps))
 
 
 def manual_masks(target: torch.Tensor, protected: torch.Tensor, grid: tuple[int, int]) -> dict:

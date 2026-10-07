@@ -2,7 +2,9 @@
 
 Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物（初期例は女性）にだけSlider LoRAの差分を適用します。男性もマスク推定に参加しますが、LoRAは持ちません。
 
-**実験版です。実GPUでの生成、自動マスクの画質、ConvRot INT8の実機互換性は未検証です。** CPUの数値・状態・接続テストと公式ソース照合を行っています。男性への直接LoRA差分は0にしますが、共有attentionを通じた間接的な属性変化や、領域外の画素変化は起こり得ます。
+**0.1.1:** 手動で効果が出る一方、自動maskが顔を覆わない実機結果を受けて、[同じSlider・強度での比較ワークフローと連続mapの診断](docs/auto-mask-investigation.md)を追加しました。自動maskの画質改善が確認された更新ではありません。
+
+**実験版です。** ユーザーの実機からmanual/auto生成結果を受領し、manualの効果とautoの顔mask欠落を確認しました。同じLoRA・強度による統制比較、自動マスクの品質合格、ConvRot INT8のprobe結果は未確認です。CPUの数値・状態・接続テストと公式ソース照合を行っています。男性への直接LoRA差分は0にしますが、共有attentionを通じた間接的な属性変化や、領域外の画素変化は起こり得ます。
 
 ## 導入
 
@@ -36,6 +38,8 @@ API形式の接続例もあります: [手動API](workflows/krea2_female_slider_
 | **Krea2 Slider Fuse Sampler** | MODEL、positive/negative、同じprompt_info、subjects、空LATENT、女性用Sliderを入力。LATENT/mask_bank/診断文字列を出力 |
 | **Krea2 Slider Fuse Mask Preview** | mask_bankを女性・男性・背景MASKとして出力。標準MaskToImage/PreviewImageに接続 |
 
+Mask Previewの末尾2出力は、autoの生類似度mapを独立min-max正規化した`target_similarity`/`protected_similarity`です。明るさは校正されたconfidenceではありません。manualではこの2出力は黒で、診断にraw mapがないことを記録します。対応したプレビューを追加済みの比較workflowを使用してください。
+
 全体promptは1本で、男女・背景・照明をまとめて記述します。例えば`adult woman in a sage-green top`と`adult man in a blue T-shirt`を含む文章を使い、その語句をSubjectsへそのまま入力します。重複するphraseは0始まりの`occurrence`で指定します。性別の自動判定は行いません。targetはユーザーが指定した人物です。
 
 positiveは専用EncodeからSamplerへ直接接続してください。途中の別ノードでconditioningのlistを作り直すと、token位置との対応を保証できないため拒否します。negativeはテンプレートのConditioningZeroOutを使用します。
@@ -68,6 +72,8 @@ python -B tools/probe_krea2_slider.py --comfy-root C:/path/to/ComfyUI --model C:
 validatorは実native Krea2の小型CPUモデルとV3 schemaを6件検証します。missing importやskipを合格にしません。probeは実チェックポイントとSliderを読み込み、全キー照合と投影種別ごとの代表層で明示的な差分計算との一致・対象への非ゼロ変化・外側差分・量子化データの保持・forward復元を確認します。ゼロ差分や、反復誤差以下しか変化しない場合は合格にしません。probeの合格も実画像の成功を意味しません。モデル・依存を自動取得する処理はありません。
 
 生成ログの`[Krea2SliderFuse]`にはrun_id、キー一致/到達数、adapter_groups（1/0/0）、MASK範囲、実sigma/block、Phase 1/2の評価回数、時間、解除状態が出ます。CUDA peakはプロセス全体の値で、このノードがresetした値ではありません。診断文字列もSamplerの出力から取得できます。
+
+0.1.1の診断にはSliderファイル名、mapのraw range/mean・normalized entropy・相関、maskの8連結断片数も含まれます。連続mapと二値maskを比較し、どの段階で顔が落ちるかを確認できます。
 
 比較はseed `42 / 4444 / 4444444444 / 123 / 777`で、Sliderなし・通常全体適用・女性限定適用を同条件で行います。詳しくは[実機確認チェックリスト](docs/real-machine-checklist.md)を参照してください。
 

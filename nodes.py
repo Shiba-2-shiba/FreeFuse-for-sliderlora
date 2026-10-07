@@ -9,6 +9,7 @@ import folder_paths
 from comfy_api.latest import io
 
 from .slider_fuse.conditioning import encode_prompt, make_subjects
+from .slider_fuse.masks import similarity_preview
 from .slider_fuse.sampling import sample_krea2
 
 PromptType = io.Custom("KREA2_SLIDER_FUSE_PROMPT")
@@ -97,10 +98,13 @@ class Krea2SliderFuseMaskPreview(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="Krea2SliderFuseMaskPreview", display_name="Krea2 Slider Fuse Mask Preview", category=CATEGORY,
+            description="First 3 outputs are routing masks. Last 2 are independently normalized raw similarity heatmaps, not calibrated confidence or segmentation. Manual mode has no raw maps and returns black for these outputs.",
             inputs=[MasksType.Input("mask_bank")],
-            outputs=[io.Mask.Output("target_mask"), io.Mask.Output("protected_mask"), io.Mask.Output("background_mask")])
+            outputs=[io.Mask.Output("target_mask"), io.Mask.Output("protected_mask"), io.Mask.Output("background_mask"),
+                     io.Mask.Output("target_similarity"), io.Mask.Output("protected_similarity")])
 
     @classmethod
     def execute(cls, mask_bank):
         masks = mask_bank["masks"]
-        return io.NodeOutput(masks["target"], masks["protected"], masks["background"])
+        return io.NodeOutput(masks["target"], masks["protected"], masks["background"],
+                             similarity_preview(mask_bank, "target"), similarity_preview(mask_bank, "protected"))

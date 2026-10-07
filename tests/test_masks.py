@@ -55,3 +55,23 @@ def test_patch_grid_4d_5d_and_odd_non_square():
     assert patch_grid(torch.zeros(1, 16, 1, 9, 7), 2) == (5, 4)
     with pytest.raises(ValueError, match="single still"):
         patch_grid(torch.zeros(1, 16, 2, 8, 8), 2)
+
+
+def test_raw_map_statistics_preserve_signal_strength_lost_by_minmax():
+    maps={"target":torch.tensor([[0.,1.,1.,0.]]),"protected":torch.tensor([[0.,0.,0.,1.]])}
+    bank=generate_masks(maps,(2,2))
+    stats=bank["map_diagnostics"]["target"]
+    assert stats["min"]==0. and stats["max"]==1. and stats["mean"]==.5
+    assert stats["range_over_mean"]==2.
+    assert stats["normalized_entropy"]==pytest.approx(.5)
+    assert bank["map_diagnostics"]["target_protected_correlation"]==pytest.approx(-.577350269,abs=1e-6)
+
+
+def test_mask_fragmentation_counts_eight_connected_components():
+    target=torch.zeros(1,6,6);target[0,0,0]=1;target[0,1,1]=1;target[0,4,0]=1
+    protected=torch.zeros_like(target);protected[:,:,-1]=1
+    bank=manual_masks(target,protected,(6,6))
+    stats=bank["diagnostics"]["target"]
+    assert stats["component_count_8"]==2
+    assert stats["largest_component_tokens"]==2
+    assert stats["largest_component_fraction"]==pytest.approx(2/3)
