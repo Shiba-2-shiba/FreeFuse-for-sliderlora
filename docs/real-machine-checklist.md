@@ -45,3 +45,12 @@ PNGの生成metadataと、対応するrun_idのログを一緒に保存する。
 - [ ] 穴埋め後も女性への効果があり、男性の同属性変化・背景破綻が増えていない。
 - [ ] 膨張1を試す場合は最大成分だけが広がり、小断片が拡大しないことを確認した。
 - [ ] 旧manual/auto workflowは設定省略または両方0で動き、UI保存・再読込後も設定が維持される。
+
+## 0.1.3の対象文章行への適用
+
+- [ ] [比較版](target-text-routing.md)の`target_text_scale=0 / 0.5 / 1`を同じ画像strength・seed・promptで生成した。
+- [ ] target/protected mask、initial_noise/full_sigmas hash、収集条件が3版で同じことを確認した。
+- [ ] 女性への効果と男性の同属性変化、構図・照明・人物欠損を比較した。
+- [ ] 通常全体適用の参照版で同じSlider・強度を一度だけ使用した。
+- [ ] 診断のtarget/protected token位置とtext policy、実行回数を確認した。
+- [ ] 旧workflowの省略時は0、UI保存・再読込後は指定倍率が維持される。

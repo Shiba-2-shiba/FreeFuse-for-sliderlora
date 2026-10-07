@@ -79,3 +79,50 @@ def test_postprocess_workflows_keep_candidate_and_preview_changes(variant,area,r
     for ident,source,slot,target,target_slot,kind in graph["links"]:
         assert kind==nodes[source]["outputs"][slot]["type"]==nodes[target]["inputs"][target_slot]["type"]
         assert nodes[target]["inputs"][target_slot]["link"]==ident
+
+
+@pytest.mark.parametrize("variant,scale", [("0",0.),("05",.5),("1",1.)])
+def test_target_text_comparisons_change_only_text_scale_and_save_prefix(variant,scale):
+    path=ROOT/f"krea2_female_slider_target_text_{variant}.json"
+    graph=json.loads(path.read_text(encoding="utf-8"))
+    api=json.loads(path.with_name(path.stem+"_api.json").read_text(encoding="utf-8"))
+    baseline=json.loads((ROOT/"krea2_female_slider_postprocess_fill8_dilate1.json").read_text(encoding="utf-8"))
+    nodes={n["id"]:n for n in graph["nodes"]}
+    for original in baseline["nodes"]:
+        node=nodes[original["id"]]
+        if node["type"]=="Krea2SliderFuseSampler":
+            assert node["widgets_values"]==original["widgets_values"]+[scale]
+            assert node["widgets_values_named"]==dict(original["widgets_values_named"],target_text_scale=scale)
+            assert api[str(node["id"])]["inputs"]["target_text_scale"]==scale
+        elif node["type"]!="SaveImage":
+            assert node==original
+    assert graph["links"]==baseline["links"]
+    for node in nodes.values():
+        settings=node.get("widgets_values_named",{})
+        for name,value in settings.items():
+            if name!="control_after_generate":
+                assert api[str(node["id"])]["inputs"][name]==value
+
+
+def test_global_reference_has_one_global_slider_and_no_local_sampler():
+    path=ROOT/"krea2_female_slider_global_reference.json"
+    graph=json.loads(path.read_text(encoding="utf-8"))
+    api=json.loads(path.with_name(path.stem+"_api.json").read_text(encoding="utf-8"))
+    nodes={n["id"]:n for n in graph["nodes"]}
+    assert not any(n["type"]=="Krea2SliderFuseSampler" for n in nodes.values())
+    loaders=[n for n in nodes.values() if n["type"]=="LoraLoaderModelOnly"]
+    assert len(loaders)==2
+    slider=next(n for n in loaders if "deaging" in n["widgets_values_named"]["lora_name"])
+    assert slider["widgets_values_named"]["strength_model"]==4.
+    sampler=next(n for n in nodes.values() if n["type"]=="KSampler")
+    assert sampler["widgets_values_named"]==dict(seed=42,control_after_generate="fixed",steps=8,cfg=1.,
+                                                 sampler_name="euler",scheduler="simple",denoise=1.)
+    assert api[str(sampler["id"])]["inputs"]["model"]==[str(slider["id"]),0]
+    for ident,source,slot,target,target_slot,kind in graph["links"]:
+        assert kind==nodes[source]["outputs"][slot]["type"]==nodes[target]["inputs"][target_slot]["type"]
+        assert ident in nodes[source]["outputs"][slot]["links"]
+        assert nodes[target]["inputs"][target_slot]["link"]==ident
+    for node in api.values():
+        for value in node["inputs"].values():
+            if isinstance(value,list):
+                assert str(value[0]) in api

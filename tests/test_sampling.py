@@ -75,3 +75,10 @@ def test_postprocess_sampling_settings_are_rejected_before_sampling(settings):
     values=dict(steps=8,cfg=1.,strength=1.,mask_mode="auto",collect_step=2,top_k_ratio=.2,temperature=10000.)
     values.update(settings)
     with pytest.raises(ValueError):validate_settings(**values)
+
+
+@pytest.mark.parametrize("scale",[True,-.1,1.1,float("nan"),float("inf")])
+def test_target_text_scale_is_rejected_before_sampling(scale):
+    with pytest.raises(ValueError):
+        validate_settings(steps=8,cfg=1.,strength=4.,mask_mode="auto",collect_step=2,top_k_ratio=.2,
+                          temperature=10000.,target_text_scale=scale)

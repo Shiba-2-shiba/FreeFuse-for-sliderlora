@@ -4,8 +4,8 @@
 
 | 項目 | 状態 |
 |---|---|
-| ローカルsuite | 0.1.0は70件、0.1.1は78件、0.1.2の後処理追加後は120件成功、skip0・失敗0 |
-| CPUのマスク・LoRA数値・alpha/rank・正負強度・text差分0 | ローカルsuiteで確認 |
+| ローカルsuite | 0.1.0は70件、0.1.1は78件、0.1.2は120件、0.1.3は165件成功、skip0・失敗0 |
+| CPUのマスク・LoRA数値・alpha/rank・正負強度・対象文章行の選択 | ローカルsuiteで確認。文章倍率0では従来のtext差分0を維持 |
 | 二段階noise/latent/sigma再利用、例外復帰、2人物の独立した収集 | ローカルsuiteで確認 |
 | V3 schemaの契約、LoRAファイル変更、JSONリンク/型 | test double・静的検査で確認 |
 | ネイティブComfyUI小型CPU6件 | import前提不足で0件実行。合格ではない |
@@ -25,3 +25,5 @@ Python3.10.11 / torch2.10.0+cpu / CUDAなし。検証用ComfyUI checkoutは`b266
 追加実機観測: seed42の候補設定で、target maskの最大断片比率が91.42%となり、顔への適用範囲とSliderの効果が改善したとの報告を受領。[候補記録](auto-mask-candidate.md)の強度0/4比較と他seedでの検証は未了。全体の品質合格条件を満たしたとは扱わない。
 
 0.1.2: [mask後処理](mask-postprocessing.md)のCPU数値/旧API/Phase2接続を追加検証。提供maskの条件付き計算で583/612/627/813を再現し、protected不変とpartitionを確認した。新後処理の実GPU生成・UI・画質は未確認。最終suiteとレビュー結果は`.omx/plans/2026-10-07-protected-mask-postprocess.progress.md`へ記録する。
+
+0.1.3: [target文章行の任意適用](target-text-routing.md)を追加。倍率0/0.5/1と正負・ゼロ強度の明示式、protected/その他文章への直接差分0、auto収集の同一性、manual接続、例外後のhook・cache復元をCPUで確認。3比較版と通常全体参照版のUI/API接続・設定を静的検証。実機の効果回復・男性への漏れ・INT8・UI互換性は未確認。証拠は`.omx/plans/2026-10-07-target-text-lora.progress.md`へ記録する。

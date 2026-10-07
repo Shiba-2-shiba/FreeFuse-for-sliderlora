@@ -79,8 +79,8 @@ def test_manual_preview_marks_raw_similarity_unavailable_with_black_outputs(node
 
 def test_postprocess_inputs_are_optional_zero_defaults_at_end(nodes):
     schema=nodes.Krea2SliderFuseSampler.define_schema()
-    assert [item.id for item in schema.inputs][-2:]==["fill_holes_max_area","mask_dilate_radius"]
-    assert all(item.optional and item.default==0 for item in schema.inputs[-2:])
+    assert [item.id for item in schema.inputs][-3:-1]==["fill_holes_max_area","mask_dilate_radius"]
+    assert all(item.optional and item.default==0 for item in schema.inputs[-3:-1])
 
 
 def test_old_api_payload_omits_new_inputs_and_executes_as_noop(nodes,monkeypatch):
@@ -94,6 +94,7 @@ def test_old_api_payload_omits_new_inputs_and_executes_as_noop(nodes,monkeypatch
              collect_step=2,collect_block=18,top_k_ratio=.2,temperature=10000.)
     assert nodes.Krea2SliderFuseSampler.execute(**old).result[0] is old["latent"]
     assert captured["fill_holes_max_area"]==0 and captured["mask_dilate_radius"]==0
+    assert captured["target_text_scale"]==0.
 
 
 def test_original_and_added_preview_and_legacy_fallback(nodes):
@@ -104,3 +105,10 @@ def test_original_and_added_preview_and_legacy_fallback(nodes):
     assert result[5] is original and result[6] is added
     legacy=nodes.Krea2SliderFuseMaskPreview.execute({"masks":masks}).result
     assert legacy[5] is masks["target"] and not legacy[6].any()
+
+
+def test_target_text_input_is_optional_zero_default_appended_after_old_widgets(nodes):
+    schema=nodes.Krea2SliderFuseSampler.define_schema()
+    field=schema.inputs[-1]
+    assert field.id=="target_text_scale" and field.optional and field.default==0.
+    assert field.min==0. and field.max==1.

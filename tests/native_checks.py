@@ -95,6 +95,6 @@ class NativeChecks(unittest.TestCase):
             schema=node.define_schema(); schema.validate()
             if schema.node_id=="Krea2SliderFuseSampler":
                 inputs={item.id:item for item in schema.inputs}
-                for name in ("fill_holes_max_area","mask_dilate_radius"):
+                for name in ("fill_holes_max_area","mask_dilate_radius","target_text_scale"):
                     self.assertTrue(inputs[name].optional)
                     self.assertEqual(inputs[name].default,0)

@@ -56,7 +56,7 @@ class Krea2SliderFuseSampler(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="Krea2SliderFuseSampler", display_name="Krea2 Slider Fuse Sampler", category=CATEGORY,
-            description="Generate target-only slider deltas, with shared scene attention. Euler/simple, CFG1, empty latent, batch1. Connect an optional GLOBAL style LoRA to MODEL; select the LOCAL slider here only. Real INT8/quality validation is pending.",
+            description="Generate target image slider deltas and optional target phrase deltas, with shared scene attention. Euler/simple, CFG1, empty latent, batch1. Connect an optional GLOBAL style LoRA to MODEL; select the LOCAL slider here only. Real INT8/quality validation is pending.",
             inputs=[io.Model.Input("model"), io.Conditioning.Input("positive"), io.Conditioning.Input("negative"),
                     PromptType.Input("prompt_info"), SubjectsType.Input("subjects"), io.Latent.Input("latent"),
                     io.Combo.Input("lora_name", options=[""] + folder_paths.get_filename_list("loras")),
@@ -72,7 +72,9 @@ class Krea2SliderFuseSampler(io.ComfyNode):
                     io.Int.Input("fill_holes_max_area", optional=True, default=0, min=0, max=64,
                                  tooltip="Auto only. Fill enclosed background-only holes up to this token area; 0 disables. Try 8 before dilation."),
                     io.Int.Input("mask_dilate_radius", optional=True, default=0, min=0, max=1,
-                                 tooltip="Auto only. Expand the largest target component into background only; 1 token is about 16 image pixels for standard Krea2.")],
+                                 tooltip="Auto only. Expand the largest target component into background only; 1 token is about 16 image pixels for standard Krea2."),
+                    io.Float.Input("target_text_scale", optional=True, default=0., min=0., max=1., step=.05,
+                                   tooltip="Experimental. Target phrase rows inside Krea2 get strength * this scale; 0 preserves image-only routing. Other text gets no direct delta, but shared attention can affect the protected person.")],
             outputs=[io.Latent.Output("latent"), MasksType.Output("mask_bank"), io.String.Output("diagnostics")])
 
     @classmethod
@@ -89,14 +91,15 @@ class Krea2SliderFuseSampler(io.ComfyNode):
     @classmethod
     def execute(cls, model, positive, negative, prompt_info, subjects, latent, lora_name, strength, seed, steps,
                 cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
-                fill_holes_max_area=0, mask_dilate_radius=0):
+                fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0.):
         if not lora_name:
             raise ValueError("Select a trained Krea2 attention-target Slider LoRA in this Sampler")
         path = folder_paths.get_full_path_or_raise("loras", lora_name)
         output, bank, report = sample_krea2(model, positive, negative, prompt_info, subjects, latent, path,
             strength=strength, seed=seed, steps=steps, cfg=cfg, mask_mode=mask_mode, collect_step=collect_step,
             collect_block=collect_block, top_k_ratio=top_k_ratio, temperature=temperature,
-            fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius)
+            fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius,
+            target_text_scale=target_text_scale)
         return io.NodeOutput(output, bank, json.dumps(report, ensure_ascii=False, indent=2))
 
 

@@ -2,6 +2,8 @@
 
 Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物（初期例は女性）にだけSlider LoRAの差分を適用します。男性もマスク推定に参加しますが、LoRAは持ちません。
 
+**0.1.3:** [対象phraseへの文章側LoRA差分](docs/target-text-routing.md)を任意で追加しました。Sampler末尾の`target_text_scale`は既定0で従来動作を維持します。同じ画像側強度・seed・mask条件の[0](workflows/krea2_female_slider_target_text_0.json)・[0.5](workflows/krea2_female_slider_target_text_05.json)・[1](workflows/krea2_female_slider_target_text_1.json)と、[通常全体適用の参照版](workflows/krea2_female_slider_global_reference.json)を用意しました。効果の回復と男性への影響は実機で未確認です。
+
 **0.1.2:** [保護付き小穴充填と最大成分だけの膨張](docs/mask-postprocessing.md)を追加しました。Sampler末尾の`fill_holes_max_area`/`mask_dilate_radius`は既定0です。最初は[穴埋め8・膨張0の比較版](workflows/krea2_female_slider_postprocess_fill8.json)を、[処理なし](workflows/krea2_female_slider_postprocess_off.json)と比較してください。新後処理の実機画質は未確認です。
 
 **0.1.1:** 手動で効果が出る一方、自動maskが顔を覆わない実機結果を受けて、[同じSlider・強度での比較ワークフローと連続mapの診断](docs/auto-mask-investigation.md)を追加しました。自動maskの画質改善が確認された更新ではありません。
@@ -52,7 +54,7 @@ positiveは専用EncodeからSamplerへ直接接続してください。途中�
 
 自動モードでは局所Sliderを無効にした序盤のattentionから、女性・男性の概念mapを観測します。背景を含めて排他的なマスクを作り、同じ初期ノイズ・latent・全sigma列から生成を再開します。Phase 1の途中画像を引き継ぎません。モデルの全体attention、位置情報、全体用LoRAは維持します。
 
-各対象Linearで`base(x) + strength × 女性mask × Slider差分`を計算します。Krea2のtext/image混合列のうち、テキスト位置への直接差分は0です。通常の全体LoRAとは適用範囲が異なるため、全面IMAGEマスクでも通常Loaderの結果との完全一致は要求しません。
+各対象Linearで画像側は`base(x) + strength × 女性mask × Slider差分`を計算します。`target_text_scale=0`ではテキスト位置への直接差分は0です。0より大きい場合は、同じKrea2内部Linearのtarget phrase行にだけ`strength × target_text_scale × Slider差分`を追加します。CLIP/text encoderへの適用ではありません。protectedとその他の文章行への直接差分は0です。通常の全体LoRAとは適用範囲が異なるため、全面IMAGEマスクでも通常Loaderの結果との完全一致は要求しません。
 
 ## 設定と制約
 

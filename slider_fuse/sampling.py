@@ -11,15 +11,16 @@ import uuid
 import torch
 
 from .attention import AttentionCollector
-from .lora import RoutingState, SliderHook, core_guard, load_adapters
+from .lora import RoutingState, SliderHook, core_guard, load_adapters, validate_target_text_scale
 from .masks import generate_masks, manual_masks, patch_grid, postprocess_masks, validate_postprocess_settings
 
 INJECTION_KEY = "krea2_slider_freefuse"
 
 
 def validate_settings(*, steps, cfg, strength, mask_mode, collect_step, top_k_ratio, temperature,
-                      fill_holes_max_area=0, mask_dilate_radius=0):
+                      fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0.):
     validate_postprocess_settings(fill_holes_max_area, mask_dilate_radius)
+    validate_target_text_scale(target_text_scale)
     if not isinstance(steps, int) or isinstance(steps, bool) or steps < 1:
         raise ValueError("steps must be positive")
     if cfg != 1.:
@@ -73,7 +74,7 @@ def run_phases(sample, noise, latent, sigmas, collect_step, collector, state, ma
 
 def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path, *, strength, seed,
                  steps, cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
-                 fill_holes_max_area=0, mask_dilate_radius=0):
+                 fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0.):
     """Own the clone and reversible native injections for one complete run."""
     import comfy.model_management
     import comfy.patcher_extension
@@ -84,7 +85,8 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
 
     validate_settings(steps=steps, cfg=cfg, strength=strength, mask_mode=mask_mode, collect_step=collect_step,
                       top_k_ratio=top_k_ratio, temperature=temperature,
-                      fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius)
+                      fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius,
+                      target_text_scale=target_text_scale)
     if not isinstance(seed, int) or isinstance(seed, bool) or not 0 <= seed <= 0xFFFFFFFFFFFFFFFF:
         raise ValueError("seed must be an unsigned 64-bit integer")
     if not prompt_info.matches(positive):
@@ -117,18 +119,26 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
     if mask_mode == "auto" and (not isinstance(collect_block, int) or not 0 <= collect_block < len(core.blocks)):
         raise ValueError(f"collect_block must be in 0..{len(core.blocks)-1}")
 
+    state = RoutingState()
+    state.configure_target_text(target_text_scale, subjects[0].positions, subjects[1].positions,
+                                len(prompt_info.token_ids))
     started = time.perf_counter()
     run_id = uuid.uuid4().hex[:12]
-    report = {"run_id": run_id, "extension_version": "0.1.2", "lora_file_name": Path(lora_path).name,
+    report = {"run_id": run_id, "extension_version": "0.1.3", "lora_file_name": Path(lora_path).name,
               "mask_mode": mask_mode, "seed": seed, "steps": steps,
               "cfg": cfg, "sampler": "euler", "scheduler": "simple", "strength": strength,
               "adapter_groups": {"target": 1, "protected": 0, "background": 0},
-              "text_delta_policy": "zero", "outside_target_direct_delta_policy": "zero",
+              "text_delta_policy": "target_phrase_only" if target_text_scale else "zero",
+              "target_text_scale": target_text_scale,
+              "target_text_effective_strength": strength * target_text_scale,
+              "target_text_positions": list(state.target_text_positions),
+              "protected_text_positions": list(state.protected_text_positions),
+              "other_text_direct_delta_policy": "zero", "protected_text_direct_delta_policy": "zero",
+              "outside_target_direct_delta_policy": "zero",
               "int8_real_machine_validated": False, "image_quality_validated": False,
               "phase1_nfe": 0, "phase2_nfe": 0}
     with core_guard(core):
         patcher = model.clone()
-        state = RoutingState()
         hooks = []; collector = None
         try:
             adapters = load_adapters(load_file(lora_path, device="cpu"), core)
@@ -203,6 +213,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
             if set(adapters) != state.reached:
                 raise RuntimeError("Not all matched Slider modules were reached; refusing to report a valid routed run")
             report["lora_linear_calls"] = state.calls
+            report["target_text_linear_calls"] = state.target_text_calls
             report["observation"] = collector.observation if mask_mode == "auto" else None
             bank["masks"] = {k: v.detach().cpu() for k, v in bank["masks"].items()}
             bank["original_masks"] = {k: v.detach().cpu() for k, v in bank["original_masks"].items()}

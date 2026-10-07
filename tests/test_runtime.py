@@ -113,16 +113,20 @@ def setup_run(tmp_path):
     return patcher,positive,info,subjects,file
 
 
-def test_manual_runtime_reports_all_keys_and_restores(environment, tmp_path):
+@pytest.mark.parametrize("scale", [0., .5, 1.])
+def test_manual_runtime_reports_all_keys_and_restores(environment, tmp_path, scale):
     _,calls,unloads = environment
     model,positive,info,subjects,file = setup_run(tmp_path)
     core = model.model.diffusion_model
     originals = {name:m.forward for name,m in core.named_modules()}
     result,bank,report = sample_krea2(model,positive,positive,info,subjects,{"samples":torch.zeros(1,4,4,4)},str(file),
-        strength=1.,seed=42,steps=2,cfg=1.,mask_mode="manual",collect_step=1,collect_block=0,top_k_ratio=.3,temperature=4000.)
+        strength=1.,seed=42,steps=2,cfg=1.,mask_mode="manual",collect_step=1,collect_block=0,top_k_ratio=.3,
+        temperature=4000.,target_text_scale=scale)
     assert len(calls)==1 and len(unloads)==1
     assert report["matched_modules"]==5 and report["reached_modules"]==5
     assert report["adapter_groups"]=={"target":1,"protected":0,"background":0}
+    assert report["target_text_linear_calls"]==(10 if scale else 0)
+    assert report["target_text_effective_strength"]==scale
     assert not core.txtfusion._forward_hooks
     for name,module in core.named_modules(): assert module.forward==originals[name]
     assert not model.model_options
@@ -246,4 +250,84 @@ def test_manual_postprocess_rejects_before_model_mutation(environment,tmp_path):
         sample_krea2(model,positive,positive,info,subjects,{"samples":torch.zeros(1,4,4,4)},str(file),
             strength=1.,seed=42,steps=2,cfg=1.,mask_mode="manual",collect_step=1,collect_block=0,top_k_ratio=.3,temperature=4000.,
             fill_holes_max_area=8)
+    assert not calls and not unloads
+
+
+def test_exception_after_text_routing_clears_indices_and_restores(environment,tmp_path,monkeypatch):
+    from slider_fuse import sampling
+    modules,_,unloads=environment
+    model,positive,info,subjects,file=setup_run(tmp_path)
+    core=model.model.diffusion_model
+    originals={name:module.forward for name,module in core.named_modules()}
+    hooks=[]
+    class RecordedHook(sampling.SliderHook):
+        def inject(self):
+            hooks.append(self)
+            return super().inject()
+    monkeypatch.setattr(sampling,"SliderHook",RecordedHook)
+    original_sample=modules["sample"].sample
+    def fail_after_routing(*args,**kwargs):
+        original_sample(*args,**kwargs)
+        assert hooks[0].state._text_index_cache
+        raise RuntimeError("after text routing")
+    modules["sample"].sample=fail_after_routing
+    with pytest.raises(RuntimeError,match="after text routing"):
+        sample_krea2(model,positive,positive,info,subjects,{"samples":torch.zeros(1,4,4,4)},str(file),
+            strength=4.,seed=42,steps=2,cfg=1.,mask_mode="manual",collect_step=1,collect_block=0,top_k_ratio=.3,
+            temperature=4000.,target_text_scale=1.)
+    assert len(unloads)==1 and hooks
+    assert all(not hook.state._text_index_cache and not hook.adapter._cache and hook.original_forward is None for hook in hooks)
+    for name,module in core.named_modules():
+        assert module.forward==originals[name]
+        assert not module._forward_hooks and not module._forward_pre_hooks
+
+
+def test_target_text_runtime_keeps_collection_identical_and_reports_after_clear(environment,tmp_path,monkeypatch):
+    from dataclasses import replace
+    from slider_fuse import sampling
+    from slider_fuse.masks import manual_masks
+    _,calls,_=environment
+    model,positive,info,subjects,file=setup_run(tmp_path)
+    auto_subjects=tuple(replace(s,manual_mask=None) for s in subjects)
+    collected=[];events=[]
+    def masks(maps,grid):
+        collected.append({key:value.clone() for key,value in maps.items()})
+        bank=manual_masks(subjects[0].manual_mask,subjects[1].manual_mask,grid);bank["mode"]="auto"
+        return bank
+    monkeypatch.setattr(sampling,"generate_masks",masks)
+    class RecordedHook(sampling.SliderHook):
+        def forward(self,*args,**kwargs):
+            before=self.state.target_text_calls
+            result=super().forward(*args,**kwargs)
+            events.append((self.state.phase,self.state.target_text_calls-before))
+            return result
+    monkeypatch.setattr(sampling,"SliderHook",RecordedHook)
+    outputs=[];reports=[]
+    for scale in (0.,.5,1.):
+        _,bank,report=sample_krea2(model,positive,positive,info,auto_subjects,{"samples":torch.zeros(1,4,4,4)},str(file),
+            strength=4.,seed=42,steps=2,cfg=1.,mask_mode="auto",collect_step=1,collect_block=0,top_k_ratio=.3,
+            temperature=4000.,target_text_scale=scale)
+        outputs.append(bank["masks"]["target"]);reports.append(report)
+        assert report["target_text_scale"]==scale and report["target_text_effective_strength"]==4*scale
+        assert report["target_text_positions"]==[0] and report["protected_text_positions"]==[1]
+        assert report["other_text_direct_delta_policy"]=="zero"
+        assert report["protected_text_direct_delta_policy"]=="zero"
+        assert report["target_text_linear_calls"]==(10 if scale else 0)
+        assert report["owned_hooks_removed"]
+    assert all(torch.equal(outputs[0],mask) for mask in outputs)
+    assert all(torch.equal(collected[0][key],maps[key]) for maps in collected for key in maps)
+    assert not any(count for phase,count in events if phase=="collect")
+    assert all(torch.equal(calls[0][0],entry[0]) for entry in calls)
+    assert reports[0]["text_delta_policy"]=="zero" and reports[1]["text_delta_policy"]=="target_phrase_only"
+
+
+def test_invalid_target_text_positions_fail_before_model_clone(environment,tmp_path):
+    from dataclasses import replace
+    _,calls,unloads=environment
+    model,positive,info,subjects,file=setup_run(tmp_path)
+    wrong=(replace(subjects[0],positions=(2,)),subjects[1])
+    with pytest.raises(ValueError,match="text"):
+        sample_krea2(model,positive,positive,info,wrong,{"samples":torch.zeros(1,4,4,4)},str(file),
+            strength=4.,seed=42,steps=2,cfg=1.,mask_mode="manual",collect_step=1,collect_block=0,top_k_ratio=.3,
+            temperature=4000.,target_text_scale=1.)
     assert not calls and not unloads

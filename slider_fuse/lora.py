@@ -111,6 +111,22 @@ def compare_probe_outputs(reference, repeat, actual, expected_delta, image_mask,
             "target_max_change": target, "expected_target_max_change": expected_target, "expected_max_error": expected_error}
 
 
+def validate_target_text_scale(scale):
+    if isinstance(scale, bool) or not isinstance(scale, (int, float)) or not math.isfinite(scale) or not 0 <= scale <= 1:
+        raise ValueError("target_text_scale must be a finite number in [0,1]")
+
+
+def _validate_text_positions(target, protected, cap_len):
+    if isinstance(cap_len, bool) or not isinstance(cap_len, int) or cap_len < 1:
+        raise ValueError("Text routing requires a positive runtime text length")
+    for name, positions in (("target", target), ("protected", protected)):
+        if (not positions or any(isinstance(p, bool) or not isinstance(p, int) or not 0 <= p < cap_len for p in positions)
+                or len(set(positions)) != len(positions)):
+            raise ValueError(f"Invalid {name} text positions; use unique indices inside the text prefix")
+    if set(target) & set(protected):
+        raise ValueError("Target/protected text positions overlap")
+
+
 @dataclass
 class RoutingState:
     phase: str = "off"
@@ -119,6 +135,30 @@ class RoutingState:
     reached: set[str] = field(default_factory=set)
     calls: int = 0
     _mask_cache: dict = field(default_factory=dict, repr=False)
+    target_text_scale: float = 0.
+    target_text_positions: tuple[int, ...] = ()
+    protected_text_positions: tuple[int, ...] = ()
+    expected_text_len: int | None = None
+    target_text_calls: int = 0
+    _text_index_cache: dict = field(default_factory=dict, repr=False)
+
+    def configure_target_text(self, scale, target_positions, protected_positions, text_len):
+        validate_target_text_scale(scale)
+        _validate_text_positions(target_positions, protected_positions, text_len)
+        self.target_text_scale = float(scale)
+        self.target_text_positions = tuple(target_positions)
+        self.protected_text_positions = tuple(protected_positions)
+        self.expected_text_len = text_len
+        self._text_index_cache.clear()
+
+    def target_text_indices(self, output):
+        if self.cap_len != self.expected_text_len:
+            raise ValueError("Runtime text boundary differs from target phrase positions")
+        validate_target_text_scale(self.target_text_scale)
+        _validate_text_positions(self.target_text_positions, self.protected_text_positions, self.cap_len)
+        if output.device not in self._text_index_cache:
+            self._text_index_cache[output.device] = torch.tensor(self.target_text_positions, device=output.device, dtype=torch.long)
+        return self._text_index_cache[output.device]
 
     def image_mask(self, output: torch.Tensor) -> torch.Tensor:
         if self.mask is None or self.cap_len is None or self.cap_len < 1:
@@ -133,6 +173,9 @@ class RoutingState:
     def clear(self):
         self.phase = "off"; self.cap_len = None; self.mask = None
         self._mask_cache.clear()
+        self.target_text_scale = 0.
+        self.target_text_positions = (); self.protected_text_positions = (); self.expected_text_len = None
+        self._text_index_cache.clear()
 
 
 class SliderHook:
@@ -173,4 +216,9 @@ class SliderHook:
         delta = self.adapter.delta(x[:, cap:]).to(base.dtype) * self.strength * mask
         result = base.clone()
         result[:, cap:] = base[:, cap:] + delta
+        if self.state.target_text_scale:
+            positions = self.state.target_text_indices(base)
+            text_delta = self.adapter.delta(x.index_select(1, positions)).to(base.dtype) * self.strength * self.state.target_text_scale
+            result.index_copy_(1, positions, base.index_select(1, positions) + text_delta)
+            self.state.target_text_calls += 1
         return result
