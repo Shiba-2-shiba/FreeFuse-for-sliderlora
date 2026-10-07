@@ -1,4 +1,12 @@
-"""Plain additive LoRA, evaluated outside quantized base weight storage."""
+"""Plain additive LoRA, evaluated outside quantized base weight storage.
+
+SPDX-License-Identifier: Apache-2.0
+Reversible injection/routing is adapted from FreeFuse-for-anima
+anima_freefuse/lora.py at 1b924b5dd1f7266fa6e5869331e67a2033e7ec2f.
+Modified for FreeFuse-for-sliderlora: native Krea2 key validation, additive
+down/up evaluation, image/optional target-text routing and exact forward restore.
+See LICENSE, NOTICE and THIRD_PARTY_NOTICES.md for licensing and attribution.
+"""
 from __future__ import annotations
 
 from contextlib import contextmanager

@@ -1,6 +1,12 @@
 """Exact Krea2 Qwen3-VL conditioning/token alignment and two subject roles.
 
-Template stripping follows ComfyUI and FreeFuse; see THIRD_PARTY_NOTICES.md.
+SPDX-License-Identifier: Apache-2.0
+Krea2 template/prefix alignment is adapted from yaoliliu/FreeFuse token_utils.py
+at f5570195e84d3bc8e7f6702fcb7b012b89372b8e. Exact-conditioning linkage is
+adapted from FreeFuse-for-anima at 1b924b5dd1f7266fa6e5869331e67a2033e7ec2f.
+Modified for FreeFuse-for-sliderlora: native template application once,
+prefix decoding, explicit phrase occurrences and separate target/protected roles.
+See LICENSE, NOTICE and THIRD_PARTY_NOTICES.md for licensing and attribution.
 """
 from __future__ import annotations
 

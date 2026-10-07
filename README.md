@@ -96,3 +96,9 @@ python -B -m pytest -q -p no:cacheprovider tests
 開発環境: Python3.10.11、torch2.10.0+cpu、CUDAなし。公式ComfyUIソースの検証用checkout `b26625f23a888367b92153b28d93e159e83e677b`では、既存`comfy_aimdo.storage`不足と`comfy_kitchen`のConvRot API版差によりimportが停止しました。依存は変更していません。ネイティブ6件、実INT8 probe、UI上の保存/再読込、実画像品質は未検証です。状態は[検証記録](docs/validation.md)に記載します。
 
 実装は[計画書](.omx/plans/2026-10-07-krea2-female-only-slider-freefuse.md)に対応します。FreeFuseのアルゴリズム、Anima版の二段階生成・復帰設計を参考にしています。Apache-2.0の出典・変更点は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
+
+## ライセンスと出典
+
+このリポジトリのソースは[Apache-2.0](LICENSE)です。[FreeFuse](https://github.com/yaoliliu/FreeFuse)と[FreeFuse-for-anima](https://github.com/Shiba-2-shiba/FreeFuse-for-anima)からの派生・改変箇所、固定コミット、元の権利表示は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)と[NOTICE](NOTICE)に記載しています。独立した派生実装であり、上流の公式版・公認版を意味しません。
+
+ソースの再配布では`LICENSE`・`NOTICE`・出典文書と改変表示を保持してください。ComfyUIはGPL-3.0の外部ランタイムであり、組み合わせたプログラムの配布ではGPLの義務も確認する必要があります。モデル・LoRA・データセットは同梱せず、それぞれの配布条件が適用されます。確認範囲と限界は[ライセンス監査記録](docs/license-audit.md)を参照してください。

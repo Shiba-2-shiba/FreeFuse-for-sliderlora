@@ -1,4 +1,12 @@
-"""Two phases share initial noise, latent and the original sigma schedule."""
+"""Two phases share initial noise, latent and the original sigma schedule.
+
+SPDX-License-Identifier: Apache-2.0
+Adapted from FreeFuse-for-anima anima_freefuse/sampling.py at
+1b924b5dd1f7266fa6e5869331e67a2033e7ec2f.
+Modified for FreeFuse-for-sliderlora: Krea2-only sampling, sigma-based collection,
+one target adapter, shared-core guards, diagnostics and stricter cleanup.
+See LICENSE, NOTICE and THIRD_PARTY_NOTICES.md for licensing and attribution.
+"""
 from __future__ import annotations
 
 import hashlib

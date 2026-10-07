@@ -1,6 +1,11 @@
 """Krea2 observation and the FreeFuse two-stage concept similarity calculation.
 
-Adapted from yaoliliu/FreeFuse (Apache-2.0); see THIRD_PARTY_NOTICES.md.
+SPDX-License-Identifier: Apache-2.0
+Adapted from yaoliliu/FreeFuse at f5570195e84d3bc8e7f6702fcb7b012b89372b8e:
+freefuse_comfyui/freefuse_core/{krea2_support.py,attention_replace.py}.
+Modified for FreeFuse-for-sliderlora: two explicit subject roles, strict
+token/grid/sigma validation, chunked similarity reduction and no attention bias.
+See LICENSE, NOTICE and THIRD_PARTY_NOTICES.md for licensing and attribution.
 Observation never replaces the model's attention result or permission matrix.
 """
 from __future__ import annotations
