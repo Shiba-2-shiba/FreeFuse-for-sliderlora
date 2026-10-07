@@ -4,6 +4,8 @@ Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面�
 
 **0.1.1:** 手動で効果が出る一方、自動maskが顔を覆わない実機結果を受けて、[同じSlider・強度での比較ワークフローと連続mapの診断](docs/auto-mask-investigation.md)を追加しました。自動maskの画質改善が確認された更新ではありません。
 
+その後、`woman/man`、top_k_ratio0.2、temperature10000、既知のSlider強度4で、seed42のマスク改善と効果が報告されました。[候補設定と同条件の強度0/4比較](docs/auto-mask-candidate.md)を保存しています。単一例なので既定値は変更していません。
+
 **実験版です。** ユーザーの実機からmanual/auto生成結果を受領し、manualの効果とautoの顔mask欠落を確認しました。同じLoRA・強度による統制比較、自動マスクの品質合格、ConvRot INT8のprobe結果は未確認です。CPUの数値・状態・接続テストと公式ソース照合を行っています。男性への直接LoRA差分は0にしますが、共有attentionを通じた間接的な属性変化や、領域外の画素変化は起こり得ます。
 
 ## 導入
