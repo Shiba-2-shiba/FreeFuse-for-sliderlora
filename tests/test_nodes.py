@@ -64,14 +64,43 @@ def test_raw_similarity_preview_is_normalized_independently_without_mutating_map
     bank={"grid":(2,2),"masks":{name:torch.zeros(1,2,2) for name in ("target","protected","background")},
           "raw_maps":{"target":target,"protected":protected}}
     result=nodes.Krea2SliderFuseMaskPreview.execute(bank).result
-    assert len(result)==5
+    assert len(result)==7
     torch.testing.assert_close(result[3],torch.tensor([[[0.,.5],[1.,0.]]]))
     torch.testing.assert_close(result[4],torch.tensor([[[0.,1.],[0.,.5]]]))
     assert torch.equal(target,torch.tensor([[10.,20.,30.,10.]]))
-    assert [o.id for o in nodes.Krea2SliderFuseMaskPreview.define_schema().outputs][3:]==["target_similarity","protected_similarity"]
+    assert [o.id for o in nodes.Krea2SliderFuseMaskPreview.define_schema().outputs][3:5]==["target_similarity","protected_similarity"]
 
 
 def test_manual_preview_marks_raw_similarity_unavailable_with_black_outputs(nodes):
     masks={"target":torch.ones(1,2,2),"protected":torch.zeros(1,2,2),"background":torch.zeros(1,2,2)}
     result=nodes.Krea2SliderFuseMaskPreview.execute({"masks":masks}).result
-    assert len(result)==5 and not result[3].any() and not result[4].any()
+    assert len(result)==7 and not result[3].any() and not result[4].any()
+
+
+def test_postprocess_inputs_are_optional_zero_defaults_at_end(nodes):
+    schema=nodes.Krea2SliderFuseSampler.define_schema()
+    assert [item.id for item in schema.inputs][-2:]==["fill_holes_max_area","mask_dilate_radius"]
+    assert all(item.optional and item.default==0 for item in schema.inputs[-2:])
+
+
+def test_old_api_payload_omits_new_inputs_and_executes_as_noop(nodes,monkeypatch):
+    captured={}
+    def sample(*args,**kwargs):
+        captured.update(kwargs)
+        return args[5],{}, {"ok":True}
+    monkeypatch.setattr(nodes,"sample_krea2",sample)
+    old=dict(model=object(),positive=[],negative=[],prompt_info=object(),subjects=(),latent={"samples":torch.zeros(1,16,4,4)},
+             lora_name="slider.safetensors",strength=1.,seed=42,steps=8,cfg=1.,mask_mode="auto",
+             collect_step=2,collect_block=18,top_k_ratio=.2,temperature=10000.)
+    assert nodes.Krea2SliderFuseSampler.execute(**old).result[0] is old["latent"]
+    assert captured["fill_holes_max_area"]==0 and captured["mask_dilate_radius"]==0
+
+
+def test_original_and_added_preview_and_legacy_fallback(nodes):
+    original=torch.tensor([[[1.,0.],[0.,0.]]]);added=torch.tensor([[[0.,1.],[0.,0.]]])
+    masks={"target":original+added,"protected":torch.zeros_like(original),"background":1-original-added}
+    bank={"masks":masks,"original_masks":{"target":original},"added_target_mask":added}
+    result=nodes.Krea2SliderFuseMaskPreview.execute(bank).result
+    assert result[5] is original and result[6] is added
+    legacy=nodes.Krea2SliderFuseMaskPreview.execute({"masks":masks}).result
+    assert legacy[5] is masks["target"] and not legacy[6].any()

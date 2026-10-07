@@ -67,3 +67,11 @@ def test_unverifiable_prior_runtime_patches_are_rejected(options):
 
 def test_empty_options_and_global_weight_lora_are_not_rejected():
     validate_model_options({"transformer_options": {}})
+
+
+@pytest.mark.parametrize("settings",[dict(fill_holes_max_area=True),dict(fill_holes_max_area=-1),dict(mask_dilate_radius=2),
+                                      dict(mask_mode="manual",fill_holes_max_area=8)])
+def test_postprocess_sampling_settings_are_rejected_before_sampling(settings):
+    values=dict(steps=8,cfg=1.,strength=1.,mask_mode="auto",collect_step=2,top_k_ratio=.2,temperature=10000.)
+    values.update(settings)
+    with pytest.raises(ValueError):validate_settings(**values)

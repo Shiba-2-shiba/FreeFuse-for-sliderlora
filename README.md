@@ -2,6 +2,8 @@
 
 Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物（初期例は女性）にだけSlider LoRAの差分を適用します。男性もマスク推定に参加しますが、LoRAは持ちません。
 
+**0.1.2:** [保護付き小穴充填と最大成分だけの膨張](docs/mask-postprocessing.md)を追加しました。Sampler末尾の`fill_holes_max_area`/`mask_dilate_radius`は既定0です。最初は[穴埋め8・膨張0の比較版](workflows/krea2_female_slider_postprocess_fill8.json)を、[処理なし](workflows/krea2_female_slider_postprocess_off.json)と比較してください。新後処理の実機画質は未確認です。
+
 **0.1.1:** 手動で効果が出る一方、自動maskが顔を覆わない実機結果を受けて、[同じSlider・強度での比較ワークフローと連続mapの診断](docs/auto-mask-investigation.md)を追加しました。自動maskの画質改善が確認された更新ではありません。
 
 その後、`woman/man`、top_k_ratio0.2、temperature10000、既知のSlider強度4で、seed42のマスク改善と効果が報告されました。[候補設定と同条件の強度0/4比較](docs/auto-mask-candidate.md)を保存しています。単一例なので既定値は変更していません。
@@ -40,7 +42,9 @@ API形式の接続例もあります: [手動API](workflows/krea2_female_slider_
 | **Krea2 Slider Fuse Sampler** | MODEL、positive/negative、同じprompt_info、subjects、空LATENT、女性用Sliderを入力。LATENT/mask_bank/診断文字列を出力 |
 | **Krea2 Slider Fuse Mask Preview** | mask_bankを女性・男性・背景MASKとして出力。標準MaskToImage/PreviewImageに接続 |
 
-Mask Previewの末尾2出力は、autoの生類似度mapを独立min-max正規化した`target_similarity`/`protected_similarity`です。明るさは校正されたconfidenceではありません。manualではこの2出力は黒で、診断にraw mapがないことを記録します。対応したプレビューを追加済みの比較workflowを使用してください。
+Mask Previewの第4・第5出力は、autoの生類似度mapを独立min-max正規化した`target_similarity`/`protected_similarity`です。明るさは校正されたconfidenceではありません。manualではこの2出力は黒で、診断にraw mapがないことを記録します。対応したプレビューを追加済みの比較workflowを使用してください。
+
+0.1.2のPreviewは先頭5出力を維持し、さらに`original_target_mask`（処理前）と`added_target_mask`（追加領域）を末尾へ追加しています。生成に使うtargetは先頭の処理後maskです。
 
 全体promptは1本で、男女・背景・照明をまとめて記述します。例えば`adult woman in a sage-green top`と`adult man in a blue T-shirt`を含む文章を使い、その語句をSubjectsへそのまま入力します。重複するphraseは0始まりの`occurrence`で指定します。性別の自動判定は行いません。targetはユーザーが指定した人物です。
 
@@ -57,7 +61,7 @@ positiveは専用EncodeからSamplerへ直接接続してください。途中�
 - ベース演算は通常のLinear/ネイティブ量子化処理を呼び、ベース重みのマージ・全体展開・再量子化を行いません。現在の対応検査は浮動小数点または`int8_tensorwise`（ConvRotを含む）です。他のquant_formatは初期版で拒否します。
 - 自動maskはpatch grid単位で、人体の画素セグメンテーションではありません。1024pxの通常Krea2なら64×64 token gridです。性質の似た人物、接触・重なり、体格変化による人物移動では失敗する可能性があります。
 - `collect_step=2`は1始まり、`collect_block=18`は0始まりです。temperature4000/top_k_ratio0.3は初期比較値で、実モデルでの最適値ではありません。空・拡散・非有限mapでは停止し、全画面maskへ置き換えません。
-- maskの面積を男女50:50に強制しません。同点や低いforeground信号は背景へ回します。初期版は膨張・feather・attention biasを行いません。
+- maskの面積を男女50:50に強制しません。同点や低いforeground信号は背景へ回します。任意の後処理は小穴充填・最大成分膨張だけで、feather・attention biasは行いません。
 - 通常Loaderの全体Slider二重適用を、ファイル名だけで完全には検出できません。指定された上流MODELには全体スタイル用LoRAだけを置いてください。
 - 未知のtoken/attention patch、native hooks/injections、raw module hook、個別forward置換、model_function_wrapper、複数GPUを実行前に拒否します。同じmodel coreを使う本拡張の並列実行も拒否します。他のSamplerを同じcoreで同時実行する組合せは対応外です。
 - 終了・中断・例外時は注入を解除し、専用cloneと同じcoreのモデルをunloadします。そのため次の生成でモデル再ロードが発生する場合があります。

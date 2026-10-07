@@ -36,3 +36,12 @@ Bでも男性が変化しない属性だけでは、男性保護の有効性を�
 - [ ] 初回ロードとwarm runの時間、Phase1/2評価回数、VRAMを別記した。
 
 PNGの生成metadataと、対応するrun_idのログを一緒に保存する。失敗時はComfyUI/extensionのcommit、モデルのquant_format、Slider形式、manual/auto、収集step/blockを添える。
+
+## 0.1.2のmask後処理
+
+- [ ] [処理なし](../workflows/krea2_female_slider_postprocess_off.json)と[穴埋め8](../workflows/krea2_female_slider_postprocess_fill8.json)を同条件で比較した。
+- [ ] original_target_mask、処理後target_mask、added_target_maskを確認した。
+- [ ] protectedが処理前後で同じで、mask_postprocess.protected_changed_token_count=0/partition_valid=trueを確認した。
+- [ ] 穴埋め後も女性への効果があり、男性の同属性変化・背景破綻が増えていない。
+- [ ] 膨張1を試す場合は最大成分だけが広がり、小断片が拡大しないことを確認した。
+- [ ] 旧manual/auto workflowは設定省略または両方0で動き、UI保存・再読込後も設定が維持される。

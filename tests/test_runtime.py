@@ -206,3 +206,44 @@ def test_foreign_injections_and_hooks_are_rejected_without_any_mutation(environm
         assert dict(module._forward_hooks)==before_hooks and dict(module._forward_pre_hooks)==before_pre
     finally:
         if handle is not None: handle.remove()
+
+
+def test_phase_two_uses_processed_mask_and_returns_cpu_snapshots(environment,tmp_path,monkeypatch):
+    from dataclasses import replace
+    from slider_fuse import sampling
+    _,calls,_=environment
+    model,positive,info,subjects,file=setup_run(tmp_path)
+    auto_subjects=tuple(replace(s,manual_mask=None) for s in subjects)
+    target=torch.tensor([[[1.,0.],[0.,0.]]]);protected=torch.tensor([[[0.,0.],[0.,1.]]])
+    original={"grid":(2,2),"mode":"auto","masks":{"target":target,"protected":protected,"background":1-target-protected}}
+    monkeypatch.setattr(sampling,"generate_masks",lambda maps,grid:original)
+    used=[]
+    class ObservedHook(sampling.SliderHook):
+        def forward(self,*args,**kwargs):
+            if self.state.phase=="route":used.append(self.state.mask.clone())
+            return super().forward(*args,**kwargs)
+    monkeypatch.setattr(sampling,"SliderHook",ObservedHook)
+    _,bank,report=sample_krea2(model,positive,positive,info,auto_subjects,{"samples":torch.zeros(1,4,4,4)},str(file),
+        strength=1.,seed=42,steps=2,cfg=1.,mask_mode="auto",collect_step=1,collect_block=0,top_k_ratio=.3,temperature=4000.,
+        fill_holes_max_area=0,mask_dilate_radius=1)
+    expected=1-protected
+    assert used and all(torch.equal(mask,expected) for mask in used)
+    assert torch.equal(bank["masks"]["target"],expected)
+    assert torch.equal(bank["original_masks"]["target"],target)
+    assert bank["added_target_mask"].sum()==2
+    assert report["mask_postprocess"]["dilated_token_count"]==2
+    assert report["mask_postprocess"]["dilation_protected_blocked_count"]==1
+    assert all(m.device.type=="cpu" and not m.requires_grad for m in bank["original_masks"].values())
+    assert bank["added_target_mask"].device.type=="cpu"
+    assert torch.equal(calls[0][0],calls[1][0]) and torch.equal(calls[0][1],calls[1][1])
+    assert torch.equal(original["masks"]["target"],target)
+
+
+def test_manual_postprocess_rejects_before_model_mutation(environment,tmp_path):
+    _,calls,unloads=environment
+    model,positive,info,subjects,file=setup_run(tmp_path)
+    with pytest.raises(ValueError,match="auto"):
+        sample_krea2(model,positive,positive,info,subjects,{"samples":torch.zeros(1,4,4,4)},str(file),
+            strength=1.,seed=42,steps=2,cfg=1.,mask_mode="manual",collect_step=1,collect_block=0,top_k_ratio=.3,temperature=4000.,
+            fill_holes_max_area=8)
+    assert not calls and not unloads

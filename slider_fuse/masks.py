@@ -36,25 +36,127 @@ def _bank(masks: dict[str, torch.Tensor], grid: tuple[int, int], **extra) -> dic
     return {"masks": masks, "grid": grid, "diagnostics": diagnostics, **extra}
 
 
-def _component_sizes(mask: torch.Tensor) -> list[int]:
-    """Diagnostic only: 8-connected components do not alter routing masks."""
+def _components(mask: torch.Tensor, connectivity: int = 8) -> list[list[int]]:
+    """Row-major ordered components on a CPU binary grid."""
     rows = mask.detach().cpu().bool().tolist()
     h, w = mask.shape
-    seen = set(); sizes = []
+    neighbors = [(dy, dx) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                 if (dy or dx) and (connectivity == 8 or abs(dy) + abs(dx) == 1)]
+    seen = set(); components = []
     for y in range(h):
         for x in range(w):
             if not rows[y][x] or (y, x) in seen:
                 continue
-            stack = [(y, x)]; seen.add((y, x)); size = 0
+            stack = [(y, x)]; seen.add((y, x)); component = []
             while stack:
-                v, u = stack.pop(); size += 1
-                for dy in (-1, 0, 1):
-                    for dx in (-1, 0, 1):
-                        ny, nx = v + dy, u + dx
-                        if (0 <= ny < h and 0 <= nx < w and rows[ny][nx] and (ny, nx) not in seen):
-                            seen.add((ny, nx)); stack.append((ny, nx))
-            sizes.append(size)
-    return sizes
+                v, u = stack.pop(); component.append(v * w + u)
+                for dy, dx in neighbors:
+                    ny, nx = v + dy, u + dx
+                    if (0 <= ny < h and 0 <= nx < w and rows[ny][nx] and (ny, nx) not in seen):
+                        seen.add((ny, nx)); stack.append((ny, nx))
+            components.append(component)
+    return components
+
+
+def _component_sizes(mask: torch.Tensor) -> list[int]:
+    return [len(component) for component in _components(mask)]
+
+
+def validate_postprocess_settings(max_hole_area=0, dilate_radius=0):
+    for name, value, maximum in (("fill_holes_max_area", max_hole_area, 64), ("mask_dilate_radius", dilate_radius, 1)):
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= maximum:
+            raise ValueError(f"{name} must be an integer in 0..{maximum}")
+
+
+def _validate_partition(bank):
+    masks = bank.get("masks", {})
+    if set(masks) != set(GROUPS):
+        raise ValueError("Postprocessing requires target/protected/background masks")
+    target = masks["target"]
+    if not isinstance(target, torch.Tensor) or target.ndim != 3 or target.shape[0] != 1 or min(target.shape[-2:]) < 1:
+        raise ValueError("Postprocessing masks must have shape [1,H,W]")
+    if tuple(bank.get("grid", ())) != tuple(target.shape[-2:]):
+        raise ValueError("Postprocessing grid differs from mask dimensions")
+    for name, mask in masks.items():
+        if (not isinstance(mask, torch.Tensor) or mask.shape != target.shape or mask.device != target.device
+                or mask.dtype != target.dtype or not mask.is_floating_point()):
+            raise ValueError("Postprocessing masks must share shape, floating dtype and device")
+        if not torch.isfinite(mask).all() or not ((mask == 0) | (mask == 1)).all():
+            raise ValueError(f"Postprocessing {name} mask must be finite and binary")
+    if not torch.equal(sum(masks.values()), torch.ones_like(target)):
+        raise ValueError("Postprocessing masks must form an exclusive, complete partition")
+    if not target.any() or not masks["protected"].any():
+        raise ValueError("Postprocessing cannot repair an empty target/protected mask")
+    return masks
+
+
+def postprocess_masks(bank, *, max_hole_area=0, dilate_radius=0):
+    """Fill background-only holes, then optionally dilate the largest target component.
+
+    Protection is immutable. Both zero settings preserve mask values exactly.
+    Input banks and observed similarity maps are never modified.
+    """
+    validate_postprocess_settings(max_hole_area, dilate_radius)
+    source = _validate_partition(bank)
+    original = {name: mask.detach().clone() for name, mask in source.items()}
+    target = original["target"][0].cpu().bool()
+    protected = original["protected"][0].cpu().bool()
+    background = original["background"][0].cpu().bool()
+    updated = target.clone()
+    filled = torch.zeros_like(target)
+    dilated = torch.zeros_like(target)
+    h, w = target.shape
+    report = {"enabled": bool(max_hole_area or dilate_radius), "fill_holes_max_area": max_hole_area,
+              "mask_dilate_radius": dilate_radius, "external_components_skipped": None,
+              "enclosed_holes_total": None, "oversize_holes_skipped": None,
+              "protected_holes_blocked": None, "filled_hole_count": 0,
+              "dilation_candidate_count": None, "dilation_protected_blocked_count": None}
+    if max_hole_area:
+        report.update(external_components_skipped=0, enclosed_holes_total=0,
+                      oversize_holes_skipped=0, protected_holes_blocked=0)
+        for component in _components(~target, connectivity=4):
+            if any(index // w in (0, h - 1) or index % w in (0, w - 1) for index in component):
+                report["external_components_skipped"] += 1
+                continue
+            report["enclosed_holes_total"] += 1
+            if len(component) > max_hole_area:
+                report["oversize_holes_skipped"] += 1
+                continue
+            if protected.flatten()[component].any():
+                report["protected_holes_blocked"] += 1
+                continue
+            if not background.flatten()[component].all():
+                raise ValueError("Unclassified pixels in an enclosed target hole")
+            filled.flatten()[component] = True
+            report["filled_hole_count"] += 1
+        updated |= filled
+    if dilate_radius:
+        components = _components(updated)
+        main = max(components, key=lambda component: (len(component), -min(component)))
+        main_mask = torch.zeros_like(updated)
+        main_mask.flatten()[main] = True
+        candidate = F.max_pool2d(main_mask.float()[None, None], 3, stride=1, padding=1)[0, 0].bool() & ~updated
+        report["dilation_candidate_count"] = int(candidate.sum())
+        report["dilation_protected_blocked_count"] = int((candidate & protected).sum())
+        dilated = candidate & background
+        updated |= dilated
+    new_target = updated[None].to(original["target"])
+    processed = {"target": new_target, "protected": original["protected"].clone(),
+                 "background": 1 - new_target - original["protected"]}
+    _validate_partition({"masks": processed, "grid": bank["grid"]})
+    added_cells = filled | dilated
+    added = added_cells[None].to(original["target"])
+    if (not torch.equal(processed["protected"], source["protected"])
+            or not torch.equal(processed["target"] - source["target"], added)
+            or bool((added * source["protected"]).any())):
+        raise RuntimeError("Postprocessing violated target/protection ownership")
+    result = dict(bank)
+    result.update(_bank(processed, tuple(bank["grid"])))
+    report.update(filled_token_count=int(filled.sum()), dilated_token_count=int(dilated.sum()),
+                  added_token_count=int(added_cells.sum()), protected_changed_token_count=0, partition_valid=True,
+                  before=_bank(original, tuple(bank["grid"]))["diagnostics"], after=result["diagnostics"])
+    result.update(original_masks=original, added_target_mask=added, postprocess_diagnostics=report)
+    return result
 
 
 def _map_diagnostics(maps: dict[str, torch.Tensor]) -> dict:

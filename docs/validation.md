@@ -4,7 +4,7 @@
 
 | 項目 | 状態 |
 |---|---|
-| ローカルsuite | 0.1.0は70件成功。0.1.1の診断・比較追加後は78件成功、skip0・失敗0 |
+| ローカルsuite | 0.1.0は70件、0.1.1は78件、0.1.2の後処理追加後は120件成功、skip0・失敗0 |
 | CPUのマスク・LoRA数値・alpha/rank・正負強度・text差分0 | ローカルsuiteで確認 |
 | 二段階noise/latent/sigma再利用、例外復帰、2人物の独立した収集 | ローカルsuiteで確認 |
 | V3 schemaの契約、LoRAファイル変更、JSONリンク/型 | test double・静的検査で確認 |
@@ -23,3 +23,5 @@ Python3.10.11 / torch2.10.0+cpu / CUDAなし。検証用ComfyUI checkoutは`b266
 0.1.1の追試条件と追加診断は[auto-mask-investigation.md](auto-mask-investigation.md)、作業証拠は`.omx/plans/2026-10-07-auto-mask-investigation.progress.md`に記録する。mask算法の修正は未実施で、診断更新を画質修正済みとは扱わない。
 
 追加実機観測: seed42の候補設定で、target maskの最大断片比率が91.42%となり、顔への適用範囲とSliderの効果が改善したとの報告を受領。[候補記録](auto-mask-candidate.md)の強度0/4比較と他seedでの検証は未了。全体の品質合格条件を満たしたとは扱わない。
+
+0.1.2: [mask後処理](mask-postprocessing.md)のCPU数値/旧API/Phase2接続を追加検証。提供maskの条件付き計算で583/612/627/813を再現し、protected不変とpartitionを確認した。新後処理の実GPU生成・UI・画質は未確認。最終suiteとレビュー結果は`.omx/plans/2026-10-07-protected-mask-postprocess.progress.md`へ記録する。

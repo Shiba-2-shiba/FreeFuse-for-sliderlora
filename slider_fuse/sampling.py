@@ -12,12 +12,14 @@ import torch
 
 from .attention import AttentionCollector
 from .lora import RoutingState, SliderHook, core_guard, load_adapters
-from .masks import generate_masks, manual_masks, patch_grid
+from .masks import generate_masks, manual_masks, patch_grid, postprocess_masks, validate_postprocess_settings
 
 INJECTION_KEY = "krea2_slider_freefuse"
 
 
-def validate_settings(*, steps, cfg, strength, mask_mode, collect_step, top_k_ratio, temperature):
+def validate_settings(*, steps, cfg, strength, mask_mode, collect_step, top_k_ratio, temperature,
+                      fill_holes_max_area=0, mask_dilate_radius=0):
+    validate_postprocess_settings(fill_holes_max_area, mask_dilate_radius)
     if not isinstance(steps, int) or isinstance(steps, bool) or steps < 1:
         raise ValueError("steps must be positive")
     if cfg != 1.:
@@ -26,6 +28,8 @@ def validate_settings(*, steps, cfg, strength, mask_mode, collect_step, top_k_ra
         raise ValueError("Slider strength must be finite and in [-10,10]")
     if mask_mode not in ("auto", "manual"):
         raise ValueError("mask_mode must be auto or manual")
+    if mask_mode == "manual" and (fill_holes_max_area or mask_dilate_radius):
+        raise ValueError("Mask postprocessing is auto-only; use both settings 0 for manual masks")
     if mask_mode == "auto" and (not isinstance(collect_step, int) or not 1 <= collect_step <= steps):
         raise ValueError("collect_step must be in 1..total steps")
     if not math.isfinite(top_k_ratio) or not 0 < top_k_ratio <= 1 or not math.isfinite(temperature) or temperature <= 0:
@@ -68,7 +72,8 @@ def run_phases(sample, noise, latent, sigmas, collect_step, collector, state, ma
 
 
 def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path, *, strength, seed,
-                 steps, cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature):
+                 steps, cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
+                 fill_holes_max_area=0, mask_dilate_radius=0):
     """Own the clone and reversible native injections for one complete run."""
     import comfy.model_management
     import comfy.patcher_extension
@@ -78,7 +83,8 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
     from safetensors.torch import load_file
 
     validate_settings(steps=steps, cfg=cfg, strength=strength, mask_mode=mask_mode, collect_step=collect_step,
-                      top_k_ratio=top_k_ratio, temperature=temperature)
+                      top_k_ratio=top_k_ratio, temperature=temperature,
+                      fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius)
     if not isinstance(seed, int) or isinstance(seed, bool) or not 0 <= seed <= 0xFFFFFFFFFFFFFFFF:
         raise ValueError("seed must be an unsigned 64-bit integer")
     if not prompt_info.matches(positive):
@@ -113,7 +119,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
 
     started = time.perf_counter()
     run_id = uuid.uuid4().hex[:12]
-    report = {"run_id": run_id, "extension_version": "0.1.1", "lora_file_name": Path(lora_path).name,
+    report = {"run_id": run_id, "extension_version": "0.1.2", "lora_file_name": Path(lora_path).name,
               "mask_mode": mask_mode, "seed": seed, "steps": steps,
               "cfg": cfg, "sampler": "euler", "scheduler": "simple", "strength": strength,
               "adapter_groups": {"target": 1, "protected": 0, "background": 0},
@@ -181,12 +187,16 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                 return comfy.sample.sample(patcher, n, steps, cfg, "euler", "simple", positive, negative, x,
                                            sigmas=schedule, seed=seed)
 
+            def make_masks(maps):
+                return postprocess_masks(generate_masks(maps, grid), max_hole_area=fill_holes_max_area,
+                                         dilate_radius=mask_dilate_radius)
+
             with torch.inference_mode():
                 if mask_mode == "auto":
                     samples, bank = run_phases(sample, noise, image, sigmas, collect_step, collector, state,
-                                               lambda maps: generate_masks(maps, grid))
+                                               make_masks)
                 else:
-                    bank = manual_masks(subjects[0].manual_mask, subjects[1].manual_mask, grid)
+                    bank = postprocess_masks(manual_masks(subjects[0].manual_mask, subjects[1].manual_mask, grid))
                     state.mask = bank["masks"]["target"]; state.phase = "route"
                     samples = sample(noise.clone(), image.clone(), sigmas)
             report["reached_modules"] = len(state.reached)
@@ -195,9 +205,12 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
             report["lora_linear_calls"] = state.calls
             report["observation"] = collector.observation if mask_mode == "auto" else None
             bank["masks"] = {k: v.detach().cpu() for k, v in bank["masks"].items()}
+            bank["original_masks"] = {k: v.detach().cpu() for k, v in bank["original_masks"].items()}
+            bank["added_target_mask"] = bank["added_target_mask"].detach().cpu()
             report["masks"] = bank["diagnostics"]
             report["raw_maps_available"] = bool(bank.get("raw_maps"))
             report["map_diagnostics"] = bank.get("map_diagnostics")
+            report["mask_postprocess"] = bank["postprocess_diagnostics"]
             result = latent.copy()
             result.pop("downscale_ratio_spacial", None); result.pop("downscale_ratio_temporal", None)
             result["samples"] = samples

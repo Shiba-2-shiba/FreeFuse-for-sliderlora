@@ -59,3 +59,23 @@ def test_controlled_comparisons_share_successful_lora_and_strength(variant):
     api=json.loads((ROOT/f"krea2_female_slider_compare_{variant}_api.json").read_text(encoding="utf-8"))
     settings=next(n["inputs"] for n in api.values() if n["class_type"]=="Krea2SliderFuseSampler")
     assert settings["lora_name"]==sampler["lora_name"] and settings["strength"]==sampler["strength"]
+
+
+@pytest.mark.parametrize("variant,area,radius",[("off",0,0),("fill4",4,0),("fill8",8,0),("fill8_dilate1",8,1)])
+def test_postprocess_workflows_keep_candidate_and_preview_changes(variant,area,radius):
+    path=ROOT/f"krea2_female_slider_postprocess_{variant}.json"
+    graph=json.loads(path.read_text(encoding="utf-8"));api=json.loads(path.with_name(path.stem+"_api.json").read_text(encoding="utf-8"))
+    nodes={n["id"]:n for n in graph["nodes"]}
+    sampler=next(n for n in nodes.values() if n["type"]=="Krea2SliderFuseSampler")
+    settings=sampler["widgets_values_named"]
+    assert settings["strength"]==4. and settings["seed"]==42 and settings["top_k_ratio"]==.2 and settings["temperature"]==10000.
+    assert settings["fill_holes_max_area"]==area and settings["mask_dilate_radius"]==radius
+    assert sampler["widgets_values"][-2:]==[area,radius]
+    assert api[str(sampler["id"])]["inputs"]["fill_holes_max_area"]==area
+    assert api[str(sampler["id"])]["inputs"]["mask_dilate_radius"]==radius
+    preview=next(n for n in nodes.values() if n["type"]=="Krea2SliderFuseMaskPreview")
+    assert [o["name"] for o in preview["outputs"]][-2:]==["original_target_mask","added_target_mask"]
+    assert all(out["links"] for out in preview["outputs"])
+    for ident,source,slot,target,target_slot,kind in graph["links"]:
+        assert kind==nodes[source]["outputs"][slot]["type"]==nodes[target]["inputs"][target_slot]["type"]
+        assert nodes[target]["inputs"][target_slot]["link"]==ident

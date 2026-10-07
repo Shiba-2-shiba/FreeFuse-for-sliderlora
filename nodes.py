@@ -68,7 +68,11 @@ class Krea2SliderFuseSampler(io.ComfyNode):
                     io.Int.Input("collect_step", default=2, min=1, max=100),
                     io.Int.Input("collect_block", default=18, min=0, max=100),
                     io.Float.Input("top_k_ratio", default=.3, min=.001, max=1.),
-                    io.Float.Input("temperature", default=4000., min=.001, max=100000.)],
+                    io.Float.Input("temperature", default=4000., min=.001, max=100000.),
+                    io.Int.Input("fill_holes_max_area", optional=True, default=0, min=0, max=64,
+                                 tooltip="Auto only. Fill enclosed background-only holes up to this token area; 0 disables. Try 8 before dilation."),
+                    io.Int.Input("mask_dilate_radius", optional=True, default=0, min=0, max=1,
+                                 tooltip="Auto only. Expand the largest target component into background only; 1 token is about 16 image pixels for standard Krea2.")],
             outputs=[io.Latent.Output("latent"), MasksType.Output("mask_bank"), io.String.Output("diagnostics")])
 
     @classmethod
@@ -84,13 +88,15 @@ class Krea2SliderFuseSampler(io.ComfyNode):
 
     @classmethod
     def execute(cls, model, positive, negative, prompt_info, subjects, latent, lora_name, strength, seed, steps,
-                cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature):
+                cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
+                fill_holes_max_area=0, mask_dilate_radius=0):
         if not lora_name:
             raise ValueError("Select a trained Krea2 attention-target Slider LoRA in this Sampler")
         path = folder_paths.get_full_path_or_raise("loras", lora_name)
         output, bank, report = sample_krea2(model, positive, negative, prompt_info, subjects, latent, path,
             strength=strength, seed=seed, steps=steps, cfg=cfg, mask_mode=mask_mode, collect_step=collect_step,
-            collect_block=collect_block, top_k_ratio=top_k_ratio, temperature=temperature)
+            collect_block=collect_block, top_k_ratio=top_k_ratio, temperature=temperature,
+            fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius)
         return io.NodeOutput(output, bank, json.dumps(report, ensure_ascii=False, indent=2))
 
 
@@ -98,13 +104,16 @@ class Krea2SliderFuseMaskPreview(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="Krea2SliderFuseMaskPreview", display_name="Krea2 Slider Fuse Mask Preview", category=CATEGORY,
-            description="First 3 outputs are routing masks. Last 2 are independently normalized raw similarity heatmaps, not calibrated confidence or segmentation. Manual mode has no raw maps and returns black for these outputs.",
+            description="Outputs 1-3: routing masks; 4-5: independently normalized raw similarity, not calibrated confidence; 6-7: original target and added area. Manual mode has black similarity maps. Old/no-op banks have original=current target and added=black.",
             inputs=[MasksType.Input("mask_bank")],
             outputs=[io.Mask.Output("target_mask"), io.Mask.Output("protected_mask"), io.Mask.Output("background_mask"),
-                     io.Mask.Output("target_similarity"), io.Mask.Output("protected_similarity")])
+                     io.Mask.Output("target_similarity"), io.Mask.Output("protected_similarity"),
+                     io.Mask.Output("original_target_mask"), io.Mask.Output("added_target_mask")])
 
     @classmethod
     def execute(cls, mask_bank):
         masks = mask_bank["masks"]
         return io.NodeOutput(masks["target"], masks["protected"], masks["background"],
-                             similarity_preview(mask_bank, "target"), similarity_preview(mask_bank, "protected"))
+                             similarity_preview(mask_bank, "target"), similarity_preview(mask_bank, "protected"),
+                             mask_bank.get("original_masks", {}).get("target", masks["target"]),
+                             mask_bank.get("added_target_mask", masks["target"].new_zeros(masks["target"].shape)))
