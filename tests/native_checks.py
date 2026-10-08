@@ -15,6 +15,27 @@ from comfy.patcher_extension import PatcherInjection
 from slider_fuse.attention import AttentionCollector
 from slider_fuse.lora import Adapter, RoutingState, SliderHook
 from slider_fuse.masks import patch_grid
+from slider_fuse.native_pair import NativePairRunner
+from slider_fuse.prediction_mixing import mix_predictions, prediction_mask
+
+
+class NativeProbeModel(nn.Module):
+    """Small native Krea2 core with the Comfy BaseModel boundary used by the runner."""
+    def __init__(self, core):
+        super().__init__()
+        self.diffusion_model = core
+        self.current_patcher = None
+        self.model_config = SimpleNamespace(unet_config={"image_model": "krea2"})
+        self.manual_cast_dtype = None
+    def get_dtype(self):
+        return torch.float32
+    def memory_required(self, input_shape, **kwargs):
+        return 0
+    def extra_conds_shapes(self, **kwargs):
+        return {}
+    def apply_model(self, x, sigma, c_crossattn, **kwargs):
+        return self.diffusion_model(x, sigma, c_crossattn,
+                                    transformer_options=kwargs.get("transformer_options", {}))
 
 
 class NativeChecks(unittest.TestCase):
@@ -110,7 +131,7 @@ class NativeChecks(unittest.TestCase):
         spec=importlib.util.spec_from_file_location("slider_native_extension",root/"__init__.py",submodule_search_locations=[str(root)])
         package=importlib.util.module_from_spec(spec); sys.modules[spec.name]=package; spec.loader.exec_module(package)
         extension=asyncio.run(package.comfy_entrypoint()); nodes=asyncio.run(extension.get_node_list())
-        self.assertEqual(len(nodes),6)
+        self.assertEqual(len(nodes),7)
         for node in nodes:
             schema=node.define_schema(); schema.validate()
             if schema.node_id=="Krea2SliderFuseSampler":
@@ -118,3 +139,65 @@ class NativeChecks(unittest.TestCase):
                 for name in ("fill_holes_max_area","mask_dilate_radius","target_text_scale"):
                     self.assertTrue(inputs[name].optional)
                     self.assertEqual(inputs[name].default,0)
+
+    def native_pair(self):
+        model = NativeProbeModel(self.core)
+        base = ModelPatcher(model, torch.device("cpu"), torch.device("cpu"))
+        key = "diffusion_model.blocks.0.attn.wq.weight"
+        base.add_patches({key: ("diff", (torch.full_like(self.core.blocks[0].attn.wq.weight, .003),))})
+        native = base.clone()
+        native.add_patches({key: ("diff", (torch.full_like(self.core.blocks[0].attn.wq.weight, .007),))})
+        return base, native, NativePairRunner(base, native)
+
+    def predict_pair(self, runner, branch):
+        from comfy.conds import CONDRegular
+        positive = [{"model_conds": {"c_crossattn": CONDRegular(self.context)}, "uuid": "native-probe"}]
+        return runner.predict(branch, self.x, self.sigma, positive=positive, negative=[],
+                              model_options={"transformer_options": {}}, seed=42)
+
+    def close_pair(self, base, runner):
+        import comfy.model_management
+        try:
+            runner.close()
+        finally:
+            comfy.model_management.unload_model_and_clones(base, unload_additional_models=False)
+
+    def test_native_pair_switch_and_restore(self):
+        weight = self.core.blocks[0].attn.wq.weight.detach().clone()
+        base, native, runner = self.native_pair()
+        try:
+            a = self.predict_pair(runner, "base")
+            self.assertIs(base.model.current_patcher, base)
+            b = self.predict_pair(runner, "slider")
+            self.assertIs(base.model.current_patcher, native)
+            c = self.predict_pair(runner, "base")
+            self.assertTrue(torch.equal(a, c))
+            self.assertGreater(float((a-b).abs().max()), 0.)
+        finally:
+            self.close_pair(base, runner)
+        self.assertTrue(torch.equal(self.core.blocks[0].attn.wq.weight, weight))
+        self.assertIsNone(base.model.current_patcher)
+
+    def test_native_pair_prediction_matches_individual_calls(self):
+        base, native, runner = self.native_pair()
+        try:
+            a = self.predict_pair(runner, "base")
+            self.assertTrue(torch.equal(a, base.model.apply_model(self.x, self.sigma, self.context)))
+            b = self.predict_pair(runner, "slider")
+            self.assertTrue(torch.equal(b, native.model.apply_model(self.x, self.sigma, self.context)))
+        finally:
+            self.close_pair(base, runner)
+
+    def test_native_prediction_mix_endpoints_and_partial_mask(self):
+        base, _, runner = self.native_pair()
+        try:
+            a = self.predict_pair(runner, "base"); b = self.predict_pair(runner, "slider")
+            token = torch.zeros(1, 4, 4); token[:, :, :2] = 1.
+            mask = prediction_mask(token, a, patch=2)
+            self.assertTrue(torch.equal(mix_predictions(a, b, torch.zeros_like(mask)), a))
+            self.assertTrue(torch.equal(mix_predictions(a, b, torch.ones_like(mask)), b))
+            mixed = mix_predictions(a, b, mask)
+            self.assertTrue(torch.equal(mixed[..., :4], b[..., :4]))
+            self.assertTrue(torch.equal(mixed[..., 4:], a[..., 4:]))
+        finally:
+            self.close_pair(base, runner)

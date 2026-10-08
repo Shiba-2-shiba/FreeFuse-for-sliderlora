@@ -111,17 +111,10 @@ def run_phases(sample, noise, latent, sigmas, collect_step, collector, state, ma
         state.clear(); collector.reset()
 
 
-def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path, *, strength, seed,
-                 steps, cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
-                 fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0., _diagnostic=None):
-    """Own the clone and reversible native injections for one complete run."""
-    import comfy.model_management
-    import comfy.patcher_extension
-    import comfy.sample
-    import comfy.samplers
+def validate_run_inputs(model, positive, prompt_info, subjects, latent, *, strength, seed, steps, cfg,
+                        mask_mode, collect_step, collect_block, top_k_ratio, temperature,
+                        fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0.):
     from comfy.ldm.krea2.model import SingleStreamDiT
-    from safetensors.torch import load_file
-
     validate_settings(steps=steps, cfg=cfg, strength=strength, mask_mode=mask_mode, collect_step=collect_step,
                       top_k_ratio=top_k_ratio, temperature=temperature,
                       fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius,
@@ -158,6 +151,25 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
     if mask_mode == "auto" and (not isinstance(collect_block, int) or not 0 <= collect_block < len(core.blocks)):
         raise ValueError(f"collect_block must be in 0..{len(core.blocks)-1}")
 
+    return core
+
+
+def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path, *, strength, seed,
+                 steps, cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
+                 fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0., _diagnostic=None):
+    """Own the clone and reversible native injections for one complete run."""
+    import comfy.model_management
+    import comfy.patcher_extension
+    import comfy.sample
+    import comfy.samplers
+    from comfy.ldm.krea2.model import SingleStreamDiT
+    from safetensors.torch import load_file
+
+    core = validate_run_inputs(model, positive, prompt_info, subjects, latent, strength=strength, seed=seed,
+        steps=steps, cfg=cfg, mask_mode=mask_mode, collect_step=collect_step, collect_block=collect_block,
+        top_k_ratio=top_k_ratio, temperature=temperature, fill_holes_max_area=fill_holes_max_area,
+        mask_dilate_radius=mask_dilate_radius, target_text_scale=target_text_scale)
+
     state = RoutingState()
     state.configure_target_text(target_text_scale, subjects[0].positions, subjects[1].positions,
                                 len(prompt_info.token_ids))
@@ -167,7 +179,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
         state.image_scope = _diagnostic["image_scope"]; state.text_scope = _diagnostic["text_scope"]
     started = time.perf_counter()
     run_id = uuid.uuid4().hex[:12]
-    report = {"run_id": run_id, "extension_version": "0.1.3", "lora_file_name": Path(lora_path).name,
+    report = {"run_id": run_id, "extension_version": "0.1.4", "lora_file_name": Path(lora_path).name,
               "mask_mode": mask_mode, "seed": seed, "steps": steps,
               "cfg": cfg, "sampler": "euler", "scheduler": "simple", "strength": strength,
               "adapter_groups": {"target": 1, "protected": 0, "background": 0},
@@ -289,7 +301,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                 audit_report, extra_tensors = recorder.finalize()
                 report.update(audit_report)
                 report.update(implementation_info())
-                report.update(diagnostic_schema_version=2, prediction_space="comfy_cfg1_denoised")
+                report.update(diagnostic_schema_version=2, prediction_space="comfy_cfg1_denoised", patch_size=core.patch)
                 effective_mask = (torch.ones_like(bank["masks"]["target"]) if state.image_scope == "all"
                                   else bank["masks"]["target"].clone())
                 bank["effective_image_mask"] = effective_mask
