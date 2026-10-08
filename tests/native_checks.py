@@ -152,8 +152,9 @@ class NativeChecks(unittest.TestCase):
     def predict_pair(self, runner, branch):
         from comfy.conds import CONDRegular
         positive = [{"model_conds": {"c_crossattn": CONDRegular(self.context)}, "uuid": "native-probe"}]
-        return runner.predict(branch, self.x, self.sigma, positive=positive, negative=[],
-                              model_options={"transformer_options": {}}, seed=42)
+        with torch.inference_mode():
+            return runner.predict(branch, self.x, self.sigma, positive=positive, negative=[],
+                                  model_options={"transformer_options": {}}, seed=42)
 
     def close_pair(self, base, runner):
         import comfy.model_management

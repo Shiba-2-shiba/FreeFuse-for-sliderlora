@@ -188,3 +188,15 @@ def test_pair_inputs_and_returned_values_cannot_be_mutated(pair_environment):
         assert torch.equal(x, torch.ones_like(x))
     finally:
         runner.close()
+
+
+@pytest.mark.parametrize("surface", ["sampler_calc_cond_batch_function", "wrappers", "callbacks"])
+def test_unknown_execution_surfaces_fail_closed(pair_environment, surface):
+    from slider_fuse.native_pair import validate_mix_options
+    base = pair_environment[0]
+    if surface == "sampler_calc_cond_batch_function":
+        base.model_options[surface] = lambda *args: None
+    else:
+        base.model_options["transformer_options"] = {surface: {"CALC_COND_BATCH": [lambda *a: None]}}
+    with pytest.raises(ValueError, match="unsupported"):
+        validate_mix_options(base)

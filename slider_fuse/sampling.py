@@ -302,6 +302,10 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                 extra_tensors.update({"reference_" + k + "_mask": v.detach().cpu().clone()
                                       for k, v in bank["masks"].items()})
                 report.update(audit_report)
+                report["matched_module_names"] = sorted(adapters)
+                if backend == "native":
+                    report["linear_audit"] = None
+                    report["linear_audit_unavailable_reason"] = "native_branch_not_instrumented"
                 report.update(implementation_info())
                 report.update(diagnostic_schema_version=2, prediction_space="comfy_cfg1_denoised", patch_size=core.patch)
                 effective_mask = (torch.ones_like(bank["masks"]["target"]) if state.image_scope == "all"
@@ -340,7 +344,8 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
     if torch.cuda.is_available():
         report["process_cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated()
         report["process_cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved()
-    logging.info("[Krea2SliderFuse] %s", report)
+    logging.info("[Krea2SliderFuse] %s", {k: v for k, v in report.items()
+                 if k not in ("linear_audit", "step_trace")})
     if _diagnostic is not None:
         from .diagnostics import DiagnosticPayload
         return result, bank, DiagnosticPayload(report, recorder.first_prediction,

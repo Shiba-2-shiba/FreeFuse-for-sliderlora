@@ -4,6 +4,7 @@ from torch import nn
 
 from slider_fuse.diagnostics import DiagnosticRecorder
 from slider_fuse.lora import Adapter, RoutingState, SliderHook
+from test_runtime import environment, setup_run, TinyKrea, Block
 
 
 def setup_audit():
@@ -80,3 +81,37 @@ def test_audit_outputs_rng_and_trace_are_independent():
 def test_invalid_level_is_rejected():
     with pytest.raises(ValueError, match="level"):
         DiagnosticRecorder(set(), level="unknown")
+
+
+def test_runtime_audits_every_projection_in_two_blocks_and_steps(environment, tmp_path):
+    from safetensors.torch import load_file, save_file
+    from slider_fuse.sampling import sample_krea2_diagnostic
+    class TwoBlockKrea(TinyKrea):
+        def __init__(self):
+            super().__init__(); self.blocks.append(Block())
+        def forward(self, x, sigma, context):
+            text = self.txtfusion(context)
+            value = torch.cat([text, x[:, :, ::2, ::2].flatten(2).transpose(1, 2)], 1)
+            for block in self.blocks:
+                value = block(value, sigma[:, None].expand(1, 4), None)
+            return value[:, text.shape[1]:].transpose(1, 2).reshape(1, 4, 2, 2)
+    model, positive, info, subjects, file = setup_run(tmp_path)
+    model.model.diffusion_model = TwoBlockKrea()
+    source = load_file(str(file))
+    source.update({k.replace("blocks_0", "blocks_1"): v.clone() for k, v in list(source.items())})
+    file = tmp_path / "two_blocks.safetensors"
+    save_file(source, str(file))
+    _, _, payload = sample_krea2_diagnostic(model, positive, positive, info, subjects,
+        {"samples": torch.zeros(1, 4, 4, 4)}, str(file), backend="hook", image_scope="target_mask",
+        text_scope="none", strength=4., seed=42, steps=2, diagnostic_level="audit")
+    assert payload.report["reached_modules"] == 10
+    assert len(payload.report["linear_audit"]) == 20
+    assert len(payload.report["step_trace"]) == 2
+    assert len(payload.report["adapter_stats"]) == 5
+    assert all(row["image"]["unselected"]["max_abs"] == 0 for row in payload.report["linear_audit"])
+    assert model.model.diffusion_model.txtfusion._forward_hooks == {}
+    from slider_fuse.diagnostics import validate_audit_coverage
+    validate_audit_coverage(payload.report)
+    payload.report["linear_audit"].pop()
+    with pytest.raises(ValueError, match="audit"):
+        validate_audit_coverage(payload.report)

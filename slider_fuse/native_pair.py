@@ -19,7 +19,7 @@ from .diagnostics import (DiagnosticPayload, DiagnosticRecorder, environment_inf
 from .lora import core_guard, load_adapters, RoutingState
 from .masks import manual_masks, patch_grid, postprocess_masks
 from .prediction_mixing import mix_predictions, prediction_mask
-from .sampling import apply_native_slider, tensor_hash, validate_run_inputs
+from .sampling import apply_native_slider, tensor_hash, validate_run_inputs, validate_model_options
 
 
 def _cleanup(*callbacks):
@@ -92,6 +92,17 @@ def _check_runtime_api():
             raise RuntimeError("Unsupported ComfyUI prediction-mix lifecycle API")
     if "latent_shapes" not in inspect.signature(comfy.samplers.CFGGuider.outer_sample).parameters:
         raise RuntimeError("Unsupported ComfyUI CFGGuider outer_sample signature")
+
+
+def validate_mix_options(model):
+    validate_model_options(model.model_options)
+    unsupported = ("sampler_cfg_function", "sampler_post_cfg_function", "sampler_pre_cfg_function",
+                   "sampler_calc_cond_batch_function", "disable_cfg1_optimization", "wrappers", "callbacks")
+    transformer = model.model_options.get("transformer_options", {})
+    if any(model.model_options.get(k) for k in unsupported) or any(transformer.get(k) for k in ("wrappers", "callbacks")):
+        raise ValueError("Custom sampler wrappers/callbacks/CFG processing are unsupported for prediction mixing")
+    if any(callbacks for group in getattr(model, "callbacks", {}).values() for callbacks in group.values()):
+        raise ValueError("Foreign model callbacks are unsupported for prediction mixing")
 
 
 def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, report, mode):
@@ -206,12 +217,7 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
     core = validate_run_inputs(model, positive, prompt_info, subjects, latent, strength=strength, seed=seed,
         steps=steps, cfg=cfg, mask_mode="manual", collect_step=1, collect_block=0,
         top_k_ratio=.3, temperature=4000.)
-    unsupported = ("sampler_cfg_function", "sampler_post_cfg_function", "sampler_pre_cfg_function",
-                   "disable_cfg1_optimization")
-    if any(model.model_options.get(k) for k in unsupported):
-        raise ValueError("Custom CFG processing is unsupported for prediction mixing")
-    if any(callbacks for group in getattr(model, "callbacks", {}).values() for callbacks in group.values()):
-        raise ValueError("Foreign model callbacks are unsupported for prediction mixing")
+    validate_mix_options(model)
     if any(metadata.get("hooks") or metadata.get("control") for _, metadata in positive + negative):
         raise ValueError("Conditioning hooks/ControlNet are unsupported for prediction mixing")
     state = RoutingState()
@@ -268,6 +274,8 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
             guider.set_conds(positive, negative); guider.set_cfg(1.)
             with torch.inference_mode():
                 samples = guider.sample(noise, image, comfy.samplers.sampler_object("euler"), sigmas, seed=seed)
+                samples = samples.to(device=comfy.model_management.intermediate_device(),
+                                     dtype=comfy.model_management.intermediate_dtype())
             extra = guider.finish_report()
             extra.update({"reference_" + k + "_mask": v.detach().cpu().clone()
                           for k, v in bank["masks"].items()})

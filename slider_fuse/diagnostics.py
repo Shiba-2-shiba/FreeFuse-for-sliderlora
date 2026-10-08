@@ -371,6 +371,61 @@ def validate_prefix(prefix, *, flat=False):
         raise ValueError("Unsafe diagnostic filename prefix")
 
 
+def validate_audit_coverage(report):
+    """A complete audit must cover every declared projection and sampler step."""
+    if report.get("diagnostic_schema_version", 1) != 2 or report.get("diagnostic_level") != "audit":
+        return
+    steps = report.get("steps")
+    if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
+        raise ValueError("Invalid audit step count")
+    backend = report.get("backend")
+    if backend not in ("hook", "native", "prediction_mix"):
+        raise ValueError("Unknown audit backend")
+    if backend == "native" and (report.get("linear_audit") or report.get("prediction_mix_audit")):
+        raise ValueError("Native backend has no direct audit instrumentation")
+    if backend == "hook":
+        matched = report.get("matched_modules")
+        rows = report.get("linear_audit")
+        if (isinstance(matched, bool) or not isinstance(matched, int) or matched < 1
+                or not isinstance(rows, list) or len(rows) != steps * matched
+                or report.get("lora_linear_calls") != steps * matched
+                or report.get("reached_modules") != matched):
+            raise ValueError("Incomplete all-layer linear audit coverage")
+        per_step = [set() for _ in range(steps)]
+        for i, row in enumerate(rows):
+            step = row.get("eval_index")
+            module = row.get("module")
+            if (isinstance(step, bool) or not isinstance(step, int) or not 0 <= step < steps
+                    or not isinstance(module, str) or row.get("call_index") != i
+                    or module in per_step[step]):
+                raise ValueError("Duplicate/invalid linear audit step or module")
+            per_step[step].add(module)
+        expected = set(report.get("matched_module_names", per_step[0]))
+        if len(expected) != matched or any(names != expected for names in per_step):
+            raise ValueError("Incomplete per-step linear audit module coverage")
+    elif backend == "prediction_mix":
+        scope = report.get("mix_scope")
+        if scope not in ("none", "target_mask", "all"):
+            raise ValueError("Invalid prediction-mix audit scope")
+        partial = scope == "target_mask" and report.get("strength") != 0
+        slider_only = scope == "all" and report.get("strength") != 0
+        expected_calls = ({"base": steps, "slider": steps} if partial else
+                          {"base": 0, "slider": steps} if slider_only else {"base": steps, "slider": 0})
+        if report.get("sampler_nfe") != steps or report.get("branch_nfe") != expected_calls:
+            raise ValueError("Invalid prediction-mix audit branch coverage")
+        rows = report.get("prediction_mix_audit")
+        if not partial:
+            if rows is not None and (not isinstance(rows, list) or rows):
+                raise ValueError("Endpoint audit cannot measure an unexecuted branch")
+            return
+        if (not isinstance(rows, list) or len(rows) != steps
+                or any(row.get("eval_index") != i for i, row in enumerate(rows))):
+            raise ValueError("Incomplete prediction-mix audit step coverage")
+        for row in rows:
+            if not {"base_excluded", "slider_selected"} <= set(row):
+                raise ValueError("Incomplete prediction-mix audit regions")
+
+
 def save_diagnostic_artifacts(directory, basename, latent, images, payload, prompt, extra_pnginfo, save_node_id):
     from PIL import Image
     from PIL.PngImagePlugin import PngInfo
@@ -379,6 +434,7 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
 
     validate_prefix(basename, flat=True)
     generation = diagnostic_provenance(prompt, save_node_id, payload.report)
+    validate_audit_coverage(payload.report)
     for key, value in (("final_latent", latent), ("first_prediction", payload.first_prediction),
                        ("effective_image_mask", payload.effective_image_mask)):
         if not isinstance(value, torch.Tensor) or not torch.isfinite(value).all():

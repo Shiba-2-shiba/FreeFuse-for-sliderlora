@@ -15,7 +15,7 @@ def load_report(path):
     from PIL import Image
     from safetensors import safe_open
     from safetensors.torch import load_file
-    from slider_fuse.diagnostics import file_hash, validate_prefix
+    from slider_fuse.diagnostics import file_hash, validate_prefix, validate_audit_coverage
     from slider_fuse.sampling import tensor_hash
 
     path = Path(path)
@@ -48,6 +48,7 @@ def load_report(path):
     if schema not in (1, 2):
         raise ValueError("Unsupported diagnostic schema version")
     if schema == 2:
+        validate_audit_coverage(report)
         manifest = report.get("tensor_manifest", {})
         if set(manifest) != set(tensors):
             raise ValueError("Diagnostic tensor manifest keys mismatch")
@@ -70,6 +71,10 @@ def load_report(path):
 
 
 def direct_routing(report):
+    from slider_fuse.diagnostics import validate_audit_coverage
+    validate_audit_coverage(report)
+    if report.get("diagnostic_schema_version", 1) != 2 or report.get("diagnostic_level") != "audit":
+        return {"status": "unavailable", "measured_elements": 0, "violations": [], "note": "Audit not requested or legacy schema"}
     violations = []
     measured = 0
     for row in report.get("linear_audit") or []:
