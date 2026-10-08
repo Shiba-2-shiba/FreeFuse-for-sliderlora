@@ -2,6 +2,8 @@
 
 Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物（初期例は女性）にだけSlider LoRAの差分を適用します。男性もマスク推定に参加しますが、LoRAは持ちません。
 
+**0.1.4 診断実験版:** [全層auditとnative予測混合](docs/prediction-mixing.md)を追加しました。新しいPrediction Mix Samplerは通常LoRAとbaseの予測を二値maskで選び、画像側hookと比較できます。[zero](workflows/krea2_slider_mix_zero.json) → [none](workflows/krea2_slider_mix_none.json) → [all](workflows/krea2_slider_mix_all.json) → [half](workflows/krea2_slider_mix_half.json)の順で実機確認してください。部分maskは1stepに2経路を直列評価します。既存診断Sampler末尾の`diagnostic_level=audit`で全層・全stepの直接差分を保存します。通常Samplerの生成演算は維持し、実INT8/UI/画質の確認は未完了です。
+
 **診断機能:** 通常Loaderと独自LoRAの演算差、画像全面/左半分、文章なし/対象語/全文を分けて比較する診断専用Samplerと保存ノードを追加しました。[実行順・保存結果・比較ツール](docs/diagnostic-parity.md)を参照してください。11条件のUI/API workflowがあります。全面/全文条件は保護対象にも作用します。実INT8・UI・画像品質の評価はユーザーの実機で行います。通常Samplerの入力・既定動作は維持しています。
 
 **0.1.3:** [対象phraseへの文章側LoRA差分](docs/target-text-routing.md)を任意で追加しました。Sampler末尾の`target_text_scale`は既定0で従来動作を維持します。同じ画像側強度・seed・mask条件の[0](workflows/krea2_female_slider_target_text_0.json)・[0.5](workflows/krea2_female_slider_target_text_05.json)・[1](workflows/krea2_female_slider_target_text_1.json)と、[通常全体適用の参照版](workflows/krea2_female_slider_global_reference.json)を用意しました。効果の回復と男性への影響は実機で未確認です。
@@ -79,7 +81,7 @@ python -B tools/validate_comfy.py C:/path/to/ComfyUI
 python -B tools/probe_krea2_slider.py --comfy-root C:/path/to/ComfyUI --model C:/path/to/krea2.safetensors --lora C:/path/to/slider.safetensors
 ```
 
-validatorは実native Krea2の小型CPUモデルとV3 schemaを6件検証します。missing importやskipを合格にしません。probeは実チェックポイントとSliderを読み込み、全キー照合と投影種別ごとの代表層で明示的な差分計算との一致・対象への非ゼロ変化・外側差分・量子化データの保持・forward復元を確認します。ゼロ差分や、反復誤差以下しか変化しない場合は合格にしません。probeの合格も実画像の成功を意味しません。モデル・依存を自動取得する処理はありません。
+validatorは実native Krea2の小型CPUモデルとV3 schemaを10件検証します。missing importやskipを合格にしません。probeは実チェックポイントとSliderを読み込み、全キー照合と投影種別ごとの代表層で明示的な差分計算との一致・対象への非ゼロ変化・外側差分・量子化データの保持・forward復元を確認します。ゼロ差分や、反復誤差以下しか変化しない場合は合格にしません。probeの合格も実画像の成功を意味しません。モデル・依存を自動取得する処理はありません。
 
 生成ログの`[Krea2SliderFuse]`にはrun_id、キー一致/到達数、adapter_groups（1/0/0）、MASK範囲、実sigma/block、Phase 1/2の評価回数、時間、解除状態が出ます。CUDA peakはプロセス全体の値で、このノードがresetした値ではありません。診断文字列もSamplerの出力から取得できます。
 

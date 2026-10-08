@@ -1,0 +1,293 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "lora_name": "krea2_darkbrush.safetensors",
+      "strength_model": 0.8,
+      "model": [
+        "1",
+        0
+      ]
+    }
+  },
+  "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "wen3vl_4b_bf16.safetensors",
+      "type": "krea2",
+      "device": "default"
+    }
+  },
+  "4": {
+    "class_type": "Krea2SliderFuseEncode",
+    "inputs": {
+      "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on the same studio floor, facing the camera. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both entire figures are visible, with space above their heads and below their shoes, at a consistent scale and camera distance. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "clip": [
+        "3",
+        0
+      ]
+    }
+  },
+  "5": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "4",
+        0
+      ]
+    }
+  },
+  "6": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "21",
+        0
+      ],
+      "protected_mask": [
+        "22",
+        0
+      ]
+    }
+  },
+  "7": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "8": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "6",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 0.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit"
+    },
+    "_meta": {
+      "title": "Prediction mix: zero"
+    }
+  },
+  "9": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "10": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    }
+  },
+  "11": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "10",
+        0
+      ],
+      "latent": [
+        "8",
+        0
+      ],
+      "diagnostics": [
+        "8",
+        2
+      ],
+      "filename_prefix": "krea2_slider_mix_zero"
+    }
+  },
+  "12": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "8",
+        1
+      ]
+    }
+  },
+  "13": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        0
+      ]
+    }
+  },
+  "14": {
+    "class_type": "PreviewImage",
+    "inputs": {
+      "images": [
+        "13",
+        0
+      ]
+    }
+  },
+  "15": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        1
+      ]
+    }
+  },
+  "16": {
+    "class_type": "PreviewImage",
+    "inputs": {
+      "images": [
+        "15",
+        0
+      ]
+    }
+  },
+  "17": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        2
+      ]
+    }
+  },
+  "18": {
+    "class_type": "PreviewImage",
+    "inputs": {
+      "images": [
+        "17",
+        0
+      ]
+    }
+  },
+  "19": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 0.0,
+      "width": 1024,
+      "height": 1024
+    }
+  },
+  "20": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "value": 1.0,
+      "width": 512,
+      "height": 1024
+    }
+  },
+  "21": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "x": 0,
+      "y": 0,
+      "operation": "add",
+      "destination": [
+        "19",
+        0
+      ],
+      "source": [
+        "20",
+        0
+      ]
+    }
+  },
+  "22": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "21",
+        0
+      ]
+    }
+  },
+  "23": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        3
+      ]
+    }
+  },
+  "24": {
+    "class_type": "PreviewImage",
+    "inputs": {
+      "images": [
+        "23",
+        0
+      ]
+    }
+  },
+  "25": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        4
+      ]
+    }
+  },
+  "26": {
+    "class_type": "PreviewImage",
+    "inputs": {
+      "images": [
+        "25",
+        0
+      ]
+    }
+  }
+}

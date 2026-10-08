@@ -1,5 +1,9 @@
 # 検証記録
 
+2026-10-08 / **0.1.4 診断実験版**: 全層・全stepの直接差分audit、単一Eulerループのbase/native予測混合Sampler、v2 trace/参照mask保存、軌道を区別する比較CLI、4条件8 workflowを実装。最新CPU suiteは**282件成功、skip0・失敗0（8.50s）**。自作Python42ファイルのAST解析、workflow JSON62ファイル、git diff --checkも成功。独立レビューの2件の高優先指摘（未知実行フックの拒否不足、部分auditを合格にできる不足）を6件の失敗試験と端点の追加3件で再現して修正し、全suiteを再実行した。
+
+native validatorは現在10件。ローカルComfyUI sourceでは`comfy_aimdo.storage`不足によりimportが停止し、0/10件実行。CPU境界doubleの成功をnative/INT8成功としない。ユーザーが実ComfyUI・実GPU生成・UI保存/再読込・画質評価を担当する。[実行順と比較コマンド](prediction-mixing.md)を参照。実機での端点一致・切替費用・人物保護の採用判定は未完了。
+
 2026-10-08 診断機能: 通常Loader相当/nativeと独自hookを比較する診断Sampler、実効mask/初回prediction/最終latent/JSONの保存、比較ツール、11条件22 workflowを追加。独立レビューの3指摘を回帰試験で再現・修正した後、最終全CPU suiteは**237件成功、skip0・失敗0**。Python構文/compile33ファイル、workflow JSON54ファイル、git diff --checkも成功。実INT8/GPU・UI保存/再読込・画像品質はユーザー側で評価するため、この実装作業では未実施です。native validatorは新しい全系列明示式チェックを含む7件を対象に変更しました。実行手順と検証限界は[診断ガイド](diagnostic-parity.md)、作業記録は`.omx/plans/2026-10-08-slider-diagnostic-parity.progress.md`に記載しています。
 
 初期実装: 2026-10-07。実機確認はユーザーがGitHubから取得後に行う。
@@ -10,7 +14,7 @@
 | CPUのマスク・LoRA数値・alpha/rank・正負強度・対象文章行の選択 | ローカルsuiteで確認。文章倍率0では従来のtext差分0を維持 |
 | 二段階noise/latent/sigma再利用、例外復帰、2人物の独立した収集 | ローカルsuiteで確認 |
 | V3 schemaの契約、LoRAファイル変更、JSONリンク/型 | test double・静的検査で確認 |
-| ネイティブComfyUI小型CPU6件 | import前提不足で0件実行。合格ではない |
+| 現行ネイティブComfyUI小型CPU10件 | import前提不足で0/10件実行。合格ではない |
 | ConvRot INT8実モデル・実Sliderのprobe | 未実施 |
 | 実ComfyUI UIの保存/再読込・生成 | ユーザーのmanual/auto生成画像を受領。保存/再読込の検証結果は未受領 |
 | 自動maskと男女の画質・局所性 | manualの効果とautoの顔mask欠落を確認。LoRA/強度不一致のため統制比較は未了 |

@@ -1,5 +1,7 @@
 # 通常LoRAと局所Sliderの診断
 
+0.1.4では末尾optionalの`diagnostic_level=audit`で全層・全stepの直接差分と軌道を保存できます。通常のsummaryと旧workflowは維持します。[native予測混合の実機確認手順](prediction-mixing.md)では、新方式の端点と画像側hookとの比較を説明しています。
+
 manual左半分を使っても全体適用ほど体格が変わらなかったため、通常Loaderとの演算差、画像の適用範囲、文章の適用範囲を分けて調べます。診断ノードは画質改善機能ではありません。実INT8・UI・画像品質の評価はユーザーの実機で行います。
 
 ## 共通条件
