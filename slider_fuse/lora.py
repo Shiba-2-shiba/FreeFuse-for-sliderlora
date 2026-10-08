@@ -149,6 +149,17 @@ class RoutingState:
     expected_text_len: int | None = None
     target_text_calls: int = 0
     _text_index_cache: dict = field(default_factory=dict, repr=False)
+    image_scope: str = "target_mask"
+    text_scope: str = "target_phrase"
+    text_linear_calls: int = 0
+    recorder: object = field(default=None, repr=False)
+
+    def __post_init__(self):
+        self.validate_scopes()
+
+    def validate_scopes(self):
+        if self.image_scope not in ("target_mask", "all") or self.text_scope not in ("none", "target_phrase", "all"):
+            raise ValueError("Invalid diagnostic image/text scope")
 
     def configure_target_text(self, scale, target_positions, protected_positions, text_len):
         validate_target_text_scale(scale)
@@ -160,13 +171,16 @@ class RoutingState:
         self._text_index_cache.clear()
 
     def target_text_indices(self, output):
+        self.validate_scopes()
         if self.cap_len != self.expected_text_len:
             raise ValueError("Runtime text boundary differs from target phrase positions")
         validate_target_text_scale(self.target_text_scale)
         _validate_text_positions(self.target_text_positions, self.protected_text_positions, self.cap_len)
-        if output.device not in self._text_index_cache:
-            self._text_index_cache[output.device] = torch.tensor(self.target_text_positions, device=output.device, dtype=torch.long)
-        return self._text_index_cache[output.device]
+        key = (output.device, self.text_scope)
+        if key not in self._text_index_cache:
+            positions = range(self.cap_len) if self.text_scope == "all" else self.target_text_positions
+            self._text_index_cache[key] = torch.tensor(list(positions), device=output.device, dtype=torch.long)
+        return self._text_index_cache[key]
 
     def image_mask(self, output: torch.Tensor) -> torch.Tensor:
         if self.mask is None or self.cap_len is None or self.cap_len < 1:
@@ -178,12 +192,19 @@ class RoutingState:
             self._mask_cache[key] = self.mask.reshape(1, -1, 1).to(output)
         return self._mask_cache[key]
 
+    def effective_image_mask(self, output: torch.Tensor) -> torch.Tensor:
+        self.validate_scopes()
+        mask = self.image_mask(output)
+        return torch.ones_like(mask) if self.image_scope == "all" else mask
+
     def clear(self):
         self.phase = "off"; self.cap_len = None; self.mask = None
         self._mask_cache.clear()
         self.target_text_scale = 0.
         self.target_text_positions = (); self.protected_text_positions = (); self.expected_text_len = None
         self._text_index_cache.clear()
+        self.image_scope = "target_mask"; self.text_scope = "target_phrase"
+        self.recorder = None
 
 
 class SliderHook:
@@ -217,16 +238,25 @@ class SliderHook:
         if self.state.phase != "route":
             return base
         self.state.reached.add(self.name); self.state.calls += 1
-        mask = self.state.image_mask(base)
+        mask = self.state.effective_image_mask(base)
         if self.strength == 0 or not bool(self.state.mask.any()):
+            if self.state.recorder is not None:
+                self.state.recorder.record_linear(self.name, x, base, base, None, None,
+                                                 self.state, self.adapter, self.strength)
             return base
         cap = self.state.cap_len
         delta = self.adapter.delta(x[:, cap:]).to(base.dtype) * self.strength * mask
         result = base.clone()
         result[:, cap:] = base[:, cap:] + delta
-        if self.state.target_text_scale:
+        text_delta = None
+        if self.state.target_text_scale and self.state.text_scope != "none":
             positions = self.state.target_text_indices(base)
             text_delta = self.adapter.delta(x.index_select(1, positions)).to(base.dtype) * self.strength * self.state.target_text_scale
             result.index_copy_(1, positions, base.index_select(1, positions) + text_delta)
-            self.state.target_text_calls += 1
+            self.state.text_linear_calls += 1
+            if self.state.text_scope == "target_phrase":
+                self.state.target_text_calls += 1
+        if self.state.recorder is not None:
+            self.state.recorder.record_linear(self.name, x, base, result, delta, text_delta,
+                                             self.state, self.adapter, self.strength)
         return result

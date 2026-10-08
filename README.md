@@ -2,6 +2,8 @@
 
 Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物（初期例は女性）にだけSlider LoRAの差分を適用します。男性もマスク推定に参加しますが、LoRAは持ちません。
 
+**診断機能:** 通常Loaderと独自LoRAの演算差、画像全面/左半分、文章なし/対象語/全文を分けて比較する診断専用Samplerと保存ノードを追加しました。[実行順・保存結果・比較ツール](docs/diagnostic-parity.md)を参照してください。11条件のUI/API workflowがあります。全面/全文条件は保護対象にも作用します。実INT8・UI・画像品質の評価はユーザーの実機で行います。通常Samplerの入力・既定動作は維持しています。
+
 **0.1.3:** [対象phraseへの文章側LoRA差分](docs/target-text-routing.md)を任意で追加しました。Sampler末尾の`target_text_scale`は既定0で従来動作を維持します。同じ画像側強度・seed・mask条件の[0](workflows/krea2_female_slider_target_text_0.json)・[0.5](workflows/krea2_female_slider_target_text_05.json)・[1](workflows/krea2_female_slider_target_text_1.json)と、[通常全体適用の参照版](workflows/krea2_female_slider_global_reference.json)を用意しました。効果の回復と男性への影響は実機で未確認です。
 
 **0.1.2:** [保護付き小穴充填と最大成分だけの膨張](docs/mask-postprocessing.md)を追加しました。Sampler末尾の`fill_holes_max_area`/`mask_dilate_radius`は既定0です。最初は[穴埋め8・膨張0の比較版](workflows/krea2_female_slider_postprocess_fill8.json)を、[処理なし](workflows/krea2_female_slider_postprocess_off.json)と比較してください。新後処理の実機画質は未確認です。

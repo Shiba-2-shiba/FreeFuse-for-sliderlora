@@ -25,6 +25,36 @@ from .masks import generate_masks, manual_masks, patch_grid, postprocess_masks, 
 INJECTION_KEY = "krea2_slider_freefuse"
 
 
+def apply_native_slider(model, source, strength, modules):
+    """The exact model-only API called by ComfyUI LoraLoaderModelOnly."""
+    import comfy.sd
+    original_counts = {key: len(value) for key, value in model.patches.items()}
+    patched, _ = comfy.sd.load_lora_for_models(model, None, source, strength, 0.)
+    missing = [name for name in modules if len(patched.patches.get("diffusion_model." + name + ".weight", ()))
+               != original_counts.get("diffusion_model." + name + ".weight", 0) + 1]
+    if missing:
+        raise ValueError(f"Standard Loader did not map all Slider modules: {missing}")
+    return patched
+
+
+def sample_krea2_diagnostic(model, positive, negative, prompt_info, subjects, latent, lora_path, *,
+                           backend, image_scope, text_scope, strength, seed, trial_id=0, steps=8, cfg=1.):
+    from .diagnostics import DiagnosticRecorder
+    RoutingState(image_scope=image_scope, text_scope=text_scope)
+    if backend not in ("native", "hook"):
+        raise ValueError("Diagnostic backend must be native or hook")
+    if backend == "native" and (image_scope != "all" or text_scope != "all"):
+        raise ValueError("native backend requires all image and all text scope")
+    if isinstance(trial_id, bool) or not isinstance(trial_id, int) or trial_id < 0:
+        raise ValueError("trial_id must be a nonnegative integer")
+    diagnostic = {"backend": backend, "image_scope": image_scope, "text_scope": text_scope,
+                  "trial_id": trial_id, "recorder": DiagnosticRecorder(set())}
+    return sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path,
+        strength=strength, seed=seed, steps=steps, cfg=cfg, mask_mode="manual", collect_step=1,
+        collect_block=0, top_k_ratio=.3, temperature=4000.,
+        target_text_scale=0. if text_scope == "none" else 1., _diagnostic=diagnostic)
+
+
 def validate_settings(*, steps, cfg, strength, mask_mode, collect_step, top_k_ratio, temperature,
                       fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0.):
     validate_postprocess_settings(fill_holes_max_area, mask_dilate_radius)
@@ -82,7 +112,7 @@ def run_phases(sample, noise, latent, sigmas, collect_step, collector, state, ma
 
 def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path, *, strength, seed,
                  steps, cfg, mask_mode, collect_step, collect_block, top_k_ratio, temperature,
-                 fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0.):
+                 fill_holes_max_area=0, mask_dilate_radius=0, target_text_scale=0., _diagnostic=None):
     """Own the clone and reversible native injections for one complete run."""
     import comfy.model_management
     import comfy.patcher_extension
@@ -130,6 +160,10 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
     state = RoutingState()
     state.configure_target_text(target_text_scale, subjects[0].positions, subjects[1].positions,
                                 len(prompt_info.token_ids))
+    recorder = _diagnostic["recorder"] if _diagnostic is not None else None
+    backend = _diagnostic["backend"] if _diagnostic is not None else "hook"
+    if _diagnostic is not None:
+        state.image_scope = _diagnostic["image_scope"]; state.text_scope = _diagnostic["text_scope"]
     started = time.perf_counter()
     run_id = uuid.uuid4().hex[:12]
     report = {"run_id": run_id, "extension_version": "0.1.3", "lora_file_name": Path(lora_path).name,
@@ -147,7 +181,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
               "phase1_nfe": 0, "phase2_nfe": 0}
     with core_guard(core):
         patcher = model.clone()
-        hooks = []; collector = None
+        hooks = []; collector = None; adapters = {}
         try:
             adapters = load_adapters(load_file(lora_path, device="cpu"), core)
             modules = {name: core.get_submodule(name) for name in adapters}
@@ -157,7 +191,15 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                     raise ValueError(f"Unsupported base quantization {quant_format!r} at {name}; initial support is floating point or ConvRot/int8_tensorwise")
             report["matched_modules"] = len(adapters)
             report["base_quant_formats"] = sorted({str(getattr(m, "quant_format", None)) for m in modules.values()})
-            hooks = [SliderHook(modules[name], adapter, strength, state, name) for name, adapter in adapters.items()]
+            if backend == "native":
+                if strength:
+                    patcher = apply_native_slider(patcher, load_file(lora_path, device="cpu"), strength, modules)
+            else:
+                hooks = [SliderHook(modules[name], adapter, strength, state, name) for name, adapter in adapters.items()]
+            if recorder is not None and backend == "hook":
+                first_block = min(int(name.split(".")[1]) for name in modules)
+                recorder.selected_modules = {name for name in modules if int(name.split(".")[1]) == first_block}
+                state.recorder = recorder
             image = comfy.sample.fix_empty_latent_channels(patcher, latent["samples"],
                 latent.get("downscale_ratio_spacial"), latent.get("downscale_ratio_temporal"))
             grid = patch_grid(image, core.patch)
@@ -197,7 +239,12 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                     report["phase1_nfe"] += 1
                 elif state.phase == "route":
                     report["phase2_nfe"] += 1
-                return apply_model(args["input"], args["timestep"], **args["c"])
+                if recorder is not None:
+                    recorder.record_inputs(args["input"], context, args["timestep"])
+                prediction = apply_model(args["input"], args["timestep"], **args["c"])
+                if recorder is not None:
+                    recorder.record_prediction(prediction)
+                return prediction
 
             patcher.model_options["model_function_wrapper"] = forward
 
@@ -218,7 +265,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                     state.mask = bank["masks"]["target"]; state.phase = "route"
                     samples = sample(noise.clone(), image.clone(), sigmas)
             report["reached_modules"] = len(state.reached)
-            if set(adapters) != state.reached:
+            if backend == "hook" and set(adapters) != state.reached:
                 raise RuntimeError("Not all matched Slider modules were reached; refusing to report a valid routed run")
             report["lora_linear_calls"] = state.calls
             report["target_text_linear_calls"] = state.target_text_calls
@@ -233,6 +280,29 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
             result = latent.copy()
             result.pop("downscale_ratio_spacial", None); result.pop("downscale_ratio_temporal", None)
             result["samples"] = samples
+            if _diagnostic is not None:
+                from .diagnostics import file_hash, environment_info
+                effective_mask = (torch.ones_like(bank["masks"]["target"]) if state.image_scope == "all"
+                                  else bank["masks"]["target"].clone())
+                bank["effective_image_mask"] = effective_mask
+                report.update({key: _diagnostic[key] for key in ("backend", "image_scope", "text_scope", "trial_id")})
+                report.update(recorder.first_inputs)
+                report.update({"case_id": f"{backend}_{state.image_scope}_{state.text_scope}_s{strength:g}",
+                    "prompt": prompt_info.prompt, "lora_sha256": file_hash(lora_path),
+                    "environment": environment_info(), "text_linear_calls": state.text_linear_calls,
+                    "selected_image_row_count": int(effective_mask.sum()),
+                    "selected_text_row_count": text_len if state.text_scope == "all" else len(subjects[0].positions) if state.text_scope == "target_phrase" else 0,
+                    "protected_text_direct_delta_policy": "enabled" if state.text_scope == "all" and strength else "zero",
+                    "other_text_direct_delta_policy": "enabled" if state.text_scope == "all" and strength else "zero",
+                    "outside_target_direct_delta_policy": "enabled" if state.image_scope == "all" and strength else "zero",
+                    "text_delta_policy": state.text_scope if strength else "zero",
+                    "adapter_stats": recorder.adapter_stats if backend == "hook" else None,
+                    "effective_image_mask_sha256": tensor_hash(effective_mask),
+                    "effective_image_mask_coverage": float(effective_mask.mean()),
+                    "reference_partition_sha256": {name: tensor_hash(mask) for name, mask in bank["masks"].items()},
+                    "first_prediction_sha256": tensor_hash(recorder.first_prediction),
+                    "final_latent_sha256": tensor_hash(samples),
+                    "final_latent_shape": list(samples.shape), "final_latent_dtype": str(samples.dtype)})
         finally:
             try:
                 comfy.model_management.unload_model_and_clones(patcher, unload_additional_models=False)
@@ -241,10 +311,15 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                 if collector is not None:
                     collector.remove(); collector.reset()
                 state.clear()
+                if backend == "native":
+                    for adapter in adapters.values(): adapter.clear()
     report["owned_hooks_removed"] = all(h.original_forward is None for h in hooks) and not collector._handles
     report["elapsed_seconds"] = round(time.perf_counter() - started, 3)
     if torch.cuda.is_available():
         report["process_cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated()
         report["process_cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved()
     logging.info("[Krea2SliderFuse] %s", report)
+    if _diagnostic is not None:
+        from .diagnostics import DiagnosticPayload
+        return result, bank, DiagnosticPayload(report, recorder.first_prediction, effective_mask.detach().cpu().clone())
     return result, bank, report

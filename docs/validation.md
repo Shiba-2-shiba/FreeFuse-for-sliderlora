@@ -1,5 +1,7 @@
 # 検証記録
 
+2026-10-08 診断機能: 通常Loader相当/nativeと独自hookを比較する診断Sampler、実効mask/初回prediction/最終latent/JSONの保存、比較ツール、11条件22 workflowを追加。独立レビューの3指摘を回帰試験で再現・修正した後、最終全CPU suiteは**237件成功、skip0・失敗0**。Python構文/compile33ファイル、workflow JSON54ファイル、git diff --checkも成功。実INT8/GPU・UI保存/再読込・画像品質はユーザー側で評価するため、この実装作業では未実施です。native validatorは新しい全系列明示式チェックを含む7件を対象に変更しました。実行手順と検証限界は[診断ガイド](diagnostic-parity.md)、作業記録は`.omx/plans/2026-10-08-slider-diagnostic-parity.progress.md`に記載しています。
+
 初期実装: 2026-10-07。実機確認はユーザーがGitHubから取得後に行う。
 
 | 項目 | 状態 |

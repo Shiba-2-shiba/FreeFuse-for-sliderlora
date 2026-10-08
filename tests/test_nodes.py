@@ -18,7 +18,8 @@ def nodes(monkeypatch):
         def __init__(self, name): self.name = name
     io = types.SimpleNamespace(ComfyNode=object, Custom=Custom, Schema=lambda **kwargs: types.SimpleNamespace(**kwargs),
         NodeOutput=lambda *args: types.SimpleNamespace(result=args))
-    for name in ("Clip", "Model", "Conditioning", "Latent", "String", "Combo", "Float", "Int", "Mask"):
+    io.Hidden = types.SimpleNamespace(prompt="PROMPT", extra_pnginfo="EXTRA_PNGINFO", unique_id="UNIQUE_ID")
+    for name in ("Clip", "Model", "Conditioning", "Latent", "String", "Combo", "Float", "Int", "Mask", "Image"):
         setattr(io,name,Kind)
     latest = types.ModuleType("comfy_api.latest"); latest.io = io
     monkeypatch.setitem(sys.modules,"comfy_api",types.ModuleType("comfy_api"))

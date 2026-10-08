@@ -18,11 +18,13 @@ from comfy_api.latest import io
 
 from .slider_fuse.conditioning import encode_prompt, make_subjects
 from .slider_fuse.masks import similarity_preview
-from .slider_fuse.sampling import sample_krea2
+from .slider_fuse.sampling import sample_krea2, sample_krea2_diagnostic
+from .slider_fuse.diagnostics import save_diagnostic_artifacts, validate_prefix
 
 PromptType = io.Custom("KREA2_SLIDER_FUSE_PROMPT")
 SubjectsType = io.Custom("KREA2_SLIDER_FUSE_SUBJECTS")
 MasksType = io.Custom("KREA2_SLIDER_FUSE_MASKS")
+DiagnosticsType = io.Custom("KREA2_SLIDER_FUSE_DIAGNOSTICS")
 CATEGORY = "Krea2/Slider FreeFuse"
 
 
@@ -128,3 +130,61 @@ class Krea2SliderFuseMaskPreview(io.ComfyNode):
                              similarity_preview(mask_bank, "target"), similarity_preview(mask_bank, "protected"),
                              mask_bank.get("original_masks", {}).get("target", masks["target"]),
                              mask_bank.get("added_target_mask", masks["target"].new_zeros(masks["target"].shape)))
+
+
+class Krea2SliderFuseDiagnosticSampler(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id="Krea2SliderFuseDiagnosticSampler", display_name="Krea2 Slider Diagnostic Sampler",
+            category=CATEGORY + "/Diagnostics",
+            description="Diagnostic only. All-image/all-text scopes directly affect protected people. Manual reference masks, Euler/simple, CFG1. Change trial_id to remeasure with the same seed.",
+            inputs=[io.Model.Input("model"), io.Conditioning.Input("positive"), io.Conditioning.Input("negative"),
+                PromptType.Input("prompt_info"), SubjectsType.Input("subjects"), io.Latent.Input("latent"),
+                io.Combo.Input("lora_name", options=[""] + folder_paths.get_filename_list("loras")),
+                io.Float.Input("strength", default=4., min=-10., max=10., step=.05),
+                io.Int.Input("seed", default=42, min=0, max=0xFFFFFFFFFFFFFFFF, control_after_generate=True),
+                io.Int.Input("steps", default=8, min=1, max=100), io.Float.Input("cfg", default=1., min=1., max=1.),
+                io.Combo.Input("backend", options=["hook", "native"]),
+                io.Combo.Input("image_scope", options=["target_mask", "all"]),
+                io.Combo.Input("text_scope", options=["none", "target_phrase", "all"]),
+                io.Int.Input("trial_id", default=0, min=0, max=0x7FFFFFFF)],
+            outputs=[io.Latent.Output("latent"), MasksType.Output("mask_bank"), DiagnosticsType.Output("diagnostics")])
+
+    @classmethod
+    def fingerprint_inputs(cls, lora_name, **kwargs):
+        return Krea2SliderFuseSampler.fingerprint_inputs(lora_name=lora_name, **kwargs)
+
+    @classmethod
+    def execute(cls, model, positive, negative, prompt_info, subjects, latent, lora_name, strength, seed, steps,
+                cfg, backend, image_scope, text_scope, trial_id=0):
+        if not lora_name:
+            raise ValueError("Select a Slider for diagnostic evaluation")
+        path = folder_paths.get_full_path_or_raise("loras", lora_name)
+        return io.NodeOutput(*sample_krea2_diagnostic(model, positive, negative, prompt_info, subjects, latent, path,
+            strength=strength, seed=seed, steps=steps, cfg=cfg, backend=backend,
+            image_scope=image_scope, text_scope=text_scope, trial_id=trial_id))
+
+
+class Krea2SliderFuseDiagnosticSave(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id="Krea2SliderFuseDiagnosticSave", display_name="Save Krea2 Slider Diagnostic Result",
+            category=CATEGORY + "/Diagnostics", is_output_node=True,
+            description="Save correlated image, effective mask, first prediction, final latent and JSON report. Connect one diagnostic Sampler and its VAEDecode.",
+            inputs=[io.Image.Input("images"), io.Latent.Input("latent"), DiagnosticsType.Input("diagnostics"),
+                    io.String.Input("filename_prefix", default="krea2_slider_diag")], outputs=[],
+            hidden=[io.Hidden.prompt, io.Hidden.extra_pnginfo, io.Hidden.unique_id])
+
+    @classmethod
+    def execute(cls, images, latent, diagnostics, filename_prefix):
+        validate_prefix(filename_prefix)
+        output_dir = Path(folder_paths.get_output_directory()).resolve()
+        folder, filename, counter, subfolder, _ = folder_paths.get_save_image_path(
+            filename_prefix, str(output_dir), images.shape[2], images.shape[1])
+        if not Path(folder).resolve().is_relative_to(output_dir):
+            raise ValueError("Diagnostic output must stay within ComfyUI output directory")
+        basename = f"{filename}_s{diagnostics.report['seed']}_{counter:05}_"
+        report = save_diagnostic_artifacts(folder, basename, latent["samples"], images, diagnostics,
+            cls.hidden.prompt, cls.hidden.extra_pnginfo, cls.hidden.unique_id)
+        return io.NodeOutput(ui={"images": [{"filename": report["artifacts"]["image"],
+                                            "subfolder": subfolder, "type": "output"}]})

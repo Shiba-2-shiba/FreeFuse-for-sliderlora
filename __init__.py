@@ -10,10 +10,12 @@ See LICENSE, NOTICE and THIRD_PARTY_NOTICES.md for licensing and attribution.
 
 async def comfy_entrypoint():
     from comfy_api.latest import ComfyExtension
-    from .nodes import Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler, Krea2SliderFuseMaskPreview
+    from .nodes import (Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler,
+                        Krea2SliderFuseMaskPreview, Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave)
 
     class SliderFreeFuseExtension(ComfyExtension):
         async def get_node_list(self):
-            return [Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler, Krea2SliderFuseMaskPreview]
+            return [Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler, Krea2SliderFuseMaskPreview,
+                    Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave]
 
     return SliderFreeFuseExtension()

@@ -23,10 +23,10 @@ def main():
         spec = importlib.util.spec_from_file_location("slider_native_checks", path)
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
         suite = unittest.defaultTestLoader.loadTestsFromModule(module)
-        if suite.countTestCases() != 6:
-            raise RuntimeError(f"Expected 6 native tests, collected {suite.countTestCases()}")
+        if suite.countTestCases() != 7:
+            raise RuntimeError(f"Expected 7 native tests, collected {suite.countTestCases()}")
         result = unittest.TextTestRunner(verbosity=2).run(suite)
-        passed = result.wasSuccessful() and result.testsRun == 6 and not result.skipped
+        passed = result.wasSuccessful() and result.testsRun == 7 and not result.skipped
         report.update(status="passed" if passed else "failed", tests_run=result.testsRun, skipped=len(result.skipped))
     except Exception as error:
         passed = False

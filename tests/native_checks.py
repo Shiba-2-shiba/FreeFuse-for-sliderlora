@@ -85,12 +85,32 @@ class NativeChecks(unittest.TestCase):
         finally: clone.eject_model()
         self.assertEqual(module.forward,original)
 
+    def test_full_sequence_hook_matches_fp32_merged_native_linear(self):
+        module = self.core.blocks[0].attn.wq
+        x = torch.randn(1, 19, 64)
+        adapter = Adapter(torch.randn(2, 64) * .01, torch.randn(64, 2) * .01, 2.)
+        before = module.weight.detach().clone()
+        state = RoutingState(phase="route", cap_len=3, mask=torch.ones(1, 4, 4),
+                             image_scope="all", text_scope="all")
+        state.configure_target_text(1., (0,), (1,), 3)
+        hook = SliderHook(module, adapter, 4., state, "blocks.0.attn.wq")
+        hook.inject()
+        try:
+            routed = module(x)
+        finally:
+            hook.eject()
+        try:
+            with torch.no_grad(): module.weight.add_((adapter.up @ adapter.down) * adapter.scale * 4.)
+            torch.testing.assert_close(module(x), routed, rtol=1e-5, atol=1e-6)
+        finally:
+            with torch.no_grad(): module.weight.copy_(before)
+
     def test_v3_entrypoint_and_schema_registration(self):
         root=Path(__file__).parents[1]
         spec=importlib.util.spec_from_file_location("slider_native_extension",root/"__init__.py",submodule_search_locations=[str(root)])
         package=importlib.util.module_from_spec(spec); sys.modules[spec.name]=package; spec.loader.exec_module(package)
         extension=asyncio.run(package.comfy_entrypoint()); nodes=asyncio.run(extension.get_node_list())
-        self.assertEqual(len(nodes),4)
+        self.assertEqual(len(nodes),6)
         for node in nodes:
             schema=node.define_schema(); schema.validate()
             if schema.node_id=="Krea2SliderFuseSampler":
