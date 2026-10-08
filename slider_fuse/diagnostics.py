@@ -13,6 +13,8 @@ import uuid
 
 import torch
 
+DIAGNOSTIC_SAMPLERS = ("Krea2SliderFuseDiagnosticSampler", "Krea2SliderFusePredictionMixSampler")
+
 
 @dataclass
 class DiagnosticPayload:
@@ -262,7 +264,8 @@ def linked_node(prompt, node_id, field, expected_type=None, slot=0):
         if not isinstance(link, list) or len(link) != 2 or link[1] != slot:
             raise ValueError(f"Unsupported link {node_id}.{field}")
         ident = str(link[0]); node = prompt[ident]
-        if expected_type is not None and node["class_type"] != expected_type:
+        allowed = (expected_type,) if isinstance(expected_type, str) else expected_type
+        if allowed is not None and node["class_type"] not in allowed:
             raise ValueError(f"Expected {expected_type} at {node_id}.{field}")
         return ident, node["inputs"]
     except (KeyError, TypeError, IndexError) as error:
@@ -273,8 +276,8 @@ def generation_config(prompt, sampler_id, vae_id, *, standard_case=None):
     """Trace only the documented evaluation graphs, never search for a loader."""
     try:
         sampler = prompt[str(sampler_id)]
-        expected = "KSampler" if standard_case else "Krea2SliderFuseDiagnosticSampler"
-        if sampler["class_type"] != expected:
+        expected = ("KSampler",) if standard_case else DIAGNOSTIC_SAMPLERS
+        if sampler["class_type"] not in expected:
             raise ValueError(f"Expected {expected}")
         s = sampler["inputs"]
         encode_id, encode = linked_node(prompt, sampler_id, "positive", "Krea2SliderFuseEncode")
@@ -335,16 +338,23 @@ def diagnostic_provenance(prompt, save_node_id, report):
     try:
         if prompt[str(save_node_id)]["class_type"] != "Krea2SliderFuseDiagnosticSave":
             raise ValueError("Expected diagnostic Save node")
-        sampler_id, settings = linked_node(prompt, save_node_id, "latent", "Krea2SliderFuseDiagnosticSampler")
-        diagnostic_id, _ = linked_node(prompt, save_node_id, "diagnostics", "Krea2SliderFuseDiagnosticSampler", slot=2)
+        sampler_id, settings = linked_node(prompt, save_node_id, "latent", DIAGNOSTIC_SAMPLERS)
+        diagnostic_id, _ = linked_node(prompt, save_node_id, "diagnostics", DIAGNOSTIC_SAMPLERS, slot=2)
         decode_id, _ = linked_node(prompt, save_node_id, "images", "VAEDecode")
-        decoded_sampler_id, _ = linked_node(prompt, decode_id, "samples", "Krea2SliderFuseDiagnosticSampler")
+        decoded_sampler_id, _ = linked_node(prompt, decode_id, "samples", DIAGNOSTIC_SAMPLERS)
         if diagnostic_id != sampler_id or decoded_sampler_id != sampler_id:
             raise ValueError("Images, latent and diagnostics must use the same Sampler")
         vae_id, _ = linked_node(prompt, decode_id, "vae", "VAELoader")
         generation = generation_config(prompt, sampler_id, vae_id)
-        for key in ("backend", "image_scope", "text_scope", "strength", "seed", "steps", "cfg", "trial_id"):
+        mix = prompt[sampler_id]["class_type"] == "Krea2SliderFusePredictionMixSampler"
+        if mix and report["backend"] != "prediction_mix":
+            raise ValueError("Prediction mix backend mismatch")
+        keys = (("mix_scope",) if mix else ("backend", "image_scope", "text_scope"))
+        for key in keys + ("strength", "seed", "steps", "cfg", "trial_id"):
             if settings[key] != report[key]: raise ValueError(f"Diagnostic provenance mismatch: {key}")
+        default_level = "audit" if mix else "summary"
+        if settings.get("diagnostic_level", default_level) != report.get("diagnostic_level", default_level):
+            raise ValueError("Diagnostic level provenance mismatch")
         if generation["prompt"] != report["prompt"]:
             raise ValueError("Diagnostic prompt mismatch")
         return generation
@@ -382,6 +392,31 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
         raise ValueError("Expected a binary effective image mask")
     # Validate JSON before creating files. Tensors stay in the dedicated payload.
     json.dumps(payload.report, allow_nan=False)
+    stored_tensors = {"final_latent": latent.detach().cpu().contiguous(),
+                      "first_prediction": payload.first_prediction.detach().cpu().contiguous()}
+    allowed = {"trace_inputs", "trace_predictions", "trace_sigmas",
+               "trace_base_predictions", "trace_slider_predictions"}
+    for key, value in payload.extra_tensors.items():
+        if key not in allowed or not isinstance(value, torch.Tensor) or not torch.isfinite(value).all():
+            raise ValueError(f"Invalid diagnostic trace tensor: {key}")
+        expected = ((payload.report["steps"],) if key == "trace_sigmas" else
+                    (payload.report["steps"],) + tuple(payload.first_prediction.shape))
+        if tuple(value.shape) != expected:
+            raise ValueError(f"Diagnostic trace dimensions mismatch: {key}")
+        stored_tensors[key] = value.detach().cpu().contiguous()
+    if payload.extra_tensors:
+        if not {"trace_inputs", "trace_predictions", "trace_sigmas"} <= set(payload.extra_tensors):
+            raise ValueError("Incomplete diagnostic step trace")
+        rows = payload.report.get("step_trace")
+        if not isinstance(rows, list) or len(rows) != payload.report["steps"]:
+            raise ValueError("Incomplete diagnostic step manifest")
+        for i, row in enumerate(rows):
+            if (row["eval_index"] != i or row["input_sha256"] != tensor_hash(stored_tensors["trace_inputs"][i])
+                    or row["prediction_sha256"] != tensor_hash(stored_tensors["trace_predictions"][i])
+                    or row["sigma"] != float(stored_tensors["trace_sigmas"][i])):
+                raise ValueError("Diagnostic trace hash or sigma mismatch")
+        if not torch.equal(stored_tensors["trace_predictions"][0], payload.first_prediction):
+            raise ValueError("First prediction does not match trace")
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     counter = 0
@@ -400,6 +435,9 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
     artifact_id = uuid.uuid4().hex
     report = dict(payload.report, artifact_id=artifact_id, artifacts=names, generation=generation,
                   complete=True, provenance_level="diagnostic_run")
+    if report.get("diagnostic_schema_version") == 2:
+        report["tensor_manifest"] = {k: {"sha256": tensor_hash(v), "shape": list(v.shape), "dtype": str(v.dtype)}
+                                     for k, v in stored_tensors.items()}
     temporary = []
     try:
         metadata = PngInfo()
@@ -418,8 +456,7 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
             os.replace(temp, directory / names[kind])
         temp = directory / (names["tensors"] + ".tmp")
         temporary.append(temp)
-        save_file({"final_latent": latent.detach().cpu().contiguous(),
-                   "first_prediction": payload.first_prediction.detach().cpu().contiguous()}, str(temp),
+        save_file(stored_tensors, str(temp),
                   metadata={"artifact_id": artifact_id, "run_id": report["run_id"]})
         os.replace(temp, directory / names["tensors"])
         report["artifact_sha256"] = {key: file_hash(directory / name) for key, name in names.items() if key != "report"}

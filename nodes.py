@@ -1,4 +1,4 @@
-"""Four ComfyUI V3 nodes for Krea2 target-only Slider LoRA.
+"""ComfyUI V3 nodes for Krea2 target-only Slider LoRA and diagnostics.
 
 SPDX-License-Identifier: Apache-2.0
 V3 node layout is adapted from FreeFuse-for-anima nodes.py at
@@ -20,6 +20,7 @@ from .slider_fuse.conditioning import encode_prompt, make_subjects
 from .slider_fuse.masks import similarity_preview
 from .slider_fuse.sampling import sample_krea2, sample_krea2_diagnostic
 from .slider_fuse.diagnostics import save_diagnostic_artifacts, validate_prefix
+from .slider_fuse.native_pair import sample_krea2_prediction_mix
 
 PromptType = io.Custom("KREA2_SLIDER_FUSE_PROMPT")
 SubjectsType = io.Custom("KREA2_SLIDER_FUSE_SUBJECTS")
@@ -147,7 +148,8 @@ class Krea2SliderFuseDiagnosticSampler(io.ComfyNode):
                 io.Combo.Input("backend", options=["hook", "native"]),
                 io.Combo.Input("image_scope", options=["target_mask", "all"]),
                 io.Combo.Input("text_scope", options=["none", "target_phrase", "all"]),
-                io.Int.Input("trial_id", default=0, min=0, max=0x7FFFFFFF)],
+                io.Int.Input("trial_id", default=0, min=0, max=0x7FFFFFFF),
+                io.Combo.Input("diagnostic_level", options=["summary", "audit"], optional=True, default="summary")],
             outputs=[io.Latent.Output("latent"), MasksType.Output("mask_bank"), DiagnosticsType.Output("diagnostics")])
 
     @classmethod
@@ -156,13 +158,45 @@ class Krea2SliderFuseDiagnosticSampler(io.ComfyNode):
 
     @classmethod
     def execute(cls, model, positive, negative, prompt_info, subjects, latent, lora_name, strength, seed, steps,
-                cfg, backend, image_scope, text_scope, trial_id=0):
+                cfg, backend, image_scope, text_scope, trial_id=0, diagnostic_level="summary"):
         if not lora_name:
             raise ValueError("Select a Slider for diagnostic evaluation")
         path = folder_paths.get_full_path_or_raise("loras", lora_name)
         return io.NodeOutput(*sample_krea2_diagnostic(model, positive, negative, prompt_info, subjects, latent, path,
             strength=strength, seed=seed, steps=steps, cfg=cfg, backend=backend,
-            image_scope=image_scope, text_scope=text_scope, trial_id=trial_id))
+            image_scope=image_scope, text_scope=text_scope, trial_id=trial_id, diagnostic_level=diagnostic_level))
+
+
+class Krea2SliderFusePredictionMixSampler(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id="Krea2SliderFusePredictionMixSampler",
+            display_name="Krea2 Slider Prediction Mix Sampler", category=CATEGORY + "/Diagnostics",
+            description="Experimental. Select native Slider predictions inside a manual mask and base predictions outside. Partial masks require two serial model evaluations per step and model switching. Protected pixels are not frozen. Change trial_id to remeasure.",
+            inputs=[io.Model.Input("model"), io.Conditioning.Input("positive"), io.Conditioning.Input("negative"),
+                PromptType.Input("prompt_info"), SubjectsType.Input("subjects"), io.Latent.Input("latent"),
+                io.Combo.Input("lora_name", options=[""] + folder_paths.get_filename_list("loras")),
+                io.Float.Input("strength", default=4., min=-10., max=10., step=.05),
+                io.Int.Input("seed", default=42, min=0, max=0xFFFFFFFFFFFFFFFF, control_after_generate=True),
+                io.Int.Input("steps", default=8, min=1, max=100), io.Float.Input("cfg", default=1., min=1., max=1.),
+                io.Combo.Input("mix_scope", options=["target_mask", "none", "all"]),
+                io.Int.Input("trial_id", default=0, min=0, max=0x7FFFFFFF),
+                io.Combo.Input("diagnostic_level", options=["audit", "summary"], default="audit")],
+            outputs=[io.Latent.Output("latent"), MasksType.Output("mask_bank"), DiagnosticsType.Output("diagnostics")])
+
+    @classmethod
+    def fingerprint_inputs(cls, lora_name, **kwargs):
+        return Krea2SliderFuseSampler.fingerprint_inputs(lora_name=lora_name, **kwargs)
+
+    @classmethod
+    def execute(cls, model, positive, negative, prompt_info, subjects, latent, lora_name, strength, seed,
+                steps, cfg, mix_scope, trial_id=0, diagnostic_level="audit"):
+        if not lora_name:
+            raise ValueError("Select a Slider for prediction mixing")
+        path = folder_paths.get_full_path_or_raise("loras", lora_name)
+        return io.NodeOutput(*sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects,
+            latent, path, strength=strength, seed=seed, steps=steps, cfg=cfg, mix_scope=mix_scope,
+            trial_id=trial_id, diagnostic_level=diagnostic_level))
 
 
 class Krea2SliderFuseDiagnosticSave(io.ComfyNode):
