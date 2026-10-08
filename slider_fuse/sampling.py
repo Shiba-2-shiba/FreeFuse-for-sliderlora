@@ -38,7 +38,8 @@ def apply_native_slider(model, source, strength, modules):
 
 
 def sample_krea2_diagnostic(model, positive, negative, prompt_info, subjects, latent, lora_path, *,
-                           backend, image_scope, text_scope, strength, seed, trial_id=0, steps=8, cfg=1.):
+                           backend, image_scope, text_scope, strength, seed, trial_id=0, steps=8, cfg=1.,
+                           diagnostic_level="summary"):
     from .diagnostics import DiagnosticRecorder
     RoutingState(image_scope=image_scope, text_scope=text_scope)
     if backend not in ("native", "hook"):
@@ -48,7 +49,7 @@ def sample_krea2_diagnostic(model, positive, negative, prompt_info, subjects, la
     if isinstance(trial_id, bool) or not isinstance(trial_id, int) or trial_id < 0:
         raise ValueError("trial_id must be a nonnegative integer")
     diagnostic = {"backend": backend, "image_scope": image_scope, "text_scope": text_scope,
-                  "trial_id": trial_id, "recorder": DiagnosticRecorder(set())}
+                  "trial_id": trial_id, "recorder": DiagnosticRecorder(set(), level=diagnostic_level)}
     return sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_path,
         strength=strength, seed=seed, steps=steps, cfg=cfg, mask_mode="manual", collect_step=1,
         collect_block=0, top_k_ratio=.3, temperature=4000.,
@@ -240,10 +241,12 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                 elif state.phase == "route":
                     report["phase2_nfe"] += 1
                 if recorder is not None:
+                    recorder.begin_step(report["phase2_nfe"] - 1, args["timestep"])
                     recorder.record_inputs(args["input"], context, args["timestep"])
                 prediction = apply_model(args["input"], args["timestep"], **args["c"])
                 if recorder is not None:
                     recorder.record_prediction(prediction)
+                    recorder.record_step(prediction, args["input"], args["timestep"])
                 return prediction
 
             patcher.model_options["model_function_wrapper"] = forward
@@ -263,6 +266,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
                 else:
                     bank = postprocess_masks(manual_masks(subjects[0].manual_mask, subjects[1].manual_mask, grid))
                     state.mask = bank["masks"]["target"]; state.phase = "route"
+                    state.audit_partition = bank["masks"]
                     samples = sample(noise.clone(), image.clone(), sigmas)
             report["reached_modules"] = len(state.reached)
             if backend == "hook" and set(adapters) != state.reached:
@@ -281,7 +285,11 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
             result.pop("downscale_ratio_spacial", None); result.pop("downscale_ratio_temporal", None)
             result["samples"] = samples
             if _diagnostic is not None:
-                from .diagnostics import file_hash, environment_info
+                from .diagnostics import file_hash, environment_info, implementation_info
+                audit_report, extra_tensors = recorder.finalize()
+                report.update(audit_report)
+                report.update(implementation_info())
+                report.update(diagnostic_schema_version=2, prediction_space="comfy_cfg1_denoised")
                 effective_mask = (torch.ones_like(bank["masks"]["target"]) if state.image_scope == "all"
                                   else bank["masks"]["target"].clone())
                 bank["effective_image_mask"] = effective_mask
@@ -321,5 +329,6 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
     logging.info("[Krea2SliderFuse] %s", report)
     if _diagnostic is not None:
         from .diagnostics import DiagnosticPayload
-        return result, bank, DiagnosticPayload(report, recorder.first_prediction, effective_mask.detach().cpu().clone())
+        return result, bank, DiagnosticPayload(report, recorder.first_prediction,
+            effective_mask.detach().cpu().clone(), extra_tensors)
     return result, bank, report

@@ -1,7 +1,7 @@
 """Opt-in measurement and portable diagnostic artifacts; no ComfyUI import."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 import math
@@ -19,6 +19,49 @@ class DiagnosticPayload:
     report: dict
     first_prediction: torch.Tensor
     effective_image_mask: torch.Tensor
+    extra_tensors: dict[str, torch.Tensor] = field(default_factory=dict)
+
+
+def implementation_info():
+    root = Path(__file__).resolve().parents[1]
+    try:
+        revision = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"],
+                                           text=True, stderr=subprocess.DEVNULL).strip()
+        dirty = bool(subprocess.check_output(["git", "-C", str(root), "status", "--porcelain"],
+                                             text=True, stderr=subprocess.DEVNULL).strip())
+    except (OSError, subprocess.CalledProcessError):
+        revision, dirty = None, None
+    # The source digest also distinguishes local edits sharing the same HEAD.
+    digest = hashlib.sha256()
+    for path in sorted((root / "slider_fuse").glob("*.py")):
+        digest.update(path.name.encode()); digest.update(path.read_bytes())
+    return {"implementation_revision": revision, "implementation_dirty": dirty,
+            "implementation_source_sha256": digest.hexdigest()}
+
+
+def region_measurement(reference, output, selection, computed=None):
+    """GPU scalar reductions; serialization is deferred to finalize()."""
+    a = reference.detach().float()[selection]
+    b = output.detach().float()[selection]
+    delta = b - a
+    c = torch.zeros_like(a) if computed is None else computed.detach().float()[selection]
+    finite = torch.isfinite(a) & torch.isfinite(b) & torch.isfinite(c)
+    clean = torch.where(finite, delta, 0.)
+    clean_c = torch.where(finite, c, 0.)
+    return torch.stack([delta.new_tensor(a.numel()), (~finite).sum(), clean.square().sum(),
+                        clean.abs().max() if clean.numel() else delta.new_zeros(()),
+                        (delta != 0).sum(), clean_c.square().sum(),
+                        ((c != 0) & (delta == 0)).sum()])
+
+
+def serialize_measurement(values):
+    count, nonfinite, squared, maximum, changed, computed_squared, dropped = values
+    return {"element_count": int(count), "nonfinite_count": int(nonfinite),
+            "rms": math.sqrt(squared / count) if count else None,
+            "max_abs": maximum if count else None, "changed_elements": int(changed),
+            "computed_delta_rms": math.sqrt(computed_squared / count) if count else None,
+            "rounded_away_elements": int(dropped),
+            "unavailable_reason": None if count else "empty region"}
 
 
 def file_hash(path) -> str:
@@ -62,12 +105,83 @@ def environment_info():
 
 
 class DiagnosticRecorder:
-    def __init__(self, selected_modules):
+    def __init__(self, selected_modules, *, level="summary"):
+        if level not in ("summary", "audit"):
+            raise ValueError("Diagnostic level must be summary or audit")
+        self.level = level
         self.selected_modules = set(selected_modules)
         self.adapter_stats = []
         self._seen = set()
         self.first_prediction = None
         self.first_inputs = {}
+        self.linear_audit = []
+        self.step_trace = []
+        self._trace_inputs = []; self._trace_predictions = []; self._trace_sigmas = []
+        self._eval_index = None; self._sigma = None
+
+    def begin_step(self, eval_index, sigma):
+        self._eval_index = eval_index
+        self._sigma = float(sigma.detach().cpu().reshape(-1)[0]) if self.level == "audit" else None
+
+    def record_step(self, prediction, latent_input, sigma):
+        if self.level != "audit":
+            return
+        from .sampling import tensor_hash
+        if any(not torch.isfinite(v).all() for v in (prediction, latent_input, sigma)):
+            raise ValueError("Non-finite diagnostic step")
+        self.step_trace.append({"eval_index": self._eval_index, "sigma": self._sigma,
+            "input_sha256": tensor_hash(latent_input), "prediction_sha256": tensor_hash(prediction)})
+        self._trace_inputs.append(latent_input.detach().cpu().clone())
+        self._trace_predictions.append(prediction.detach().cpu().clone())
+        self._trace_sigmas.append(sigma.detach().cpu().reshape(-1)[0].clone())
+
+    def finalize(self):
+        rows = []
+        if self.linear_audit:
+            measures = [v for row in self.linear_audit for section in ("image", "text")
+                        for v in row[section].values()]
+            values = torch.stack(measures).detach().cpu().double().tolist()
+            iterator = iter(values)
+            for row in self.linear_audit:
+                rows.append(dict(row, **{section: {name: serialize_measurement(next(iterator))
+                    for name in row[section]} for section in ("image", "text")}))
+        tensors = {}
+        if self._trace_inputs:
+            tensors = {"trace_inputs": torch.stack(self._trace_inputs),
+                       "trace_predictions": torch.stack(self._trace_predictions),
+                       "trace_sigmas": torch.stack(self._trace_sigmas)}
+        return {"diagnostic_level": self.level, "linear_audit": rows if self.level == "audit" else None,
+                "step_trace": self.step_trace if self.level == "audit" else None}, tensors
+
+    def _audit_linear(self, name, base, result, image_delta, text_delta, state):
+        cap = state.cap_len
+        selection = state.effective_image_mask(base).squeeze(-1).bool()
+        if state.audit_partition is None:
+            raise ValueError("Linear audit requires a reference partition")
+        if base.device not in state._audit_partition_cache:
+            state._audit_partition_cache[base.device] = {
+                k: v.reshape(1, -1).to(device=base.device, dtype=torch.bool)
+                for k, v in state.audit_partition.items()}
+        image_regions = dict(state._audit_partition_cache[base.device], unselected=~selection,
+                             selected=selection)
+        target = torch.zeros(base.shape[:2], device=base.device, dtype=torch.bool)[:, :cap]
+        protected = torch.zeros_like(target)
+        target[:, list(state.target_text_positions)] = True
+        protected[:, list(state.protected_text_positions)] = True
+        selected = torch.zeros_like(target)
+        if state.text_scope != "none" and state.target_text_scale:
+            selected[:, state.target_text_indices(base)] = True
+        full_delta = torch.zeros_like(base[:, :cap])
+        if text_delta is not None:
+            full_delta.index_copy_(1, state.target_text_indices(base), text_delta)
+        self.linear_audit.append({"eval_index": self._eval_index, "sigma": self._sigma,
+            "module": name, "call_index": len(self.linear_audit),
+            "image": {k: region_measurement(base[:, cap:], result[:, cap:], v, image_delta)
+                      for k, v in image_regions.items()},
+            "text": {k: region_measurement(base[:, :cap], result[:, :cap], v, full_delta)
+                     for k, v in {"target_phrase": target, "protected_phrase": protected,
+                                  "other": ~(target | protected), "selected": selected,
+                                  "unselected": ~selected}.items()}})
 
     def record_inputs(self, image, context, timestep):
         if self.first_inputs:
@@ -84,6 +198,8 @@ class DiagnosticRecorder:
             self.first_prediction = prediction.detach().cpu().clone()
 
     def record_linear(self, name, x, base, result, image_delta, text_delta, state, adapter, strength):
+        if self.level == "audit":
+            self._audit_linear(name, base, result, image_delta, text_delta, state)
         if name not in self.selected_modules or name in self._seen:
             return
         self._seen.add(name)

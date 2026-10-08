@@ -153,6 +153,8 @@ class RoutingState:
     text_scope: str = "target_phrase"
     text_linear_calls: int = 0
     recorder: object = field(default=None, repr=False)
+    audit_partition: dict[str, torch.Tensor] | None = field(default=None, repr=False)
+    _audit_partition_cache: dict = field(default_factory=dict, repr=False)
 
     def __post_init__(self):
         self.validate_scopes()
@@ -205,6 +207,7 @@ class RoutingState:
         self._text_index_cache.clear()
         self.image_scope = "target_mask"; self.text_scope = "target_phrase"
         self.recorder = None
+        self.audit_partition = None; self._audit_partition_cache.clear()
 
 
 class SliderHook:
