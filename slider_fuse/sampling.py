@@ -299,6 +299,8 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
             if _diagnostic is not None:
                 from .diagnostics import file_hash, environment_info, implementation_info
                 audit_report, extra_tensors = recorder.finalize()
+                extra_tensors.update({"reference_" + k + "_mask": v.detach().cpu().clone()
+                                      for k, v in bank["masks"].items()})
                 report.update(audit_report)
                 report.update(implementation_info())
                 report.update(diagnostic_schema_version=2, prediction_space="comfy_cfg1_denoised", patch_size=core.patch)

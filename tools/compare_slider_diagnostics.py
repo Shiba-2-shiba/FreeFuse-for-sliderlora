@@ -44,11 +44,94 @@ def load_report(path):
     mask = Image.open(files["effective_mask"])
     if any(im.info.get(k) != report[k] or mask.info.get(k) != report[k] for k in ("artifact_id", "run_id")):
         raise ValueError("PNG artifact ID mismatch")
+    schema = report.get("diagnostic_schema_version", 1)
+    if schema not in (1, 2):
+        raise ValueError("Unsupported diagnostic schema version")
+    if schema == 2:
+        manifest = report.get("tensor_manifest", {})
+        if set(manifest) != set(tensors):
+            raise ValueError("Diagnostic tensor manifest keys mismatch")
+        for name, value in tensors.items():
+            entry = manifest[name]
+            if (tensor_hash(value) != entry["sha256"] or list(value.shape) != entry["shape"]
+                    or str(value.dtype) != entry["dtype"] or not torch.isfinite(value).all()):
+                raise ValueError("Diagnostic tensor manifest mismatch: " + name)
+        if "trace_predictions" in tensors:
+            rows = report.get("step_trace", [])
+            if len(rows) != report["steps"] or tensors["trace_predictions"].shape[0] != report["steps"]:
+                raise ValueError("Diagnostic trace length mismatch")
+            for i, row in enumerate(rows):
+                if (row["eval_index"] != i or row["input_sha256"] != tensor_hash(tensors["trace_inputs"][i])
+                        or row["prediction_sha256"] != tensor_hash(tensors["trace_predictions"][i])
+                        or row["sigma"] != float(tensors["trace_sigmas"][i])):
+                    raise ValueError("Diagnostic trace manifest mismatch")
     rgb = torch.frombuffer(bytearray(im.convert("RGB").tobytes()), dtype=torch.uint8).reshape(im.height, im.width, 3).double()
     return report, tensors, rgb
 
 
-def compare_reports(paths, *, atol=None, rtol=None):
+def direct_routing(report):
+    violations = []
+    measured = 0
+    for row in report.get("linear_audit") or []:
+        for region in (row["image"]["unselected"], row["text"]["unselected"]):
+            measured += region["element_count"]
+            if region["changed_elements"] or region["nonfinite_count"]:
+                violations.append({"eval_index": row["eval_index"], "module": row["module"], "region": region})
+    for row in report.get("prediction_mix_audit") or []:
+        for name in ("base_excluded", "slider_selected"):
+            region = row[name]
+            measured += region["element_count"]
+            if region["changed_elements"] or region["nonfinite_count"]:
+                violations.append({"eval_index": row["eval_index"], "region_name": name, "region": region})
+    return {"status": "direct_routing_violation" if violations else "measured_zero" if measured else "unavailable",
+            "measured_elements": measured, "violations": violations,
+            "note": "Same-input direct deltas; does not establish protected image invariance."}
+
+
+def trajectory_comparison(a, ta, b, tb):
+    import torch
+    from torch.nn import functional as F
+    from slider_fuse.diagnostics import tensor_metrics
+    from slider_fuse.prediction_mixing import prediction_mask
+    required = {"trace_inputs", "trace_predictions", "trace_sigmas"}
+    if not required <= set(ta) or not required <= set(tb):
+        return None
+    if ta["trace_sigmas"].shape != tb["trace_sigmas"].shape or not torch.equal(ta["trace_sigmas"], tb["trace_sigmas"]):
+        raise ValueError("Trajectory sigma schedules differ")
+    regions = {}
+    reference = ta if "reference_target_mask" in ta else tb
+    if "reference_target_mask" in reference:
+        regions = {k: reference["reference_" + k + "_mask"] for k in ("target", "protected", "background")}
+        target = regions["target"][None].float()
+        outside = F.max_pool2d(target, 3, stride=1, padding=1) > 0
+        inside = -F.max_pool2d(-target, 3, stride=1, padding=1) == 1
+        regions["boundary"] = (outside & ~inside)[0]
+    rows = []
+    for i, (pa, pb) in enumerate(zip(ta["trace_predictions"], tb["trace_predictions"])):
+        same_input = torch.equal(ta["trace_inputs"][i], tb["trace_inputs"][i])
+        metrics = {}
+        for name, token in regions.items():
+            selector = prediction_mask(token, pa, patch=a["patch_size"]).expand_as(pa)
+            metrics[name] = tensor_metrics(pa[selector], pb[selector]) if selector.any() else {"unavailable_reason": "empty region"}
+        rows.append({"eval_index": i, "sigma": float(ta["trace_sigmas"][i]),
+            "comparison_kind": "same_input_prediction_difference" if same_input else "trajectory_difference",
+            "input": tensor_metrics(ta["trace_inputs"][i], tb["trace_inputs"][i]),
+            "prediction": tensor_metrics(pa, pb), "regions": metrics or None})
+    return rows
+
+
+def _generation_for_comparison(report, endpoint_reference):
+    generation = dict(report["generation"])
+    if endpoint_reference and report.get("backend") == "prediction_mix":
+        if report.get("mix_scope") == "none" or report["strength"] == 0:
+            expected = {"base": report["steps"], "slider": 0}
+            if report.get("branch_nfe") != expected or report.get("effective_slider_strength") != 0:
+                raise ValueError("Unproven prediction-mix base endpoint")
+            generation["strength"] = 0.
+    return generation
+
+
+def compare_reports(paths, *, atol=None, rtol=None, include_trajectories=False, endpoint_reference=False):
     from slider_fuse.diagnostics import tensor_metrics
     if len(paths) < 2: raise ValueError("Specify at least two diagnostic reports")
     runs = [load_report(path) for path in paths]
@@ -60,19 +143,36 @@ def compare_reports(paths, *, atol=None, rtol=None):
         a, ta, ia = runs[i]; b, tb, ib = runs[j]
         if a["run_id"] == b["run_id"]:
             raise ValueError("Same cached run saved twice; change trial_id for a new trial")
-        for key in ("generation",) + invariants:
+        if _generation_for_comparison(a, endpoint_reference) != _generation_for_comparison(b, endpoint_reference):
+            raise ValueError("invalid_comparison: generation conditions differ")
+        for key in invariants:
             if key not in a or key not in b or a[key] != b[key]:
                 raise ValueError(f"invalid_comparison: conditions differ or are missing: {key}")
         if ta["final_latent"].dtype != tb["final_latent"].dtype or ta["first_prediction"].dtype != tb["first_prediction"].dtype:
             raise ValueError("invalid_comparison: output dtypes differ")
+        both_v2 = all(r.get("diagnostic_schema_version") == 2 for r in (a, b))
+        if both_v2:
+            for key in ("implementation_revision", "implementation_source_sha256", "prediction_space"):
+                if not a.get(key) and key != "implementation_revision":
+                    raise ValueError("Missing implementation or prediction identity")
+                if a.get(key) != b.get(key):
+                    raise ValueError("invalid_comparison: implementation/prediction identity differs: " + key)
         pairs.append({"reports": [str(paths[i]), str(paths[j])], "run_ids": [a["run_id"], b["run_id"]],
             "cases": [a.get("case_id"), b.get("case_id")],
             "repeat_trial": all(a.get(k) == b.get(k) for k in ("backend", "image_scope", "text_scope", "strength")),
             "first_prediction": tensor_metrics(ta["first_prediction"], tb["first_prediction"], atol=atol, rtol=rtol),
             "final_latent": tensor_metrics(ta["final_latent"], tb["final_latent"], atol=atol, rtol=rtol),
-            "rgb": tensor_metrics(ia, ib)})
-    return {"status": "measured_only" if atol is None else "within_tolerance" if all(
-        pair[key]["within_declared_tolerance"] for pair in pairs for key in ("first_prediction", "final_latent")) else "mismatch",
+            "rgb": tensor_metrics(ia, ib), "direct_routing": [direct_routing(a), direct_routing(b)],
+            "prediction_comparison_kind": "same_input_prediction_difference" if both_v2 else "legacy_prediction_space_unverified",
+            "trajectory": trajectory_comparison(a, ta, b, tb) if include_trajectories and both_v2 else None,
+            "trajectory_unavailable_reason": None if include_trajectories and both_v2 and
+                "trace_predictions" in ta and "trace_predictions" in tb else "trace missing, legacy schema, or not requested",
+            "branch_nfe": [a.get("branch_nfe"), b.get("branch_nfe")]})
+    status = "measured_only" if atol is None else "within_tolerance" if all(
+        pair[key]["within_declared_tolerance"] for pair in pairs for key in ("first_prediction", "final_latent")) else "mismatch"
+    if any(r["status"] == "direct_routing_violation" for pair in pairs for r in pair["direct_routing"]):
+        status = "direct_routing_violation"
+    return {"status": status,
         "note": "RGB differences are not an age or local-effect score.", "pairs": pairs}
 
 
@@ -131,6 +231,9 @@ def main():
     parser.add_argument("--standard-png")
     parser.add_argument("--standard-case", choices=["standard_zero", "standard_global"])
     parser.add_argument("--against")
+    parser.add_argument("--include-trajectories", action="store_true")
+    parser.add_argument("--endpoint-reference", action="store_true",
+                        help="Allow proven mix none/zero endpoint versus native zero; all other settings must match")
     args = parser.parse_args()
     try:
         if (args.atol is None) != (args.rtol is None): raise ValueError("Specify both --atol and --rtol")
@@ -139,13 +242,14 @@ def main():
             if not all(standard) or args.reports: raise ValueError("Standard comparison requires all four flags and no report list")
             result = compare_standard(*standard, atol=args.atol, rtol=args.rtol)
         else:
-            result = compare_reports(args.reports, atol=args.atol, rtol=args.rtol)
+            result = compare_reports(args.reports, atol=args.atol, rtol=args.rtol,
+                include_trajectories=args.include_trajectories, endpoint_reference=args.endpoint_reference)
     except (ValueError, KeyError, OSError, TypeError) as error:
         result = {"status": "invalid_comparison", "error": str(error)}
     serialized = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False)
     if args.output: Path(args.output).write_text(serialized, encoding="utf-8")
     print(serialized)
-    if result.get("status") in ("invalid_comparison", "mismatch") or result.get("final_latent", {}).get("status") == "mismatch":
+    if result.get("status") in ("invalid_comparison", "mismatch", "direct_routing_violation") or result.get("final_latent", {}).get("status") == "mismatch":
         return 1
     return 0
 

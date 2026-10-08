@@ -394,17 +394,29 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
     json.dumps(payload.report, allow_nan=False)
     stored_tensors = {"final_latent": latent.detach().cpu().contiguous(),
                       "first_prediction": payload.first_prediction.detach().cpu().contiguous()}
+    reference_names = {"reference_" + k + "_mask" for k in ("target", "protected", "background")}
     allowed = {"trace_inputs", "trace_predictions", "trace_sigmas",
-               "trace_base_predictions", "trace_slider_predictions"}
+               "trace_base_predictions", "trace_slider_predictions"} | reference_names
     for key, value in payload.extra_tensors.items():
         if key not in allowed or not isinstance(value, torch.Tensor) or not torch.isfinite(value).all():
             raise ValueError(f"Invalid diagnostic trace tensor: {key}")
-        expected = ((payload.report["steps"],) if key == "trace_sigmas" else
+        expected = (tuple(payload.effective_image_mask.shape) if key in reference_names else
+                    (payload.report["steps"],) if key == "trace_sigmas" else
                     (payload.report["steps"],) + tuple(payload.first_prediction.shape))
         if tuple(value.shape) != expected:
             raise ValueError(f"Diagnostic trace dimensions mismatch: {key}")
         stored_tensors[key] = value.detach().cpu().contiguous()
-    if payload.extra_tensors:
+    references = set(payload.extra_tensors) & reference_names
+    if references:
+        if references != reference_names:
+            raise ValueError("Incomplete reference mask partition")
+        for name in ("target", "protected", "background"):
+            value = stored_tensors["reference_" + name + "_mask"]
+            if not ((value == 0) | (value == 1)).all() or tensor_hash(value) != payload.report["reference_partition_sha256"][name]:
+                raise ValueError("Reference mask hash/binary mismatch")
+        if not torch.equal(sum(stored_tensors[k] for k in reference_names), torch.ones_like(payload.effective_image_mask)):
+            raise ValueError("Reference masks are not an exclusive partition")
+    if any(k.startswith("trace_") for k in payload.extra_tensors):
         if not {"trace_inputs", "trace_predictions", "trace_sigmas"} <= set(payload.extra_tensors):
             raise ValueError("Incomplete diagnostic step trace")
         rows = payload.report.get("step_trace")

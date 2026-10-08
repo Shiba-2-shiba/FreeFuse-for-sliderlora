@@ -269,6 +269,8 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
             with torch.inference_mode():
                 samples = guider.sample(noise, image, comfy.samplers.sampler_object("euler"), sigmas, seed=seed)
             extra = guider.finish_report()
+            extra.update({"reference_" + k + "_mask": v.detach().cpu().clone()
+                          for k, v in bank["masks"].items()})
             if report["sampler_nfe"] != steps:
                 raise RuntimeError("Prediction mix did not execute the expected Euler steps")
             report.update(recorder.first_inputs)
