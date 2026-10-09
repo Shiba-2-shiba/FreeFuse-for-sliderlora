@@ -1,4 +1,45 @@
-# 全層auditとnative予測混合（0.1.4診断実験版）
+# Prediction Mix：manual / autoと診断保存（0.2.0）
+
+Prediction Mix Samplerを通常カテゴリへ移し、autoのマスク収集を接続しました。既存node ID・旧入力順・Samplerの3出力型を維持し、auto関連7入力と選択拡張1入力を末尾に追加しています。省略時はmanual・選択拡張0で、旧workflowは以前と同じ範囲を使います。
+
+## 推奨workflow
+
+| 入口 | 設定・状態 |
+|---|---|
+| [manual](../workflows/krea2_female_slider_prediction_mix_manual.json) | 左半分target、右半分protected、strength4、summary。実人物位置を確認 |
+| [auto](../workflows/krea2_female_slider_prediction_mix_auto.json) | 両MASK未接続、collect_step2/block18、top_k0.2、temperature10000、fill0/dilate0、選択拡張4、summary。画質は実機確認待ち |
+
+各workflowの同名`_api.json`も同梱しています。収集値は過去の候補を使用したもので、最適値ではありません。
+
+autoはstyleのみのbaseで短い予備生成を行い、既存の類似度map→排他mask→保護付き後処理を使います。観測用hookを外してから、元の初期noise・latent・全sigma列でPrediction Mix生成を開始します。予備生成の途中latentは引き継ぎません。
+
+## 参照マスクと予測選択の余白
+
+`selection_dilate_radius`（0〜16、既定0）は、Prediction Mixで採用する範囲だけの拡張です。最大の対象成分から背景へ1 gridずつ広げ、保護領域を追加せず、保護領域を飛び越えません。小さな孤立targetは保持しますが広げません。参照target/protected/backgroundは変えないため、旧autoとの比較を維持できます。
+
+従来の`mask_dilate_radius`（0〜1）は参照targetの後処理で、別の設定です。新autoの選択拡張4は通常Krea2で約64pxの比較開始候補です。0/4/8を比較し、頭身・位置が変わった部分のはみ出しと背景境界を評価してください。適切な余白や継ぎ目の解消は実機未確認です。
+
+Mask Previewは先頭7出力を保ち、第8に実効予測選択mask、第9に選択余白の追加領域を出します。先頭のtargetは参照マスクであり、選択拡張後の全適用範囲ではありません。Saveの`_effective_mask.png`も実際の選択範囲です。
+
+8 steps・collect_step2・部分maskなら、phase1_nfe=2、phase2_nfe=sampler_nfe=8、branch_nfe={base:8,slider:8}、total_model_nfe=18です。none/all/強度0でもautoのmask収集は実行し、Phase 2だけ必要な経路へ省略します。空・拡散・非有限mapでは停止します。
+
+## schema 3の保存・比較
+
+新Prediction Mixの保存はschema 3です。旧hook/nativeのschema 1/2は読込を維持します。summaryでもmask_generation、収集時の入力hash、Phase別の実行回数を検証します。autoはraw_target/protected_similarity、original_target_mask、added_target_mask、収集時の小さな全sigma列と参照partitionを保存します。summaryでも収集prefixのhash・観測したsigma・文章位置・grid・head数・mask統計を照合し、保存・読込時にraw mapからmaskを再生成します。
+
+auditでは従来のPhase 2 traceに加え、保存されたbase/native予測から二値選択を再計算して一致を確認します。Phase 1のtraceはPhase 2へ混ぜません。schemaの既定は互換性のためaudit、新推奨workflowはsummaryを明示しています。
+
+autoとmanualの同じmaskを比較するには、[実機確認手順](real-machine-checklist.md)に従い、参照target/protected maskをexport_reference_masks.pyで書き出してmanualへ再入力します。
+
+```powershell
+python -B tools/compare_slider_diagnostics.py "<auto.json>" "<same-mask-manual.json>" --same-mask-reference --include-trajectories
+```
+
+このオプションはschema 3のauto/manual一組に限り、同じscope・strength・実効mask・参照partitionを要求します。環境、実装、conditioningなどの検査は緩めません。通常比較はmask生成設定が異なると拒否しますが、同条件でscopeだけを変えるnone/all/half比較は可能です。
+
+同一mask比較では`selection_dilate_radius`も揃えてください。参照partitionが同じで、選択半径だけを変えた通常比較は`selection_policy_comparison`となり、同条件反復とは扱いません。軌道の`boundary`は参照targetの境界を指すため、余白込みの実効境界は第8Preview/実効mask画像で確認します。
+
+## 0.1.4からの比較機能
 
 対象の顔・頭身・体格へのLoRA効果と、保護人物の同属性の維持を比較する機能です。実INT8/GPU・UI保存/再読込・画像品質はユーザーの実機で検証します。
 
@@ -22,7 +63,7 @@ Slider強度は標準Loaderで一度だけ適用します。2branchは1つのEul
 python -B tools/validate_comfy.py C:/path/to/ComfyUI
 ```
 
-validatorは10件を期待し、skip/import不足を合格にしません。依存を自動変更しません。この成功と実INT8生成は別の証拠です。
+validatorは12件を期待し、skip/import不足を合格にしません。依存を自動変更しません。この成功と実INT8生成は別の証拠です。
 
 2. 既存の`native_global`、`hook_all_all`、`hook_half_none`で`diagnostic_level=audit`、trial_id0/1を各1回実行します。計6回。旧workflowにoptional入力が表示されなければ診断Samplerを置き直して接続を維持し、保存/再読込を確認します。2回とも同じ0.1.4コードで採取し、seedを変更しません。Saveだけの再実行は反復試験ではありません。
 
@@ -85,4 +126,4 @@ python -B tools/compare_slider_diagnostics.py "<native_zero.json>" "<mix_zero.js
 
 照合したローカルComfyUI sourceは`b26625f23a888367b92153b28d93e159e83e677b`。既存実機`52f98af2e2e42c421070a3e147c161c47cdeaf22`との同等性は未実証です。CFGGuider/helper API、current_patcher identity、conditioning/grid、同一core/device、出力shape/dtype/deviceを検査します。未知wrapper/callback/conditioning hooks/追加モデルは拒否し、別方式へ自動代替しません。
 
-こちらのCPU suiteはComfyUI境界doubleを含みます。native小型CPU10件、実INT8切替・端点、UI保存/再読込、実画像品質はユーザーの実機での検証項目です。
+こちらのCPU suiteはComfyUI境界doubleを含みます。native小型CPU12件、実INT8切替・端点、UI保存/再読込、実画像品質はユーザーの実機での検証項目です。

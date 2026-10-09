@@ -17,9 +17,10 @@ import torch
 from .diagnostics import (DiagnosticPayload, DiagnosticRecorder, environment_info, file_hash,
                           implementation_info, region_measurement, serialize_measurement)
 from .lora import core_guard, load_adapters, RoutingState
-from .masks import manual_masks, patch_grid, postprocess_masks
+from .masks import manual_masks, patch_grid, postprocess_masks, prediction_selection_mask, validate_selection_radius
 from .prediction_mixing import mix_predictions, prediction_mask
 from .sampling import apply_native_slider, tensor_hash, validate_run_inputs, validate_model_options
+from .version import __version__
 
 
 def _cleanup(*callbacks):
@@ -105,7 +106,7 @@ def validate_mix_options(model):
         raise ValueError("Foreign model callbacks are unsupported for prediction mixing")
 
 
-def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, report, mode):
+def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, report, mode, restore_base=False):
     """Define the native subclass lazily so package imports never require ComfyUI."""
     import comfy.samplers
     import comfy.sampler_helpers
@@ -133,6 +134,9 @@ def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, rep
                     latent_image = latent_image.to(device=device, dtype=torch.float32)
                     sigmas = sigmas.to(device)
                     comfy.samplers.cast_to_load_options(self.model_options, device=device, dtype=base.model_dtype())
+                    if restore_base:
+                        # Re-establish the parent's styled base after shared-core collection teardown.
+                        self.runner.activate("base", noise, self.conds)
                     self.runner.activate("slider" if mode == "slider" else "base", noise, self.conds)
                     return self.inner_sample(noise, latent_image, device, sampler, sigmas, denoise_mask,
                                              callback, disable_pbar, seed, latent_shapes=latent_shapes)
@@ -204,19 +208,23 @@ def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, rep
 
 def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects, latent, lora_path, *,
                                strength, seed, steps=8, cfg=1., mix_scope="target_mask", trial_id=0,
-                               diagnostic_level="audit"):
+                               diagnostic_level="audit", mask_mode="manual", collect_step=2,
+                               collect_block=18, top_k_ratio=.3, temperature=4000.,
+                               fill_holes_max_area=0, mask_dilate_radius=0, selection_dilate_radius=0):
     import comfy.sample
     import comfy.samplers
     import comfy.model_management
     from safetensors.torch import load_file
     if mix_scope not in ("none", "target_mask", "all"):
         raise ValueError("mix_scope must be none, target_mask or all")
+    validate_selection_radius(selection_dilate_radius)
     if isinstance(trial_id, bool) or not isinstance(trial_id, int) or trial_id < 0:
         raise ValueError("trial_id must be a nonnegative integer")
     recorder = DiagnosticRecorder(set(), level=diagnostic_level)
     core = validate_run_inputs(model, positive, prompt_info, subjects, latent, strength=strength, seed=seed,
-        steps=steps, cfg=cfg, mask_mode="manual", collect_step=1, collect_block=0,
-        top_k_ratio=.3, temperature=4000.)
+        steps=steps, cfg=cfg, mask_mode=mask_mode, collect_step=collect_step, collect_block=collect_block,
+        top_k_ratio=top_k_ratio, temperature=temperature, fill_holes_max_area=fill_holes_max_area,
+        mask_dilate_radius=mask_dilate_radius)
     validate_mix_options(model)
     if any(metadata.get("hooks") or metadata.get("control") for _, metadata in positive + negative):
         raise ValueError("Conditioning hooks/ControlNet are unsupported for prediction mixing")
@@ -234,26 +242,51 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
             formats = {getattr(m, "quant_format", None) for m in modules.values()}
             if not formats <= {None, "int8_tensorwise"}:
                 raise ValueError("Unsupported base quantization for prediction mixing")
-            if mode != "base":
-                slider = apply_native_slider(base, source, strength, modules)
             image = comfy.sample.fix_empty_latent_channels(base, latent["samples"],
                 latent.get("downscale_ratio_spacial"), latent.get("downscale_ratio_temporal"))
             grid = patch_grid(image, core.patch)
-            bank = postprocess_masks(manual_masks(subjects[0].manual_mask, subjects[1].manual_mask, grid))
-            effective = (torch.zeros_like(bank["masks"]["target"]) if mix_scope == "none" else
-                         torch.ones_like(bank["masks"]["target"]) if mix_scope == "all" else
-                         bank["masks"]["target"].clone())
-            bank["effective_image_mask"] = effective
             noise = comfy.sample.prepare_noise(image, seed, latent.get("batch_index"))
             sigmas = comfy.samplers.KSampler(base, steps, base.load_device, sampler="euler",
                 scheduler="simple", model_options=base.model_options).sigmas
-            report = {"run_id": uuid.uuid4().hex[:12], "extension_version": "0.1.4",
+            collection_sigmas = sigmas.detach().cpu().clone() if mask_mode == "auto" else None
+            collection_report = {"phase1_nfe": 0, "observation": None, "collection_attention_heads": None,
+                **{key: None for key in ("collection_initial_noise_sha256", "collection_initial_latent_sha256",
+                                        "collection_full_sigmas_sha256", "collection_used_sigmas_sha256")}}
+            if mask_mode == "auto":
+                from .mask_collection import collect_auto_mask
+                bank, collection_report = collect_auto_mask(base, positive, negative, prompt_info, subjects,
+                    image, noise, sigmas, grid=grid, seed=seed, steps=steps, cfg=cfg,
+                    collect_step=collect_step, collect_block=collect_block, top_k_ratio=top_k_ratio,
+                    temperature=temperature, fill_holes_max_area=fill_holes_max_area,
+                    mask_dilate_radius=mask_dilate_radius)
+                if any(m._forward_hooks or m._forward_pre_hooks for m in core.modules()):
+                    raise RuntimeError("Mask observation left hooks installed; refusing prediction mixing")
+            else:
+                bank = postprocess_masks(manual_masks(subjects[0].manual_mask, subjects[1].manual_mask, grid))
+            if mode != "base":
+                slider = apply_native_slider(base, source, strength, modules)
+            selection_target = prediction_selection_mask(bank, selection_dilate_radius)
+            bank["selection_target_mask"] = selection_target
+            bank["selection_added_mask"] = selection_target - bank["masks"]["target"]
+            effective = (torch.zeros_like(bank["masks"]["target"]) if mix_scope == "none" else
+                         torch.ones_like(bank["masks"]["target"]) if mix_scope == "all" else
+                         selection_target.clone())
+            bank["effective_image_mask"] = effective
+            report = {"run_id": uuid.uuid4().hex[:12], "extension_version": __version__,
                 "backend": "prediction_mix", "mix_scope": mix_scope, "model_text_scope": "all",
-                "image_scope": mix_scope, "text_scope": "all", "mask_mode": "manual",
+                "image_scope": mix_scope, "text_scope": "all", "mask_mode": mask_mode,
+                "prediction_selection": {"dilate_radius": selection_dilate_radius,
+                                         "method": "largest_component_background_only"},
+                "mask_generation": {"mode": mask_mode, "collection_branch": "base" if mask_mode == "auto" else None,
+                    "collect_step": collect_step if mask_mode == "auto" else None,
+                    "collect_block": collect_block if mask_mode == "auto" else None,
+                    "top_k_ratio": top_k_ratio if mask_mode == "auto" else None,
+                    "temperature": temperature if mask_mode == "auto" else None,
+                    "fill_holes_max_area": fill_holes_max_area, "mask_dilate_radius": mask_dilate_radius},
                 "strength": strength, "effective_slider_strength": strength if mode != "base" else 0.,
                 "seed": seed, "steps": steps, "cfg": cfg, "trial_id": trial_id,
                 "sampler": "euler", "scheduler": "simple", "phase1_nfe": 0, "phase2_nfe": 0,
-                "sampler_nfe": 0, "diagnostic_schema_version": 2, "prediction_space": "comfy_cfg1_denoised",
+                "sampler_nfe": 0, "diagnostic_schema_version": 3, "prediction_space": "comfy_cfg1_denoised",
                 "lora_file_name": Path(lora_path).name, "lora_sha256": file_hash(lora_path),
                 "matched_modules": len(adapters), "reached_modules": None, "adapter_stats": None,
                 "base_quant_formats": sorted(map(str, formats)), "prompt": prompt_info.prompt,
@@ -264,13 +297,16 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
                 "effective_image_mask_coverage": float(effective.mean()),
                 "initial_noise_sha256": tensor_hash(noise), "initial_latent_sha256": tensor_hash(image),
                 "full_sigmas_sha256": tensor_hash(sigmas), "masks": bank["diagnostics"],
+                "mask_postprocess": bank["postprocess_diagnostics"],
+                "raw_maps_available": bool(bank.get("raw_maps")), "map_diagnostics": bank.get("map_diagnostics"),
                 "output_routing_policy": "native_inside_base_outside_same_input",
                 "skipped_branch_reason": None if mode == "both" else
                     "zero_strength" if not strength else "single_branch_endpoint",
                 "environment": environment_info(), "int8_real_machine_validated": False,
-                "image_quality_validated": False, **implementation_info()}
+                "image_quality_validated": False, **implementation_info(), **collection_report}
             guider = make_prediction_mix_guider(base, slider, effective, patch=core.patch,
-                                                recorder=recorder, report=report, mode=mode)
+                                                recorder=recorder, report=report, mode=mode,
+                                                restore_base=mask_mode == "auto")
             guider.set_conds(positive, negative); guider.set_cfg(1.)
             with torch.inference_mode():
                 samples = guider.sample(noise, image, comfy.samplers.sampler_object("euler"), sigmas, seed=seed)
@@ -279,9 +315,16 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
             extra = guider.finish_report()
             extra.update({"reference_" + k + "_mask": v.detach().cpu().clone()
                           for k, v in bank["masks"].items()})
+            if mask_mode == "auto":
+                extra["collection_sigmas"] = collection_sigmas
+                extra.update({"raw_" + k + "_similarity": v.detach().cpu().float().reshape(1, -1).clone()
+                              for k, v in bank["raw_maps"].items()})
+                extra.update(original_target_mask=bank["original_masks"]["target"].detach().cpu().clone(),
+                             added_target_mask=bank["added_target_mask"].detach().cpu().clone())
             if report["sampler_nfe"] != steps:
                 raise RuntimeError("Prediction mix did not execute the expected Euler steps")
             report.update(recorder.first_inputs)
+            report["total_model_nfe"] = report["phase1_nfe"] + sum(report["branch_nfe"].values())
             report.update(first_prediction_sha256=tensor_hash(recorder.first_prediction),
                           final_latent_sha256=tensor_hash(samples), final_latent_shape=list(samples.shape),
                           final_latent_dtype=str(samples.dtype))

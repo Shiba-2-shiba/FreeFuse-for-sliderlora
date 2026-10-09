@@ -90,6 +90,30 @@ def _validate_partition(bank):
     return masks
 
 
+def validate_selection_radius(radius=0):
+    if isinstance(radius, bool) or not isinstance(radius, int) or not 0 <= radius <= 16:
+        raise ValueError("selection_dilate_radius must be an integer in 0..16 token cells")
+
+
+def prediction_selection_mask(bank, radius=0):
+    """Expand only the largest target component through background; keep the partition."""
+    validate_selection_radius(radius)
+    source = _validate_partition(bank)
+    target = source["target"].detach().clone()
+    if radius == 0:
+        return target
+    components = _components(target[0].cpu().bool())
+    main = max(components, key=lambda c: (len(c), -min(c)))
+    grown = torch.zeros_like(target[0], device="cpu", dtype=torch.bool)
+    grown.flatten()[main] = True
+    background = source["background"][0].detach().cpu().bool()
+    # One-cell iterations cannot jump across a protected barrier.
+    for _ in range(radius):
+        neighbors = F.max_pool2d(grown.float()[None, None], 3, stride=1, padding=1)[0, 0].bool()
+        grown |= neighbors & background
+    return torch.maximum(target, grown[None].to(target))
+
+
 def postprocess_masks(bank, *, max_hole_area=0, dilate_radius=0):
     """Fill background-only holes, then optionally dilate the largest target component.
 

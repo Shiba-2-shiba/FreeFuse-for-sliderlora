@@ -1,6 +1,12 @@
 # FreeFuse-for-sliderlora
 
-Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物（初期例は女性）にだけSlider LoRAの差分を適用します。男性もマスク推定に参加しますが、LoRAは持ちません。
+Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面として描きながら、指定した人物の領域でSlider LoRAの予測を採用します。
+
+**0.2.0：Prediction Mixを推奨経路にしました。** [推奨manual workflow](workflows/krea2_female_slider_prediction_mix_manual.json)は手動mask、[推奨auto workflow](workflows/krea2_female_slider_prediction_mix_auto.json)はSliderなしで収集したmaskを使います。通常利用はsummary、詳細検証はauditに切り替えます。[使い方・診断形式](docs/prediction-mixing.md)と[ユーザーによる手動実機確認](docs/real-machine-checklist.md)を参照してください。
+
+旧版のmanual予測混合では、強い対象側の効果と保護人物の成人性維持を実機で確認しました。0.2.0のauto接続とUI互換性・画質は、ユーザーの実機確認待ちです。対象外の完成画素は固定されません。旧hookノードと旧workflowは比較・互換用に保持しています。
+
+## 旧版の検討経緯
 
 **0.1.4 診断実験版:** [全層auditとnative予測混合](docs/prediction-mixing.md)を追加しました。新しいPrediction Mix Samplerは通常LoRAとbaseの予測を二値maskで選び、画像側hookと比較できます。[zero](workflows/krea2_slider_mix_zero.json) → [none](workflows/krea2_slider_mix_none.json) → [all](workflows/krea2_slider_mix_all.json) → [half](workflows/krea2_slider_mix_half.json)の順で実機確認してください。部分maskは1stepに2経路を直列評価します。既存診断Sampler末尾の`diagnostic_level=audit`で全層・全stepの直接差分を保存します。通常Samplerの生成演算は維持し、実INT8/UI/画質の確認は未完了です。
 
@@ -28,7 +34,23 @@ Krea2とV3 APIに対応したComfyUI、通常のComfyUI環境にあるPyTorchと
 
 ネイティブ処理はComfyUI commit `3d9b2d551788d4fe80ede5743417077d1795cbd2`の公式ソースに照合しました。別commitでは後述のvalidatorと実機probeを実行してください。
 
-## 最初の実機確認
+## Prediction Mixを使う
+
+1. [manual版](workflows/krea2_female_slider_prediction_mix_manual.json)を読み込み、モデル、Krea2 CLIP、VAE、styleとSliderのファイル名を環境に合わせます。
+2. `Krea2 Slider Prediction Mix Sampler`の`lora_name`で局所用Sliderを指定します。同じSliderを上流の通常LoRA Loaderにも重ねないでください。
+3. 左半分のtarget、右半分のprotectedが実際の人物を覆うことを確認し、同じseedのstrength0/2/4を比較します。
+4. [auto版](workflows/krea2_female_slider_prediction_mix_auto.json)はSubjectsの両MASK入力を未接続にします。収集値は改善候補で、最適値ではありません。顔・全身がtarget maskに含まれるか確認してください。
+5. 通常の保存はsummary。数値比較するときはauditにして、PNG・実効mask・safetensors・JSONを元の名前で一組に保存します。
+
+旧`krea2_slider_mix_zero/none/all/half`はaudit付きmanual比較のままです。旧ノードを読み込んだだけで生成方式が切り替わることはありません。Prediction Mixでは文章側のSlider作用はnative経路に含まれるため、旧hookの`target_text_scale`は使用しません。
+
+API形式：[manual API](workflows/krea2_female_slider_prediction_mix_manual_api.json)、[auto API](workflows/krea2_female_slider_prediction_mix_auto_api.json)。部分maskは1stepに2経路、autoはさらにcollect_step回の予備評価が必要です。
+
+autoの`selection_dilate_radius=4`は、参照マスクを変えず選択範囲だけ背景へ広げる比較開始値です。通常Krea2で約64px。0/4/8を比較し、実効予測maskと追加余白のPreviewを確認してください。旧workflowの省略時は0です。
+
+lowvram/offload環境では、経路を切り替えるたびの重み再適用とロードが負担になり、実測例の約2倍より遅くなる場合があります。生成速度は保証していません。
+
+## 旧hook方式の実機確認
 
 1. 通常のKrea2生成が動く環境で、[手動版ワークフロー](workflows/krea2_female_slider_manual.json)を読み込みます。
 2. モデル、CLIP、VAE、darkbrushを自分のファイルへ合わせます。テンプレートは現在の比較環境の`intorealismAsian_k2JAVFLASHV1.safetensors`、`wen3vl_4b_bf16.safetensors`、`qwen_image_vae.safetensors`を指定しています。CLIPのtypeは`krea2`です。
@@ -81,7 +103,7 @@ python -B tools/validate_comfy.py C:/path/to/ComfyUI
 python -B tools/probe_krea2_slider.py --comfy-root C:/path/to/ComfyUI --model C:/path/to/krea2.safetensors --lora C:/path/to/slider.safetensors
 ```
 
-validatorは実native Krea2の小型CPUモデルとV3 schemaを10件検証します。missing importやskipを合格にしません。probeは実チェックポイントとSliderを読み込み、全キー照合と投影種別ごとの代表層で明示的な差分計算との一致・対象への非ゼロ変化・外側差分・量子化データの保持・forward復元を確認します。ゼロ差分や、反復誤差以下しか変化しない場合は合格にしません。probeの合格も実画像の成功を意味しません。モデル・依存を自動取得する処理はありません。
+validatorは実native Krea2の小型CPUモデルとV3 schemaを12件検証します。missing importやskipを合格にしません。probeは実チェックポイントとSliderを読み込み、全キー照合と投影種別ごとの代表層で明示的な差分計算との一致・対象への非ゼロ変化・外側差分・量子化データの保持・forward復元を確認します。ゼロ差分や、反復誤差以下しか変化しない場合は合格にしません。probeの合格も実画像の成功を意味しません。モデル・依存を自動取得する処理はありません。
 
 生成ログの`[Krea2SliderFuse]`にはrun_id、キー一致/到達数、adapter_groups（1/0/0）、MASK範囲、実sigma/block、Phase 1/2の評価回数、時間、解除状態が出ます。CUDA peakはプロセス全体の値で、このノードがresetした値ではありません。診断文字列もSamplerの出力から取得できます。
 

@@ -15,7 +15,7 @@ def load_report(path):
     from PIL import Image
     from safetensors import safe_open
     from safetensors.torch import load_file
-    from slider_fuse.diagnostics import file_hash, validate_prefix, validate_audit_coverage
+    from slider_fuse.diagnostics import file_hash, validate_prefix, validate_audit_coverage, validate_mask_artifacts
     from slider_fuse.sampling import tensor_hash
 
     path = Path(path)
@@ -45,9 +45,9 @@ def load_report(path):
     if any(im.info.get(k) != report[k] or mask.info.get(k) != report[k] for k in ("artifact_id", "run_id")):
         raise ValueError("PNG artifact ID mismatch")
     schema = report.get("diagnostic_schema_version", 1)
-    if schema not in (1, 2):
+    if schema not in (1, 2, 3):
         raise ValueError("Unsupported diagnostic schema version")
-    if schema == 2:
+    if schema in (2, 3):
         validate_audit_coverage(report)
         manifest = report.get("tensor_manifest", {})
         if set(manifest) != set(tensors):
@@ -66,6 +66,9 @@ def load_report(path):
                         or row["prediction_sha256"] != tensor_hash(tensors["trace_predictions"][i])
                         or row["sigma"] != float(tensors["trace_sigmas"][i])):
                     raise ValueError("Diagnostic trace manifest mismatch")
+        if schema == 3:
+            mask_tensor = torch.frombuffer(bytearray(mask.convert("L").tobytes()), dtype=torch.uint8).float().reshape(1, mask.height, mask.width) / 255
+            validate_mask_artifacts(report, tensors, mask_tensor)
     rgb = torch.frombuffer(bytearray(im.convert("RGB").tobytes()), dtype=torch.uint8).reshape(im.height, im.width, 3).double()
     return report, tensors, rgb
 
@@ -73,7 +76,7 @@ def load_report(path):
 def direct_routing(report):
     from slider_fuse.diagnostics import validate_audit_coverage
     validate_audit_coverage(report)
-    if report.get("diagnostic_schema_version", 1) != 2 or report.get("diagnostic_level") != "audit":
+    if report.get("diagnostic_schema_version", 1) not in (2, 3) or report.get("diagnostic_level") != "audit":
         return {"status": "unavailable", "measured_elements": 0, "violations": [], "note": "Audit not requested or legacy schema"}
     violations = []
     measured = 0
@@ -136,9 +139,12 @@ def _generation_for_comparison(report, endpoint_reference):
     return generation
 
 
-def compare_reports(paths, *, atol=None, rtol=None, include_trajectories=False, endpoint_reference=False):
+def compare_reports(paths, *, atol=None, rtol=None, include_trajectories=False, endpoint_reference=False,
+                    same_mask_reference=False):
     from slider_fuse.diagnostics import tensor_metrics
     if len(paths) < 2: raise ValueError("Specify at least two diagnostic reports")
+    if same_mask_reference and (len(paths) != 2 or endpoint_reference):
+        raise ValueError("Same-mask reference requires exactly one auto/manual pair")
     runs = [load_report(path) for path in paths]
     pairs = []
     invariants = ("lora_sha256", "initial_noise_sha256", "initial_latent_sha256", "full_sigmas_sha256",
@@ -155,7 +161,25 @@ def compare_reports(paths, *, atol=None, rtol=None, include_trajectories=False, 
                 raise ValueError(f"invalid_comparison: conditions differ or are missing: {key}")
         if ta["final_latent"].dtype != tb["final_latent"].dtype or ta["first_prediction"].dtype != tb["first_prediction"].dtype:
             raise ValueError("invalid_comparison: output dtypes differ")
-        both_v2 = all(r.get("diagnostic_schema_version") == 2 for r in (a, b))
+        configs = [r.get("mask_generation") for r in (a, b)]
+        from slider_fuse.diagnostics import prediction_selection_config
+        selections = [r.get("prediction_selection", prediction_selection_config({})) for r in (a,b)]
+        for index, r in enumerate((a, b)):
+            if configs[index] is None:
+                if r.get("mask_mode", "manual") != "manual":
+                    raise ValueError("Legacy automatic mask provenance is unavailable")
+                from slider_fuse.diagnostics import mask_generation_config
+                configs[index] = mask_generation_config({"mask_mode": "manual"})
+        if same_mask_reference:
+            if (any(r.get("diagnostic_schema_version") != 3 or r.get("backend") != "prediction_mix" for r in (a,b))
+                    or {c["mode"] for c in configs} != {"auto", "manual"}
+                    or selections[0] != selections[1]
+                    or a["mix_scope"] != b["mix_scope"]
+                    or a["effective_image_mask_sha256"] != b["effective_image_mask_sha256"]):
+                raise ValueError("Same-mask reference requires identical masks/scope and proven auto/manual sources")
+        elif configs[0] != configs[1]:
+            raise ValueError("invalid_comparison: mask generation settings differ")
+        both_v2 = all(r.get("diagnostic_schema_version") in (2, 3) for r in (a, b))
         if both_v2:
             for key in ("implementation_revision", "implementation_source_sha256", "prediction_space"):
                 if not a.get(key) and key != "implementation_revision":
@@ -163,8 +187,10 @@ def compare_reports(paths, *, atol=None, rtol=None, include_trajectories=False, 
                 if a.get(key) != b.get(key):
                     raise ValueError("invalid_comparison: implementation/prediction identity differs: " + key)
         pairs.append({"reports": [str(paths[i]), str(paths[j])], "run_ids": [a["run_id"], b["run_id"]],
+            "comparison_kind": "same_mask_phase2_comparison" if same_mask_reference else
+                               "selection_policy_comparison" if selections[0] != selections[1] else "same_conditions_comparison",
             "cases": [a.get("case_id"), b.get("case_id")],
-            "repeat_trial": all(a.get(k) == b.get(k) for k in ("backend", "image_scope", "text_scope", "strength")),
+            "repeat_trial": configs[0] == configs[1] and selections[0] == selections[1] and all(a.get(k) == b.get(k) for k in ("backend", "image_scope", "text_scope", "strength")),
             "first_prediction": tensor_metrics(ta["first_prediction"], tb["first_prediction"], atol=atol, rtol=rtol),
             "final_latent": tensor_metrics(ta["final_latent"], tb["final_latent"], atol=atol, rtol=rtol),
             "rgb": tensor_metrics(ia, ib), "direct_routing": [direct_routing(a), direct_routing(b)],
@@ -237,18 +263,23 @@ def main():
     parser.add_argument("--standard-case", choices=["standard_zero", "standard_global"])
     parser.add_argument("--against")
     parser.add_argument("--include-trajectories", action="store_true")
+    parser.add_argument("--same-mask-reference", action="store_true",
+                        help="Compare schema 3 auto/manual Phase 2 with an identical reference partition and effective mask")
     parser.add_argument("--endpoint-reference", action="store_true",
                         help="Allow proven mix none/zero endpoint versus native zero; all other settings must match")
     args = parser.parse_args()
     try:
         if (args.atol is None) != (args.rtol is None): raise ValueError("Specify both --atol and --rtol")
         standard = [args.standard_latent, args.standard_png, args.standard_case, args.against]
+        if any(standard) and args.same_mask_reference:
+            raise ValueError("Same-mask reference applies only to diagnostic auto/manual reports")
         if any(standard):
             if not all(standard) or args.reports: raise ValueError("Standard comparison requires all four flags and no report list")
             result = compare_standard(*standard, atol=args.atol, rtol=args.rtol)
         else:
             result = compare_reports(args.reports, atol=args.atol, rtol=args.rtol,
-                include_trajectories=args.include_trajectories, endpoint_reference=args.endpoint_reference)
+                include_trajectories=args.include_trajectories, endpoint_reference=args.endpoint_reference,
+                same_mask_reference=args.same_mask_reference)
     except (ValueError, KeyError, OSError, TypeError) as error:
         result = {"status": "invalid_comparison", "error": str(error)}
     serialized = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False)

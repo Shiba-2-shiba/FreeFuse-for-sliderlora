@@ -21,6 +21,7 @@ import torch
 from .attention import AttentionCollector
 from .lora import RoutingState, SliderHook, core_guard, load_adapters, validate_target_text_scale
 from .masks import generate_masks, manual_masks, patch_grid, postprocess_masks, validate_postprocess_settings
+from .version import __version__
 
 INJECTION_KEY = "krea2_slider_freefuse"
 
@@ -70,7 +71,7 @@ def validate_settings(*, steps, cfg, strength, mask_mode, collect_step, top_k_ra
         raise ValueError("mask_mode must be auto or manual")
     if mask_mode == "manual" and (fill_holes_max_area or mask_dilate_radius):
         raise ValueError("Mask postprocessing is auto-only; use both settings 0 for manual masks")
-    if mask_mode == "auto" and (not isinstance(collect_step, int) or not 1 <= collect_step <= steps):
+    if mask_mode == "auto" and (isinstance(collect_step, bool) or not isinstance(collect_step, int) or not 1 <= collect_step <= steps):
         raise ValueError("collect_step must be in 1..total steps")
     if not math.isfinite(top_k_ratio) or not 0 < top_k_ratio <= 1 or not math.isfinite(temperature) or temperature <= 0:
         raise ValueError("Invalid top_k_ratio or temperature")
@@ -148,7 +149,7 @@ def validate_run_inputs(model, positive, prompt_info, subjects, latent, *, stren
         raise ValueError("Manual mode requires both target and protected masks")
     if mask_mode == "auto" and any(s.manual_mask is not None for s in subjects):
         raise ValueError("Auto mode does not accept manual masks; disconnect both MASK inputs")
-    if mask_mode == "auto" and (not isinstance(collect_block, int) or not 0 <= collect_block < len(core.blocks)):
+    if mask_mode == "auto" and (isinstance(collect_block, bool) or not isinstance(collect_block, int) or not 0 <= collect_block < len(core.blocks)):
         raise ValueError(f"collect_block must be in 0..{len(core.blocks)-1}")
 
     return core
@@ -179,7 +180,7 @@ def sample_krea2(model, positive, negative, prompt_info, subjects, latent, lora_
         state.image_scope = _diagnostic["image_scope"]; state.text_scope = _diagnostic["text_scope"]
     started = time.perf_counter()
     run_id = uuid.uuid4().hex[:12]
-    report = {"run_id": run_id, "extension_version": "0.1.4", "lora_file_name": Path(lora_path).name,
+    report = {"run_id": run_id, "extension_version": __version__, "lora_file_name": Path(lora_path).name,
               "mask_mode": mask_mode, "seed": seed, "steps": steps,
               "cfg": cfg, "sampler": "euler", "scheduler": "simple", "strength": strength,
               "adapter_groups": {"target": 1, "protected": 0, "background": 0},

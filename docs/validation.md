@@ -1,5 +1,15 @@
 # 検証記録
 
+2026-10-09 / **0.2.0 Prediction Mix採用**：既存Prediction Mixへautoのbase-onlyマスク収集を接続。初期noise/latent/full sigmasを再利用し、Phase別NFEを分離。既存ノードID・位置引数・manual既定と旧workflowを維持し、新manual/auto workflowを追加した。新診断はschema 3で、raw mapからのmask再生成、予測選択の再計算、収集provenance・summaryのNFE検証を行う。旧schema 1/2の読込を維持する。
+
+独立レビューで2点（summaryの収集由来検査不足、親base復帰の検査不足）を確認し、改変受理と親base選択の回帰試験をRED→GREENで修正した。追加レビュー対応後の最終CPU suiteは339件成功（失敗・skip0）。テストはComfyUI境界doubleを含み、実native検証の代用ではない。
+
+native validatorの対象は12件へ更新した。**0.2.0の実native・INT8/GPU生成・UI保存再読込・auto画質は未実施で、ユーザーが手動確認する。** 実装担当の完了条件はコード・CPU/static検証・検証用workflowと手順の整備まで。[実機確認手順](real-machine-checklist.md)を参照。0.1.4のmanual実機結果と、0.2.0のauto品質を区別する。
+
+追加レビューでは、参照partitionを保った選択専用背景拡張（0〜16 grid、既定0、auto候補4）、旧autoと新helperのraw map/partition一致試験、lowvram注意、runtime version共通化を追加した。追加範囲の独立レビューで指摘0。選択拡張後の実機画質はユーザーの手動確認待ち。
+
+以下は各版の作成時点の履歴。
+
 2026-10-08 / **0.1.4 診断実験版**: 全層・全stepの直接差分audit、単一Eulerループのbase/native予測混合Sampler、v2 trace/参照mask保存、軌道を区別する比較CLI、4条件8 workflowを実装。最新CPU suiteは**282件成功、skip0・失敗0（8.50s）**。自作Python42ファイルのAST解析、workflow JSON62ファイル、git diff --checkも成功。独立レビューの2件の高優先指摘（未知実行フックの拒否不足、部分auditを合格にできる不足）を6件の失敗試験と端点の追加3件で再現して修正し、全suiteを再実行した。
 
 native validatorは現在10件。ローカルComfyUI sourceでは`comfy_aimdo.storage`不足によりimportが停止し、0/10件実行。CPU境界doubleの成功をnative/INT8成功としない。ユーザーが実ComfyUI・実GPU生成・UI保存/再読込・画質評価を担当する。[実行順と比較コマンド](prediction-mixing.md)を参照。実機での端点一致・切替費用・人物保護の採用判定は未完了。

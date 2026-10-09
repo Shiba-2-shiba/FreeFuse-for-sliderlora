@@ -332,6 +332,198 @@ def generation_config(prompt, sampler_id, vae_id, *, standard_case=None):
         raise ValueError("Incomplete evaluation provenance") from error
 
 
+def mask_generation_config(settings):
+    """Canonicalize effective mask settings, ignoring inactive manual controls."""
+    from .sampling import validate_settings
+    mode = settings.get("mask_mode", settings.get("mode", "manual"))
+    step = settings.get("collect_step", 2)
+    block = settings.get("collect_block", 18)
+    ratio = settings.get("top_k_ratio", .3)
+    temperature = settings.get("temperature", 4000.)
+    fill = settings.get("fill_holes_max_area", 0)
+    dilate = settings.get("mask_dilate_radius", 0)
+    validate_settings(steps=settings.get("steps", max(step, 1) if mode == "auto" and isinstance(step, int) else 8),
+        cfg=1., strength=0., mask_mode=mode, collect_step=step,
+        top_k_ratio=ratio if mode == "auto" else .3, temperature=temperature if mode == "auto" else 4000.,
+        fill_holes_max_area=fill, mask_dilate_radius=dilate)
+    if mode == "auto" and (isinstance(block, bool) or not isinstance(block, int) or block < 0):
+        raise ValueError("Invalid mask collection block")
+    return {"mode": mode, "collection_branch": "base" if mode == "auto" else None,
+            "collect_step": step if mode == "auto" else None, "collect_block": block if mode == "auto" else None,
+            "top_k_ratio": ratio if mode == "auto" else None, "temperature": temperature if mode == "auto" else None,
+            "fill_holes_max_area": fill, "mask_dilate_radius": dilate}
+
+
+def prediction_selection_config(settings):
+    from .masks import validate_selection_radius
+    radius = settings.get("selection_dilate_radius", settings.get("dilate_radius", 0))
+    validate_selection_radius(radius)
+    return {"dilate_radius": radius, "method": "largest_component_background_only"}
+
+
+COLLECTION_HASHES = ("collection_initial_noise_sha256", "collection_initial_latent_sha256",
+                     "collection_full_sigmas_sha256", "collection_used_sigmas_sha256")
+AUTO_MASK_TENSORS = {"raw_target_similarity", "raw_protected_similarity",
+                     "original_target_mask", "added_target_mask", "collection_sigmas"}
+
+
+def validate_prediction_mix_report(report):
+    """Validate schema 3's phase/provenance contract even at summary level."""
+    if report.get("diagnostic_schema_version") != 3:
+        return
+    if report.get("backend") != "prediction_mix" or report.get("diagnostic_level") not in ("summary", "audit"):
+        raise ValueError("Invalid schema 3 prediction-mix report")
+    config = report.get("mask_generation")
+    if not isinstance(config, dict) or config != mask_generation_config(config):
+        raise ValueError("Missing or noncanonical mask generation provenance")
+    selection = report.get("prediction_selection")
+    if not isinstance(selection, dict) or selection != prediction_selection_config(selection):
+        raise ValueError("Missing or invalid prediction selection provenance")
+    steps = report.get("steps")
+    if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
+        raise ValueError("Invalid prediction-mix step count")
+    mode = config["mode"]
+    if report.get("mask_mode") != mode:
+        raise ValueError("Mask mode provenance mismatch")
+    phase1 = config["collect_step"] if mode == "auto" else 0
+    if phase1 > steps:
+        raise ValueError("Mask collection step exceeds generation steps")
+    scope, strength = report.get("mix_scope"), report.get("strength")
+    if scope not in ("none", "all", "target_mask") or isinstance(strength, bool) or not isinstance(strength, (int, float)) or not math.isfinite(strength) or not -10 <= strength <= 10:
+        raise ValueError("Invalid prediction-mix scope or strength")
+    calls = ({"base": steps, "slider": 0} if scope == "none" or strength == 0 else
+             {"base": 0, "slider": steps} if scope == "all" else {"base": steps, "slider": steps})
+    counters = {"phase1_nfe": phase1, "phase2_nfe": steps, "sampler_nfe": steps,
+                "total_model_nfe": phase1 + sum(calls.values())}
+    if any(isinstance(report.get(k), bool) or not isinstance(report.get(k), int) or report.get(k) != v for k, v in counters.items()):
+        raise ValueError("Invalid prediction-mix phase NFE coverage")
+    if report.get("branch_nfe") != calls or any(isinstance(v, bool) or not isinstance(v, int) for v in report["branch_nfe"].values()):
+        raise ValueError("Invalid prediction-mix branch NFE coverage")
+    if mode == "auto":
+        for key, phase2 in zip(COLLECTION_HASHES[:3], ("initial_noise_sha256", "initial_latent_sha256", "full_sigmas_sha256")):
+            if not isinstance(report.get(key), str) or not report[key] or report[key] != report.get(phase2):
+                raise ValueError("Collection initial input hash differs from Phase 2")
+        if not isinstance(report.get(COLLECTION_HASHES[3]), str) or not report[COLLECTION_HASHES[3]]:
+            raise ValueError("Missing collection schedule hash")
+        observation = report.get("observation")
+        if not isinstance(observation, dict) or observation.get("step") != phase1 or observation.get("block") != config["collect_block"]:
+            raise ValueError("Mask observation provenance mismatch")
+        heads = report.get("collection_attention_heads")
+        if (not isinstance(heads, dict) or set(heads) != {"query", "key_value"}
+                or any(isinstance(v, bool) or not isinstance(v, int) or v < 1 for v in heads.values())
+                or heads["query"] % heads["key_value"]):
+            raise ValueError("Invalid collection attention dimensions")
+        tokens = report.get("text_token_count")
+        positions = report.get("token_positions")
+        observed_positions = observation.get("positions")
+        if (isinstance(tokens, bool) or not isinstance(tokens, int) or tokens < 1
+                or not isinstance(positions, dict) or set(positions) != {"target", "protected"}
+                or not isinstance(observed_positions, dict) or set(observed_positions) != set(positions)):
+            raise ValueError("Invalid collection text provenance")
+        for name, values in positions.items():
+            observed = observed_positions[name]
+            if (not isinstance(values, list) or not values or len(set(values)) != len(values)
+                    or any(isinstance(v, bool) or not isinstance(v, int) or not 0 <= v < tokens for v in values)
+                    or not isinstance(observed, (list, tuple)) or list(observed) != values):
+                raise ValueError("Collection token positions mismatch")
+        if set(positions["target"]) & set(positions["protected"]):
+            raise ValueError("Overlapping collection subject positions")
+        if (observation.get("cap_len") != tokens or tuple(observation.get("grid", ())) != tuple(report.get("grid", ()))
+                or observation.get("image_len") != math.prod(report.get("grid", ()))
+                or observation.get("q_heads") != heads["query"] or observation.get("kv_heads") != heads["key_value"]):
+            raise ValueError("Collection observation dimensions mismatch")
+    elif any(k not in report or report[k] is not None for k in COLLECTION_HASHES) or report.get("observation") is not None:
+        raise ValueError("Manual mask cannot claim a collection phase")
+
+
+def validate_mask_artifacts(report, tensors, effective_mask):
+    """Reconstruct schema 3 auto masks from the saved observations."""
+    if report.get("diagnostic_schema_version") != 3:
+        return
+    from .sampling import tensor_hash
+    from .masks import generate_masks, postprocess_masks, prediction_selection_mask
+    validate_prediction_mix_report(report)
+    grid = report.get("grid")
+    if not isinstance(grid, list) or len(grid) != 2 or any(isinstance(v, bool) or not isinstance(v, int) or v < 1 for v in grid):
+        raise ValueError("Invalid mask grid")
+    shape = (1, *grid)
+    names = {"reference_" + k + "_mask" for k in ("target", "protected", "background")}
+    if not names <= set(tensors):
+        raise ValueError("Incomplete reference mask partition")
+    masks = {k: tensors["reference_" + k + "_mask"] for k in ("target", "protected", "background")}
+    for k, value in masks.items():
+        if value.shape != shape or value.dtype != torch.float32 or not torch.isfinite(value).all() or not ((value == 0) | (value == 1)).all():
+            raise ValueError("Invalid reference mask tensor")
+        if tensor_hash(value) != report.get("reference_partition_sha256", {}).get(k):
+            raise ValueError("Reference mask content hash mismatch")
+    if not torch.equal(sum(masks.values()), torch.ones_like(masks["target"])) or not masks["target"].any() or not masks["protected"].any():
+        raise ValueError("Invalid exclusive reference partition")
+    selected = prediction_selection_mask({"masks": masks, "grid": tuple(grid)},
+                                         report["prediction_selection"]["dilate_radius"])
+    expected = (torch.zeros_like(masks["target"]) if report["mix_scope"] == "none" else
+                torch.ones_like(masks["target"]) if report["mix_scope"] == "all" else selected)
+    if not torch.equal(effective_mask.cpu(), expected.cpu()) or tensor_hash(effective_mask) != report.get("effective_image_mask_sha256"):
+        raise ValueError("Effective mask differs from the declared scope")
+    coverage = report.get("effective_image_mask_coverage")
+    if isinstance(coverage, bool) or coverage != float(expected.mean()):
+        raise ValueError("Effective mask coverage mismatch")
+    config = report["mask_generation"]
+    present = AUTO_MASK_TENSORS & set(tensors)
+    if report.get("raw_maps_available") is not (config["mode"] == "auto"):
+        raise ValueError("Raw map availability mismatch")
+    if config["mode"] == "auto":
+        if present != AUTO_MASK_TENSORS:
+            raise ValueError("Incomplete automatic mask source tensors")
+        raw = {k: tensors["raw_" + k + "_similarity"] for k in ("target", "protected")}
+        if any(v.shape != (1, grid[0]*grid[1]) or v.dtype != torch.float32 or not torch.isfinite(v).all() for v in raw.values()):
+            raise ValueError("Invalid raw mask similarity tensor")
+        bank = postprocess_masks(generate_masks(raw, tuple(grid)), max_hole_area=config["fill_holes_max_area"],
+                                 dilate_radius=config["mask_dilate_radius"])
+        for key, expected_value in (("original_target_mask", bank["original_masks"]["target"]),
+                                    ("added_target_mask", bank["added_target_mask"])):
+            if tensors[key].dtype != torch.float32 or not torch.equal(tensors[key], expected_value):
+                raise ValueError("Automatic mask source/postprocessing mismatch")
+        if any(not torch.equal(masks[k], v) for k, v in bank["masks"].items()):
+            raise ValueError("Automatic reference partition differs from its raw maps")
+        if report.get("map_diagnostics") != bank["map_diagnostics"]:
+            raise ValueError("Automatic mask diagnostics differ from source tensors")
+        schedule = tensors["collection_sigmas"]
+        if (schedule.shape != (report["steps"]+1,) or not schedule.is_floating_point()
+                or not torch.isfinite(schedule).all() or schedule[-1] != 0 or schedule[0] <= 0
+                or bool((schedule[:-1] < schedule[1:]).any()) or bool((schedule < 0).any())):
+            raise ValueError("Invalid persisted collection schedule")
+        if (tensor_hash(schedule) != report["full_sigmas_sha256"]
+                or tensor_hash(schedule[:config["collect_step"]+1]) != report["collection_used_sigmas_sha256"]
+                or report["observation"].get("sigma") != float(schedule[config["collect_step"]-1].float())):
+            raise ValueError("Collection schedule or observed sigma mismatch")
+    else:
+        if present:
+            raise ValueError("Manual mask cannot claim automatic source tensors")
+        bank = postprocess_masks({"masks": masks, "grid": tuple(grid)})
+        if report.get("map_diagnostics") is not None or report.get("collection_attention_heads") is not None:
+            raise ValueError("Manual mask cannot claim collection diagnostics")
+    if report.get("masks") != bank["diagnostics"] or report.get("mask_postprocess") != bank["postprocess_diagnostics"]:
+        raise ValueError("Mask diagnostics differ from saved partition")
+    trace = {k for k in tensors if k.startswith("trace_")}
+    if report["diagnostic_level"] == "summary" and trace:
+        raise ValueError("Summary report cannot contain step trace tensors")
+    if report["diagnostic_level"] == "audit":
+        required = {"trace_inputs", "trace_predictions", "trace_sigmas"}
+        partial = report["mix_scope"] == "target_mask" and report["strength"] != 0
+        branch_traces = {"trace_base_predictions", "trace_slider_predictions"}
+        if not required <= set(tensors) or (partial and not branch_traces <= set(tensors)) or (not partial and branch_traces & set(tensors)):
+            raise ValueError("Incomplete or unexpected prediction-mix audit trace")
+        if partial:
+            from .prediction_mixing import prediction_mask
+            selector = prediction_mask(expected, tensors["first_prediction"], patch=report["patch_size"])
+            if not torch.equal(tensors["trace_predictions"], torch.where(selector,
+                    tensors["trace_slider_predictions"], tensors["trace_base_predictions"])):
+                raise ValueError("Prediction selector disagrees with saved branch traces")
+        if config["mode"] == "auto":
+            if not torch.equal(tensors["trace_sigmas"], tensors["collection_sigmas"][:-1]):
+                raise ValueError("Collection schedule differs from Phase 2")
+
+
 def diagnostic_provenance(prompt, save_node_id, report):
     if not isinstance(prompt, dict) or save_node_id is None:
         raise ValueError("Hidden prompt and unique_id are required for diagnostic saving")
@@ -349,6 +541,15 @@ def diagnostic_provenance(prompt, save_node_id, report):
         mix = prompt[sampler_id]["class_type"] == "Krea2SliderFusePredictionMixSampler"
         if mix and report["backend"] != "prediction_mix":
             raise ValueError("Prediction mix backend mismatch")
+        if report.get("diagnostic_schema_version") == 3:
+            if mask_generation_config(settings) != report.get("mask_generation"):
+                raise ValueError("Mask generation provenance mismatch")
+            if prediction_selection_config(settings) != report.get("prediction_selection"):
+                raise ValueError("Prediction selection provenance mismatch")
+            _, subject = linked_node(prompt, sampler_id, "subjects", "Krea2SliderFuseSubjects")
+            supplied = [subject.get(k) is not None for k in ("target_mask", "protected_mask")]
+            if (report.get("mask_mode") == "auto" and any(supplied)) or (report.get("mask_mode") == "manual" and not all(supplied)):
+                raise ValueError("Mask connection provenance mismatch")
         keys = (("mix_scope",) if mix else ("backend", "image_scope", "text_scope"))
         for key in keys + ("strength", "seed", "steps", "cfg", "trial_id"):
             if settings[key] != report[key]: raise ValueError(f"Diagnostic provenance mismatch: {key}")
@@ -373,7 +574,8 @@ def validate_prefix(prefix, *, flat=False):
 
 def validate_audit_coverage(report):
     """A complete audit must cover every declared projection and sampler step."""
-    if report.get("diagnostic_schema_version", 1) != 2 or report.get("diagnostic_level") != "audit":
+    validate_prediction_mix_report(report)
+    if report.get("diagnostic_schema_version", 1) not in (2, 3) or report.get("diagnostic_level") != "audit":
         return
     steps = report.get("steps")
     if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
@@ -453,10 +655,14 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
     reference_names = {"reference_" + k + "_mask" for k in ("target", "protected", "background")}
     allowed = {"trace_inputs", "trace_predictions", "trace_sigmas",
                "trace_base_predictions", "trace_slider_predictions"} | reference_names
+    if payload.report.get("diagnostic_schema_version") == 3:
+        allowed |= AUTO_MASK_TENSORS
     for key, value in payload.extra_tensors.items():
         if key not in allowed or not isinstance(value, torch.Tensor) or not torch.isfinite(value).all():
             raise ValueError(f"Invalid diagnostic trace tensor: {key}")
-        expected = (tuple(payload.effective_image_mask.shape) if key in reference_names else
+        expected = ((payload.report["steps"]+1,) if key == "collection_sigmas" else
+                    (1, mask.shape[-2]*mask.shape[-1]) if key.startswith("raw_") else
+                    tuple(payload.effective_image_mask.shape) if key in reference_names or key in ("original_target_mask", "added_target_mask") else
                     (payload.report["steps"],) if key == "trace_sigmas" else
                     (payload.report["steps"],) + tuple(payload.first_prediction.shape))
         if tuple(value.shape) != expected:
@@ -485,6 +691,7 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
                 raise ValueError("Diagnostic trace hash or sigma mismatch")
         if not torch.equal(stored_tensors["trace_predictions"][0], payload.first_prediction):
             raise ValueError("First prediction does not match trace")
+    validate_mask_artifacts(payload.report, stored_tensors, mask)
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     counter = 0
@@ -503,7 +710,7 @@ def save_diagnostic_artifacts(directory, basename, latent, images, payload, prom
     artifact_id = uuid.uuid4().hex
     report = dict(payload.report, artifact_id=artifact_id, artifacts=names, generation=generation,
                   complete=True, provenance_level="diagnostic_run")
-    if report.get("diagnostic_schema_version") == 2:
+    if report.get("diagnostic_schema_version") in (2, 3):
         report["tensor_manifest"] = {k: {"sha256": tensor_hash(v), "shape": list(v.shape), "dtype": str(v.dtype)}
                                      for k, v in stored_tensors.items()}
     temporary = []

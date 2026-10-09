@@ -1,5 +1,6 @@
 """Executed only by tools/validate_comfy.py, never substituted with fixtures."""
 import asyncio
+import copy
 import importlib.util
 from pathlib import Path
 import sys
@@ -17,6 +18,11 @@ from slider_fuse.lora import Adapter, RoutingState, SliderHook
 from slider_fuse.masks import patch_grid
 from slider_fuse.native_pair import NativePairRunner
 from slider_fuse.prediction_mixing import mix_predictions, prediction_mask
+from slider_fuse.mask_collection import collect_auto_mask
+from slider_fuse.masks import manual_masks
+from slider_fuse.lora import core_guard
+from slider_fuse.diagnostics import DiagnosticRecorder
+from slider_fuse.native_pair import make_prediction_mix_guider
 
 
 class NativeProbeModel(nn.Module):
@@ -27,15 +33,30 @@ class NativeProbeModel(nn.Module):
         self.current_patcher = None
         self.model_config = SimpleNamespace(unet_config={"image_model": "krea2"})
         self.manual_cast_dtype = None
+        from comfy.model_sampling import ModelSamplingFlux, CONST
+        class NativeSampling(ModelSamplingFlux, CONST):
+            pass
+        self.model_sampling = NativeSampling()
+        self.latent_format = SimpleNamespace(latent_channels=4, latent_dimensions=2,
+            spacial_downscale_ratio=8, temporal_downscale_ratio=1, fix_empty_latent=lambda x:x)
     def get_dtype(self):
         return torch.float32
     def memory_required(self, input_shape, **kwargs):
         return 0
     def extra_conds_shapes(self, **kwargs):
         return {}
+    def extra_conds(self, **kwargs):
+        from comfy.conds import CONDRegular
+        context = kwargs.get("cross_attn")
+        return {} if context is None else {"c_crossattn": CONDRegular(context)}
+    def process_latent_in(self, x):
+        return x
+    def process_latent_out(self, x):
+        return x
     def apply_model(self, x, sigma, c_crossattn, **kwargs):
-        return self.diffusion_model(x, sigma, c_crossattn,
-                                    transformer_options=kwargs.get("transformer_options", {}))
+        velocity = self.diffusion_model(self.model_sampling.calculate_input(sigma,x), sigma, c_crossattn,
+                                       transformer_options=kwargs.get("transformer_options", {}))
+        return self.model_sampling.calculate_denoised(sigma,velocity,x)
 
 
 class NativeChecks(unittest.TestCase):
@@ -139,6 +160,10 @@ class NativeChecks(unittest.TestCase):
                 for name in ("fill_holes_max_area","mask_dilate_radius","target_text_scale"):
                     self.assertTrue(inputs[name].optional)
                     self.assertEqual(inputs[name].default,0)
+            if schema.node_id=="Krea2SliderFusePredictionMixSampler":
+                inputs={item.id:item for item in schema.inputs}
+                self.assertTrue(inputs["mask_mode"].optional)
+                self.assertEqual(inputs["mask_mode"].default,"manual")
 
     def native_pair(self):
         model = NativeProbeModel(self.core)
@@ -202,3 +227,71 @@ class NativeChecks(unittest.TestCase):
             self.assertTrue(torch.equal(mixed[..., 4:], a[..., 4:]))
         finally:
             self.close_pair(base, runner)
+
+    def collect_native_mask(self, base):
+        info=SimpleNamespace(token_ids=(0,1,2))
+        subjects=(SimpleNamespace(id="target",positions=(0,)),SimpleNamespace(id="protected",positions=(2,)))
+        sigmas=torch.tensor([.7,.35,0.])
+        return collect_auto_mask(base,[[self.context,{}]],[],info,subjects,
+            torch.zeros_like(self.x),self.x,sigmas,grid=(4,4),seed=42,steps=2,cfg=1.,
+            collect_step=1,collect_block=0,top_k_ratio=.3,temperature=4000.,
+            fill_holes_max_area=0,mask_dilate_radius=0)
+
+    def sample_native_mask(self, base, slider, mask):
+        recorder=DiagnosticRecorder(set(),level="audit")
+        report={"sampler_nfe":0,"grid":[4,4],"text_token_count":3}
+        guider=make_prediction_mix_guider(base,slider,mask,patch=2,recorder=recorder,report=report,mode="both",restore_base=True)
+        guider.set_conds([[self.context,{}]],[]);guider.set_cfg(1.)
+        import comfy.samplers
+        with torch.inference_mode():
+            value=guider.sample(self.x.clone(),torch.zeros_like(self.x),comfy.samplers.sampler_object("euler"),
+                                torch.tensor([.7,.35,0.]),seed=42)
+        traces=guider.finish_report()
+        return value,report,traces
+
+    def test_native_auto_collect_then_mix(self):
+        base,slider,runner=self.native_pair()
+        style_key="diffusion_model.blocks.0.attn.wq.weight"
+        style_before=base.patches[style_key][0][1][1][0].clone()
+        options_before=copy.deepcopy(base.model_options)
+        patch_counts={k:len(v) for k,v in base.patches.items()}
+        try:
+            with core_guard(self.core):
+                expected=self.predict_pair(runner,"base");runner.close()
+                bank,collection=self.collect_native_mask(base)
+                self.assertEqual(collection["phase1_nfe"],1)
+                self.assertFalse(any(m._forward_hooks or m._forward_pre_hooks for m in self.core.modules()))
+                self.assertTrue(torch.equal(expected,self.predict_pair(runner,"base")))
+                self.assertIs(base.model.current_patcher,base);runner.close()
+                from unittest.mock import patch
+                with patch.object(NativeProbeModel,"apply_model",side_effect=RuntimeError("forced native collection failure")):
+                    with self.assertRaisesRegex(RuntimeError,"forced native collection"):
+                        self.collect_native_mask(base)
+                self.assertFalse(any(m._forward_hooks or m._forward_pre_hooks for m in self.core.modules()))
+                self.assertTrue(torch.equal(expected,self.predict_pair(runner,"base")))
+                self.assertIs(base.model.current_patcher,base);runner.close()
+                self.assertEqual(base.model_options,options_before)
+                self.assertEqual({k:len(v) for k,v in base.patches.items()},patch_counts)
+                self.assertTrue(torch.equal(style_before,base.patches[style_key][0][1][1][0]))
+                value,report,traces=self.sample_native_mask(base,slider,bank["masks"]["target"])
+                self.assertTrue(torch.isfinite(value).all())
+                self.assertEqual(report["branch_nfe"],{"base":2,"slider":2})
+                selector=prediction_mask(bank["masks"]["target"],value,patch=2)
+                self.assertTrue(torch.equal(traces["trace_predictions"],torch.where(selector,
+                    traces["trace_slider_predictions"],traces["trace_base_predictions"])))
+        finally:
+            self.close_pair(base,runner)
+
+    def test_native_auto_manual_same_mask(self):
+        base,slider,runner=self.native_pair()
+        try:
+            with core_guard(self.core):
+                bank,_=self.collect_native_mask(base)
+                manual=manual_masks(bank["masks"]["target"],bank["masks"]["protected"],(4,4))
+                a,_,ta=self.sample_native_mask(base,slider,bank["masks"]["target"])
+                b,_,tb=self.sample_native_mask(base,slider,manual["masks"]["target"])
+                self.assertTrue(torch.equal(a,b))
+                self.assertTrue(torch.equal(ta["trace_inputs"],tb["trace_inputs"]))
+                self.assertTrue(torch.equal(ta["trace_predictions"],tb["trace_predictions"]))
+        finally:
+            self.close_pair(base,runner)

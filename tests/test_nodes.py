@@ -65,7 +65,7 @@ def test_raw_similarity_preview_is_normalized_independently_without_mutating_map
     bank={"grid":(2,2),"masks":{name:torch.zeros(1,2,2) for name in ("target","protected","background")},
           "raw_maps":{"target":target,"protected":protected}}
     result=nodes.Krea2SliderFuseMaskPreview.execute(bank).result
-    assert len(result)==7
+    assert len(result)==9
     torch.testing.assert_close(result[3],torch.tensor([[[0.,.5],[1.,0.]]]))
     torch.testing.assert_close(result[4],torch.tensor([[[0.,1.],[0.,.5]]]))
     assert torch.equal(target,torch.tensor([[10.,20.,30.,10.]]))
@@ -75,7 +75,8 @@ def test_raw_similarity_preview_is_normalized_independently_without_mutating_map
 def test_manual_preview_marks_raw_similarity_unavailable_with_black_outputs(nodes):
     masks={"target":torch.ones(1,2,2),"protected":torch.zeros(1,2,2),"background":torch.zeros(1,2,2)}
     result=nodes.Krea2SliderFuseMaskPreview.execute({"masks":masks}).result
-    assert len(result)==7 and not result[3].any() and not result[4].any()
+    assert len(result)==9 and not result[3].any() and not result[4].any()
+    assert torch.equal(result[7],masks["target"]) and not result[8].any()
 
 
 def test_postprocess_inputs_are_optional_zero_defaults_at_end(nodes):

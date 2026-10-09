@@ -118,11 +118,12 @@ class Krea2SliderFuseMaskPreview(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="Krea2SliderFuseMaskPreview", display_name="Krea2 Slider Fuse Mask Preview", category=CATEGORY,
-            description="Outputs 1-3: routing masks; 4-5: independently normalized raw similarity, not calibrated confidence; 6-7: original target and added area. Manual mode has black similarity maps. Old/no-op banks have original=current target and added=black.",
+            description="Outputs 1-3: reference partition; 4-5: normalized similarity, not confidence; 6-7: original/added reference target; 8: actual prediction selection; 9: selection margin. Manual similarity is black. Old banks preserve the first seven outputs and have no margin.",
             inputs=[MasksType.Input("mask_bank")],
             outputs=[io.Mask.Output("target_mask"), io.Mask.Output("protected_mask"), io.Mask.Output("background_mask"),
                      io.Mask.Output("target_similarity"), io.Mask.Output("protected_similarity"),
-                     io.Mask.Output("original_target_mask"), io.Mask.Output("added_target_mask")])
+                     io.Mask.Output("original_target_mask"), io.Mask.Output("added_target_mask"),
+                     io.Mask.Output("effective_prediction_mask"), io.Mask.Output("selection_added_mask")])
 
     @classmethod
     def execute(cls, mask_bank):
@@ -130,7 +131,9 @@ class Krea2SliderFuseMaskPreview(io.ComfyNode):
         return io.NodeOutput(masks["target"], masks["protected"], masks["background"],
                              similarity_preview(mask_bank, "target"), similarity_preview(mask_bank, "protected"),
                              mask_bank.get("original_masks", {}).get("target", masks["target"]),
-                             mask_bank.get("added_target_mask", masks["target"].new_zeros(masks["target"].shape)))
+                             mask_bank.get("added_target_mask", masks["target"].new_zeros(masks["target"].shape)),
+                             mask_bank.get("effective_image_mask", masks["target"]),
+                             mask_bank.get("selection_added_mask", masks["target"].new_zeros(masks["target"].shape)))
 
 
 class Krea2SliderFuseDiagnosticSampler(io.ComfyNode):
@@ -171,8 +174,8 @@ class Krea2SliderFusePredictionMixSampler(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="Krea2SliderFusePredictionMixSampler",
-            display_name="Krea2 Slider Prediction Mix Sampler", category=CATEGORY + "/Diagnostics",
-            description="Experimental. Select native Slider predictions inside a manual mask and base predictions outside. Partial masks require two serial model evaluations per step and model switching. Protected pixels are not frozen. Change trial_id to remeasure.",
+            display_name="Krea2 Slider Prediction Mix Sampler", category=CATEGORY,
+            description="Apply a Slider inside the target mask using Prediction Mix. Manual masks are supported; automatic masks remain experimental. Partial masks require two model evaluations per step. Outside pixels may still change. Change trial_id to remeasure.",
             inputs=[io.Model.Input("model"), io.Conditioning.Input("positive"), io.Conditioning.Input("negative"),
                 PromptType.Input("prompt_info"), SubjectsType.Input("subjects"), io.Latent.Input("latent"),
                 io.Combo.Input("lora_name", options=[""] + folder_paths.get_filename_list("loras")),
@@ -181,7 +184,16 @@ class Krea2SliderFusePredictionMixSampler(io.ComfyNode):
                 io.Int.Input("steps", default=8, min=1, max=100), io.Float.Input("cfg", default=1., min=1., max=1.),
                 io.Combo.Input("mix_scope", options=["target_mask", "none", "all"]),
                 io.Int.Input("trial_id", default=0, min=0, max=0x7FFFFFFF),
-                io.Combo.Input("diagnostic_level", options=["audit", "summary"], default="audit")],
+                io.Combo.Input("diagnostic_level", options=["audit", "summary"], default="audit"),
+                io.Combo.Input("mask_mode", options=["manual", "auto"], optional=True, default="manual"),
+                io.Int.Input("collect_step", optional=True, default=2, min=1, max=100),
+                io.Int.Input("collect_block", optional=True, default=18, min=0, max=100),
+                io.Float.Input("top_k_ratio", optional=True, default=.3, min=.001, max=1.),
+                io.Float.Input("temperature", optional=True, default=4000., min=.001, max=100000.),
+                io.Int.Input("fill_holes_max_area", optional=True, default=0, min=0, max=64),
+                io.Int.Input("mask_dilate_radius", optional=True, default=0, min=0, max=1),
+                io.Int.Input("selection_dilate_radius", optional=True, default=0, min=0, max=16,
+                             tooltip="Prediction selection only. Expand the largest target component through background; keep reference/protected masks. 1 cell is about 16 image pixels for standard Krea2.")],
             outputs=[io.Latent.Output("latent"), MasksType.Output("mask_bank"), DiagnosticsType.Output("diagnostics")])
 
     @classmethod
@@ -190,13 +202,18 @@ class Krea2SliderFusePredictionMixSampler(io.ComfyNode):
 
     @classmethod
     def execute(cls, model, positive, negative, prompt_info, subjects, latent, lora_name, strength, seed,
-                steps, cfg, mix_scope, trial_id=0, diagnostic_level="audit"):
+                steps, cfg, mix_scope, trial_id=0, diagnostic_level="audit", mask_mode="manual",
+                collect_step=2, collect_block=18, top_k_ratio=.3, temperature=4000.,
+                fill_holes_max_area=0, mask_dilate_radius=0, selection_dilate_radius=0):
         if not lora_name:
             raise ValueError("Select a Slider for prediction mixing")
         path = folder_paths.get_full_path_or_raise("loras", lora_name)
         return io.NodeOutput(*sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects,
             latent, path, strength=strength, seed=seed, steps=steps, cfg=cfg, mix_scope=mix_scope,
-            trial_id=trial_id, diagnostic_level=diagnostic_level))
+            trial_id=trial_id, diagnostic_level=diagnostic_level, mask_mode=mask_mode,
+            collect_step=collect_step, collect_block=collect_block, top_k_ratio=top_k_ratio,
+            temperature=temperature, fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius,
+            selection_dilate_radius=selection_dilate_radius))
 
 
 class Krea2SliderFuseDiagnosticSave(io.ComfyNode):

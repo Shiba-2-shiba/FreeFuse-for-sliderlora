@@ -78,14 +78,14 @@ def guider_environment(pair_environment):
     return pair_environment
 
 
-def create_guider(env, *, mode="both", text_len=2):
+def create_guider(env, *, mode="both", text_len=2, restore_base=False):
     from slider_fuse.native_pair import make_prediction_mix_guider
     from slider_fuse.diagnostics import DiagnosticRecorder
     base, slider, events, _ = env
     recorder = DiagnosticRecorder(set(), level="audit")
     report = {"sampler_nfe": 0, "grid": [2, 2], "text_token_count": text_len}
     guider = make_prediction_mix_guider(base, slider, torch.tensor([[[1., 0.], [1., 0.]]]),
-        patch=1, recorder=recorder, report=report, mode=mode)
+        patch=1, recorder=recorder, report=report, mode=mode, restore_base=restore_base)
     guider.set_conds([{"model_conds": {"c_crossattn": types.SimpleNamespace(cond=torch.ones(1, 2, 3))}}], [])
     return guider, report, recorder
 
@@ -113,6 +113,15 @@ def test_endpoints_skip_unneeded_branch(guider_environment, mode, counts, value)
     guider.finish_report()
     assert report["branch_nfe"] == counts
     assert torch.equal(recorder.first_prediction, torch.full((1, 1, 2, 2), value))
+
+
+def test_collection_restore_activates_base_before_slider_endpoint(guider_environment):
+    guider,report,_=create_guider(guider_environment,mode="slider",restore_base=True)
+    guider.sample(torch.ones(1,1,2,2),torch.zeros(1,1,2,2),"euler",torch.linspace(1,0,9),seed=42)
+    guider.finish_report()
+    loads=[e for e in guider_environment[2] if e[0]=="load"]
+    assert loads[:2]==[("load",2.),("load",6.)]
+    assert report["branch_nfe"]=={"base":0,"slider":8}
 
 
 def test_bad_text_boundary_rejected_before_branch_forward(guider_environment):
