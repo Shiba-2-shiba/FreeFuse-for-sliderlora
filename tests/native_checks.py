@@ -207,10 +207,11 @@ class NativeChecks(unittest.TestCase):
     def test_native_pair_prediction_matches_individual_calls(self):
         base, native, runner = self.native_pair()
         try:
-            a = self.predict_pair(runner, "base")
-            self.assertTrue(torch.equal(a, base.model.apply_model(self.x, self.sigma, self.context)))
-            b = self.predict_pair(runner, "slider")
-            self.assertTrue(torch.equal(b, native.model.apply_model(self.x, self.sigma, self.context)))
+            with torch.inference_mode():
+                a = self.predict_pair(runner, "base")
+                self.assertTrue(torch.equal(a, base.model.apply_model(self.x, self.sigma, self.context)))
+                b = self.predict_pair(runner, "slider")
+                self.assertTrue(torch.equal(b, native.model.apply_model(self.x, self.sigma, self.context)))
         finally:
             self.close_pair(base, runner)
 

@@ -12,7 +12,11 @@
 
 **作成日:** 2026-10-09
 
+**最新の実行指示（同日）:** ユーザーが起動中ComfyUIでのエージェントによる実機検証を依頼し、U2の旧commit回帰を不要と指定した。U2は完了条件から除外する。T1〜T7の実装、U1/U3の実機検証は完了。U4の永続保存・再実行、U5の指定比較表、U6の通常KSamplerを含む復帰確認をエージェントが実行する。以下の「ユーザーが手動実施」は当初の担当割当の履歴で、この追加指示が優先する。U5の完了は評価の実施・採用判定・失敗記録までであり、未達のauto画質を合格へ書き換えない。
+
 **調査時点のコード:** `dev` / `fb3cd592e7d115809ab125ef524612b7bfc62e19`
+
+**現在の状態:** T1〜T7およびU1/U3/U4/U6完了、U2対象外。U5は48条件の評価・判定を完了したが、auto画質は未達例が残る。ユーザーのチャット終了・引き継ぎ希望により評価を区切った。最新証拠と次の課題は対応するprogress、`docs/validation.md`、`.omx/notepad.md`を参照。画質の原因切り分け・修正は次の指示を受けて別作業とする。
 
 **この依頼の成果物:** 実装計画書。生成処理の変更・commit・push・公開は、この計画作成には含めない。
 
@@ -321,7 +325,7 @@ schema 3のauto artifactには、既存の参照partitionに加えて`raw_target
 | 順序 | 確認する内容 | 残す証拠 |
 |---|---|---|
 | U1 | 実ComfyUI環境でnative validatorを実行し、12件実行・skip0を確認 | 実行ログとComfyUI revision |
-| U2 | T1で指定した旧commitのmanual基準と、実装後の旧mix4条件を比較。旧結果と環境が異なる場合は、ユーザーが旧commitと新版を同じ実機環境でそれぞれ実行する | 初期入力hash、予測、最終latent、画像。不一致時に閾値を後から緩めない |
+| U2 | ユーザー指示で対象外。旧commitの実機回帰は実施せず、未実施を合格とは扱わない | 現行版の端点・旧入力互換性の検査は保持 |
 | U3 | autoのstrength0/4で収集maskが同じか、autoと同じmaskをmanualへ渡したPhase 2が一致するか | 両runのmask・JSON・tensorと比較結果 |
 | U4 | 新旧workflowをUIへ読み込み、保存、再読込、再実行する | 接続・widget値・実行結果。任意入力の値ずれの有無 |
 | U5 | 元promptのseed42/444444、正面スタジオ、腰手・腕組み、公園でnone/all/対象maskと強度2/4を比較 | 顔・頭身・保護側・境界・mask越境を記入した評価表 |
@@ -336,7 +340,7 @@ schema 3のauto artifactには、既存の参照partitionに加えて`raw_target
 | ID | 完了を判断する条件 | 検証 |
 |---|---|---|
 | AC1 | 既存Prediction Mix node ID、入力位置、出力型、4条件8 workflowが維持される | 実装担当：T1/T5 schema・workflow試験。実UIはユーザーU4 |
-| AC2 | 旧引数省略時はmanual/auditで動き、旧manualの数値経路が維持される | 実装担当：T1/T3。実機manual回帰はユーザーU2 |
+| AC2 | 旧引数省略時はmanual/auditで動き、現行manualの端点と旧入力互換性が維持される | T1/T3と現行実機の端点比較。旧commit実機回帰U2はユーザー指定で対象外 |
 | AC3 | auto Phase 1はbaseだけをcollect_step回評価し、観測hookをPhase 2へ残さない | T2/T3のspy・例外・残留検査 |
 | AC4 | Phase 2は元のnoise/latent/full sigmasから開始する | T3の入力tensor完全一致 |
 | AC5 | 同じpartitionを使うauto/manualのPhase 2予測・最終latentが一致する | 実装担当：T3 CPU試験。実native/実機はユーザーU1/U3 |

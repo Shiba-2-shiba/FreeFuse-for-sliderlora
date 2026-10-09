@@ -1,8 +1,10 @@
-# Prediction Mix 0.2.0：ユーザーが手動で行う実機確認
+# Prediction Mix 0.2.0：実機確認と進捗
 
-実装担当はCPU検証と以下のツール・workflowを整備します。実ComfyUIでのnative検証、GPU生成、UI保存・再読込、画質評価はユーザーが手動で行います。実装完了と実機評価完了は別に記録してください。
+ユーザーの追加指示により、エージェントが起動中ComfyUIで実機確認を行います。U2の旧commit回帰はユーザー指定で対象外です。実装完了、評価実施の完了、画質の採用判定は分けて記録します。既存結果は[検証記録](validation.md)、追加のU4〜U6成果物はローカルの`test-results/u456-20261009/`へ保存します。
 
 ## U1：環境とnative小型モデル
+
+現在: U1/U3/U4/U6完了、U2対象外、U5評価完了・auto画質未達。最新証拠は`test-results/u456-20261009/`の各summary。次の作業は自動maskと境界の原因切り分けであり、比較表や旧commit回帰の再実行ではありません。
 
 ComfyUIが使っているPythonで、拡張のルートから実行します。
 
@@ -10,24 +12,13 @@ ComfyUIが使っているPythonで、拡張のルートから実行します。
 python -B tools/validate_comfy.py "<ComfyUIソースのルート>"
 ```
 
-- [ ] native12件、skip0、status=passed。import失敗や途中停止は未合格として記録。
-- [ ] 7ノードが登録され、Prediction Mix Samplerが通常カテゴリにある。
-- [ ] checkpoint、Krea2 CLIP、VAE、darkbrush、Sliderのファイル名を環境に合わせた。同じSliderを上流へ二重適用していない。
+- [x] native12件、skip0、status=passed。import失敗や途中停止は未合格として記録。
+- [x] 7ノードが登録され、Prediction Mix Samplerが通常カテゴリにある。
+- [x] checkpoint、Krea2 CLIP、VAE、darkbrush、Sliderのファイル名を環境に合わせた。同じSliderを上流へ二重適用していない。
 
-## U2：既存manualの回帰確認
+## U2：ユーザー指示で対象外
 
-基準版はcommit `fb3cd592e7d115809ab125ef524612b7bfc62e19`です。同じComfyUI/Python/PyTorch/GPU・変更していないモデルファイルで、旧版と新版の`krea2_slider_mix_zero / none / all / half`を実行します。既存の保存結果を使う場合も環境・生成条件・入力hashを照合してください。
-
-- [ ] 既存4条件のseed42、8steps、CFG1、Euler/simple、1024×1024、style0.8、Slider4（zeroのみ0）を維持した。
-- [ ] 旧workflowの省略入力でmanual/auditとして動き、widget値がずれない。
-- [ ] zero/noneでbase8・slider0、allでbase0・slider8、halfでbase8・slider8。phase1_nfe=0。
-- [ ] 旧版と新版の初回予測・最終latentを比較した。新版はsource hashが異なるため、通常の同条件比較CLIの検査を緩めず、版の違う回帰確認として記録する。
-
-同じ新版内でzeroとnoneを比較する場合：
-
-```powershell
-python -B tools/compare_slider_diagnostics.py "<mix_zero.json>" "<mix_none.json>" --endpoint-reference --include-trajectories
-```
+旧commitと新版を同じ実機で比較する作業は完了条件から除外しました。未実施を合格とは扱いません。現行版のzero/none一致、all/native一致、旧入力省略時のmanual/audit互換性は確認済みです。
 
 ## U3：autoと同じmaskのmanual比較
 
@@ -46,29 +37,29 @@ python -B tools/export_reference_masks.py "<auto.json>" --output-dir "<マスク
 python -B tools/compare_slider_diagnostics.py "<auto.json>" "<same-mask-manual.json>" --same-mask-reference --include-trajectories --output "same-mask-comparison.json"
 ```
 
-- [ ] 実効maskと参照target/protected/backgroundのhashが一致し、Phase 2入力・予測・final latentが一致した。
-- [ ] autoのstrength0/4で同じ収集maskになる。収集値、seed、promptは固定した。
-- [ ] autoのcollect_step2 / 8steps / 部分maskでphase1_nfe=2、phase2_nfe=sampler_nfe=8、branch_nfe={base:8,slider:8}、total_model_nfe=18。
-- [ ] autoのnone/all/strength0でも収集2回を維持し、Phase 2の不要経路だけ省略する。
-- [ ] maskの顔・全身被覆、raw map、処理前mask、追加領域を確認した。顔欠落を「LoRAの演算が弱い」と混同しない。
-- [ ] 同じautoの収集設定でselection_dilate_radiusを0/4/8に変え、参照partitionが同じで実効予測maskだけが広がることを確認した。
-- [ ] 第8Previewの実効予測maskと第9の追加余白を確認し、頭・手足の越境、二重化・欠け、輪郭沿いの背景段差を評価した。推定protectedの未捕捉部への影響も実画像で確認した。
+- [x] 実効maskと参照target/protected/backgroundのhashが一致し、Phase 2入力・予測・final latentが一致した。
+- [x] autoのstrength0/4で同じ収集maskになる。収集値、seed、promptは固定した。
+- [x] autoのcollect_step2 / 8steps / 部分maskでphase1_nfe=2、phase2_nfe=sampler_nfe=8、branch_nfe={base:8,slider:8}、total_model_nfe=18。
+- [x] autoのnone/all/strength0でも収集2回を維持し、Phase 2の不要経路だけ省略する。
+- [x] maskの顔・全身被覆、raw map、処理前mask、追加領域を確認した。顔欠落を「LoRAの演算が弱い」と混同しない。
+- [x] 同じautoの収集設定でselection_dilate_radiusを0/4/8に変え、参照partitionが同じで実効予測maskだけが広がることを確認した。
+- [x] 第8Previewの実効予測maskと第9の追加余白を確認し、頭・手足の越境、二重化・欠け、輪郭沿いの背景段差を評価した。推定protectedの未捕捉部への影響も実画像で確認した。
 
 比較のstatus=measured_onlyは測定終了を示し、画質合格を意味しません。数値のexact_equalとdirect_routingを確認してください。観測後に都合よく許容値を緩めないでください。
 
 ## U4〜U6：UI・画質・復帰
 
-- [ ] 新manual/autoと旧workflowをUIで読み込み、保存・再読込・再実行した。optional入力の値と接続を維持できた。
-- [ ] 同条件のnone/all/対象maskを保存し、元promptのseed42/444444、正面スタジオ、腰手・腕組み、公園を強度2/4で評価した。
-- [ ] 対象の顔・頭身・胴脚、保護側の年齢感・体格、衣服・手足、背景中央の段差、mask越境を別々に評価した。
-- [ ] 中断後の再実行、Phase 1失敗後のmanual、base→Slider→baseの連続実行が動き、Sliderが残留しない。
+- [x] 新manual/autoと旧workflowを別名で永続保存し、専用UI再起動後に値・接続を保持してUIから再実行した。backend再起動は行っていない。
+- [x] 4promptそれぞれのseed42/444444、強度2/4、none/all/targetの48条件を評価した。
+- [x] 顔・頭身・胴脚、保護側、衣服・手足、背景・境界、mask越境を別々に評価した。姿勢の基準画像頭部cropは顔比較不可・基礎生成不適合として記録した。
+- [x] 既存Phase1/2中断後manual復帰、および標準KSampler→Slider→標準KSampler、不正Subjects後の標準KSamplerを確認。前後latent/RGB完全一致、sampler cache未使用。
 
 | 条件 / seed / strength / run_id | 対象の顔・体格 | 保護側の変化 | 顔・全身のmask被覆 | 背景・手足・境界 | 採用 / 要調整 / 不適合 |
 |---|---|---|---|---|---|
-| 元prompt | | | | | |
-| 正面スタジオ | | | | | |
-| 腰手・腕組み | | | | | |
-| 公園 | | | | | |
+| 元prompt / 2seed / 強度2・4 | 顔・体格に強度差 | 成人らしい外見維持 | おおむね被覆 | 細部・位置変化は残る | 条件付き可 |
+| 正面スタジオ / 2seed / 強度2・4 | 効果あり | 成人らしい外見維持 | おおむね被覆 | seed444444・強度4の床に白い矩形artifact | 当該例は要調整 |
+| 腰手・腕組み / 2seed / 強度2・4 | 頭部cropで顔比較不可、強度4増殖 | 腕組みは維持、基準も頭部欠落 | 基礎生成不適合 | 新しい顔と古い胴体の融合・増殖 | 不適合 |
+| 公園 / 2seed / 強度2・4 | 効果あり、体格変化が限定的な例 | 成人らしい外見維持 | seedにより境界不足 | seed444444・強度4で服が顔へ重なる | 当該例は不適合 |
 
 PNG、`_effective_mask.png`、safetensors、JSONの4点を**元の名前のまま同じフォルダー**に保持してください。JSON内の固定falseの検証フラグだけで実行失敗と判断せず、NFE・監査値・画像を評価します。
 

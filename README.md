@@ -4,7 +4,11 @@ Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面�
 
 **0.2.0：Prediction Mixを推奨経路にしました。** [推奨manual workflow](workflows/krea2_female_slider_prediction_mix_manual.json)は手動mask、[推奨auto workflow](workflows/krea2_female_slider_prediction_mix_auto.json)はSliderなしで収集したmaskを使います。通常利用はsummary、詳細検証はauditに切り替えます。[使い方・診断形式](docs/prediction-mixing.md)と[ユーザーによる手動実機確認](docs/real-machine-checklist.md)を参照してください。
 
-旧版のmanual予測混合では、強い対象側の効果と保護人物の成人性維持を実機で確認しました。0.2.0のauto接続とUI互換性・画質は、ユーザーの実機確認待ちです。対象外の完成画素は固定されません。旧hookノードと旧workflowは比較・互換用に保持しています。
+旧版のmanual予測混合では、強い対象側の効果と保護人物の成人性維持を実機で確認しました。0.2.0もAMD R9700 / INT8環境でnative12件、auto/manualの同一mask比較、UI graph再読込、中断後の復帰を確認しました。seed42ではautoの選択余白4/8で効果を確認した一方、余白0では顔が崩れました。他条件への一般化は未確認です。[実機追試の条件と限界](docs/validation.md)を参照してください。対象外の完成画素は固定されません。旧hookノードと旧workflowは比較・互換用に保持しています。
+
+重なり構図の追加評価では、男性が手前の条件でauto余白1〜4すべてに顔の断片が残りました。同条件の手動半分maskではその断片が消えています。余白の調整だけで自動maskの品質が保証されるとは扱いません。[重なり構図の比較記録](docs/validation.md)を参照してください。
+
+U2はユーザー指定で対象外、U4の永続保存・UI再起動後再実行、U5の指定48条件評価、U6の標準KSampler復帰確認は完了しました。姿勢指定の頭部crop/増殖、公園の服と顔の融合などauto画質の未達は残しています。[最新評価と引き継ぎ](docs/validation.md)から状況と証拠を確認できます。
 
 ## 旧版の検討経緯
 

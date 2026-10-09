@@ -1,5 +1,54 @@
 # 検証記録
 
+2026-10-09 / **U4・U5・U6評価完了とチャット引き継ぎ**：ユーザー指定でU2の旧commit回帰を完了条件から除外した。T1〜T7とU1/U3/U4/U6は完了、U5は指定比較表の評価・採用判定を完了した。autoの汎用画質は未達のまま。ユーザーがチャット終了を希望したため新しい生成・実装修正を追加せず、[引き継ぎノート](../.omx/notepad.md)と最新plan/progressを残した。
+
+- **U4完了**：new manual、new auto、旧mix halfをComfyUIユーザーフォルダーの`workflows/codex_u4_20261009/{manual,auto,legacy}.json`へ別名保存。専用Edgeを終了・再起動し、保存JSON構造・widget値・linkが一致することを確認。UIの`app.queuePrompt`から3条件を再実行し、キャッシュではなくSamplerを評価してすべて成功した。バックエンドの再起動は行っていない。証拠`test-results/u456-20261009/u4-summary.json`。
+- **U5評価完了**：元prompt、正面スタジオ、腰手/腕組み、公園、それぞれseed42/444444、強度2/4、none/all/targetで48生成成功。16部分run全128stepの予測選択は完全一致。全8prompt/seed群で参照partition一致、none強度2/4の全step入力・予測・最終latent・RGBも完全一致。生protected mapは公園seed42のall強度4に限り120要素・最大4.0745362639427185e-10の差を確認した。二値maskは同一だが、生mapを完全一致とは報告しない。事後の許容値で合格へ変更せず測定を保持した。証拠`u5-summary.json`、`u5-raw-map-difference-investigation.json`、比較図8枚、`u5-visual-observations.json`。
+- **U6完了**：既存のPhase1/2中断後manual復帰に加え、標準KSampler→Slider→標準KSampler、不正Subjects拒否後の標準KSamplerを実行。前後のlatent・RGBは完全一致、latent最大誤差0。1倍の空latent補間で入力値を維持してcacheを無効化し、各標準Samplerが実際に実行されたことをhistoryで確認した。追加の不正SubjectsはSampler前に拒否される検査で、GPUのPhase1内部強制例外とは区別する。証拠`u6-summary.json`。
+
+| U5条件 | 評価結果 |
+|---|---|
+| 元prompt / 両seed / 強度2・4 | 対象に強度差、保護側は成人らしい外見。今回の条件では比較的良好 |
+| 正面スタジオ / 両seed / 強度2・4 | 顔・体格の効果と保護側の外見を確認。seed444444・強度4の床に白い矩形artifactがあり要調整 |
+| 腰手/腕組み / 両seed / 強度2・4 | 基準画像から頭部が画面外で顔比較不可。強度4で新しい顔と古い身体が重なり、増殖/融合する不適合例 |
+| 公園 / seed42 / 強度2・4 | 対象効果と保護側の成人らしい外見、道・樹木・影の連続性を確認 |
+| 公園 / seed444444 / 強度2 | 対象の顔に効果、体格の変化は限定的。保護側の成人らしい外見を維持 |
+| 公園 / seed444444 / 強度4 | 元の服が新しい顔へ重なり、首・胴の接続が崩れる不適合例 |
+
+既存の重なり構図の顔断片も未解決。現在の判定はmanual推奨・auto実験扱いの継続であり、「評価完了」を「画質合格」と読み替えない。次の課題は失敗runのraw/reference/effective maskを基準・生成画像と照合し、誤割当・穴・孤立成分・形状変化後の境界を切り分けること。手動halfで改善した比較はmask形状と収集モードが同時に異なり、原因を単独で証明していない。算法・追跡・境界処理の変更は次の指示に基づく別計画とする。
+
+保存済み評価は繰り返さず、次チャットは引き継ぎノートと各summaryから再開する。生成実装・配布workflow・依存は変更していない。未コミット変更は最新plan/progress、README、本記録、実機チェックリスト、nativeテストの推論モード修正で、commit/pushは行っていない。専用ブラウザーは終了済み。ComfyUIバックエンドは維持し、終了時のqueueは空。
+
+2026-10-09 / **男女が重なる構図とauto選択余白1〜4の追加評価**：同じ実機・モデル・Slider、seed42、強度4で、「女性が手前、男性が後ろから肩に手を置く」「男性が手前、女性が後ろから肩と腕に触れる」の2promptを評価した。基準画像で肩・腕・胴体の重なりを確認してから、それぞれbase、全体適用、auto余白1/2/3/4を生成した。男性が手前の構図にmanual左半分を1条件追加し、合計13生成が成功した。
+
+| 余白 | 女性が手前 | 男性が手前 |
+|---|---|---|
+| 1 | 対象の顔の効果、保護人物の成人らしい外見。比較的まとまるが全体適用より体格変化は限定的 | 保護人物の顔の横に別の顔の断片、下肢にも残像 |
+| 2 | 対象に効果。保護人物の脚・足が対象の左側へ回り込む不自然な配置 | 顔と手の断片が残る |
+| 3 | 対象に効果、保護人物の成人らしい外見。今回の女性手前条件では比較的まとまる | 顔の断片が保護人物の頬に重なり、服の境界も崩れる |
+| 4 | 対象に効果。保護人物の首・襟に切り欠き状の変化 | 顔の断片・頬・服の境界の崩れが残る |
+
+男性が手前の同条件manual左半分では顔の断片が消え、2人の像が成立した。manualは参照mask形状と収集モードの両方がautoと異なるため、原因を一つに確定する比較ではない。自動maskの誤領域や、体格変化に伴う選択境界のずれが有力な課題で、**余白1〜4を重なり構図全般の安全な範囲とは判定しない**。固定半分maskも人物追従の解決策ではない。
+
+数値監査では、auto部分選択8runとmanual1runの全stepでinside=native / outside=baseが完全一致した。autoのraw map・参照partitionは各prompt内の強度0/4・余白1〜4で完全一致し、初期noise/latent/full sigmas/conditioningも同一。余白拡張は参照partitionを保ち、推定protected maskへの追加は0だった。これは実人物の全画素を正しく保護できたことを意味しない。画像と参照maskの重ね図には背景の誤割当や人物内の穴も見える。演算の合格と画質の不合格を分けて記録する。
+
+保存先はローカルの`test-results/overlap-20261009/`。`summary.json`、`woman_front-comparison.png`、`man_front-comparison.png`、`manual-control-comparison.png`、`reference-mask-overlays.png`と各runの元4点セットを保持する。1seed・2prompt・1Sliderの探索結果であり、年齢や同一人物性の自動スコアにはしていない。生成実装と配布workflowの変更はない。
+
+2026-10-09 / **0.2.0の起動中ComfyUIでの実機追試**：ユーザーの依頼により、`http://127.0.0.1:8000`のComfyUI 0.37.0 / commit `15ef24d1c0333a3eba56c5cd153d8db65363ff8f`、Python 3.12.11、torch 2.12.0+rocm7.14.0、AMD Radeon AI PRO R9700で検証した。モデルは`intorealismAsian_k2JAVFLASHV1.safetensors`（対象投影はint8_tensorwise）、CLIPは`qwen3vl_4b_bf16.safetensors`、styleはdarkbrush 0.8、Sliderは`archive/krea2_deaging_20261001T075826Z_c06cb035.safetensors`。seed42、1024×1024、8steps、Euler/simple、CFG1を使用した。
+
+- native12件はskip0で成功。初回は直接forward比較をautograd有効のまま呼ぶテスト側の不備で1件失敗した。`tests/native_checks.py`の当該比較を実Samplerと同じ`torch.inference_mode()`に揃えて再実行した。生成実装の変更はない。変更後のCPU339件も成功（6.41秒）。
+- 実GPUで14条件の生成・診断保存が成功し、2件の意図的中断を確認した。保存物のhash・manifest・mask再生成を既存readerで検証した。zero/none、all/native全体適用、同じmaskのauto/manualは初回予測・最終latent・RGBが完全一致した。保存traceが双方にある比較では全stepの入力・予測も完全一致し、許容誤差は0とした。
+- 部分選択は全stepでinside=native / outside=baseが完全一致。autoの強度0/4、余白0/4/8でraw mapと参照partitionが一致した。余白だけが拡大し、protected参照領域への追加は0。auto部分選択のNFEは収集2＋base8＋slider8＝18だった。
+- Phase 1収集中とPhase 2生成中に、対象prompt_idだけをキャンセルした。それぞれ直後のmanual strength0が成功し、中断前baseの全step入力・予測・最終latent・RGBと完全一致した。成功runの`owned_hooks_removed`はすべてtrue。
+- 実INT8の全140対象moduleを照合し、gate/wq/wk/wv/woの代表5投影probeが成功した。非対象位置・明示式との誤差は0、packed weightは不変。probe終了後にComfyUIの`ModelPatcher.__del__`がPython終了時の`ON_DETACH`参照で警告を出したが、probe結果と終了コードは成功。実サーバーの停止や依存変更は行っていない。
+- 実frontend 1.53.6を専用の非表示Edgeで開き、新manual、新auto、旧halfの3graphを読込・serialize・再読込した。専用ノードのwidget値と入出力linkを保持し、再読込後のAPI exportもlive preflightに合格した。ファイル名は実環境へ合わせたコピーを使い、配布workflowは変更していない。ブラウザーは終了済み。
+
+**画質の判定は条件付き。** このseedではmanual halfとauto余白4/8に対象の顔・体格変化が見え、保護人物は成人の外見を維持した。一方、auto余白0では対象の顔の二重化・崩れを確認した。予測選択の数値監査には違反がなく、狭い固定maskと大きな形状変化の組合せは引き続き画質評価が必要。他seed・他prompt・他Slider、同一環境での旧commit数値回帰、アプリ再起動を跨ぐユーザー保存workflowの維持は今回未検証。
+
+元のPNG・mask・safetensors・JSON、実行prompt_id、比較結果、UI export、ログはローカルの`test-results/live-20261009/`へ保存した。集約は`summary.json`、画像比較は`visual-comparison.png`、実INT8 probeは`real-int8-probe.json`。これらはGit追跡対象外で、モデル・画像を公開しない。低temperatureの探索run（保存名`auto_invalid_map`）は実際には成功したため、強制失敗の証拠には数えていない。生成JSONの固定falseフラグは書き換えていない。
+
+以下は実装完了時点の履歴。「実機未実施」は各記録の作成時点の状態であり、上記の追試と区別する。
+
 2026-10-09 / **0.2.0 Prediction Mix採用**：既存Prediction Mixへautoのbase-onlyマスク収集を接続。初期noise/latent/full sigmasを再利用し、Phase別NFEを分離。既存ノードID・位置引数・manual既定と旧workflowを維持し、新manual/auto workflowを追加した。新診断はschema 3で、raw mapからのmask再生成、予測選択の再計算、収集provenance・summaryのNFE検証を行う。旧schema 1/2の読込を維持する。
 
 独立レビューで2点（summaryの収集由来検査不足、親base復帰の検査不足）を確認し、改変受理と親base選択の回帰試験をRED→GREENで修正した。追加レビュー対応後の最終CPU suiteは339件成功（失敗・skip0）。テストはComfyUI境界doubleを含み、実native検証の代用ではない。
