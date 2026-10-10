@@ -1,0 +1,1185 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+      "weight_dtype": "default"
+    },
+    "_meta": {
+      "title": "Checkpoint"
+    }
+  },
+  "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "lora_name": "krea2_darkbrush.safetensors",
+      "strength_model": 0.8,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared style baseline (all FINAL models)"
+    }
+  },
+  "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_4b_bf16.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Qwen3-VL CLIP, Krea2 type"
+    }
+  },
+  "4": {
+    "class_type": "Krea2SliderFuseEncode",
+    "inputs": {
+      "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "clip": [
+        "3",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared scene: two fully clothed adults"
+    }
+  },
+  "5": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared zero negative"
+    }
+  },
+  "6": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Collection subjects: woman / man"
+    }
+  },
+  "7": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Shared EMPTY latent, never collector output"
+    }
+  },
+  "9": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "_meta": {
+      "title": "Shared VAE"
+    }
+  },
+  "10": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "strength_model": 4.0
+    },
+    "_meta": {
+      "title": "ON collector only: ordinary global Slider +4"
+    }
+  },
+  "8": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "6",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 0.0,
+      "trial_id": 0,
+      "mix_scope": "none",
+      "diagnostic_level": "summary",
+      "mask_mode": "auto",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 0
+    },
+    "_meta": {
+      "title": "OFF: style only; own strength=0, no mix"
+    }
+  },
+  "11": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "10",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "6",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 0.0,
+      "trial_id": 0,
+      "mix_scope": "none",
+      "diagnostic_level": "summary",
+      "mask_mode": "auto",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 0
+    },
+    "_meta": {
+      "title": "ON: upstream style + Slider; own strength=0, no mix"
+    }
+  },
+  "12": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "8",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "OFF bank: raw target 0 / protected 1"
+    }
+  },
+  "13": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "11",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "ON bank: raw target 0 / protected 1"
+    }
+  },
+  "40": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "13",
+        0
+      ],
+      "source": [
+        "12",
+        1
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "subtract"
+    },
+    "_meta": {
+      "title": "C target = clamp(T_on - P_off)"
+    }
+  },
+  "20": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "12",
+        0
+      ],
+      "protected_mask": [
+        "12",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "A_off: manual reference subjects"
+    }
+  },
+  "21": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "20",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "_meta": {
+      "title": "A_off: FINAL style baseline + local Slider"
+    }
+  },
+  "22": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "21",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "A_off: decode"
+    }
+  },
+  "23": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "22",
+        0
+      ],
+      "latent": [
+        "21",
+        0
+      ],
+      "diagnostics": [
+        "21",
+        2
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_off"
+    },
+    "_meta": {
+      "title": "A_off: PNG + audit + latent/prediction"
+    }
+  },
+  "30": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "13",
+        0
+      ],
+      "protected_mask": [
+        "13",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "B_on: manual reference subjects"
+    }
+  },
+  "31": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "30",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "_meta": {
+      "title": "B_on: FINAL style baseline + local Slider"
+    }
+  },
+  "32": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "31",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "B_on: decode"
+    }
+  },
+  "33": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "32",
+        0
+      ],
+      "latent": [
+        "31",
+        0
+      ],
+      "diagnostics": [
+        "31",
+        2
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_on"
+    },
+    "_meta": {
+      "title": "B_on: PNG + audit + latent/prediction"
+    }
+  },
+  "41": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "40",
+        0
+      ],
+      "protected_mask": [
+        "12",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "C_hybrid: manual reference subjects"
+    }
+  },
+  "42": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "41",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "_meta": {
+      "title": "C_hybrid: FINAL style baseline + local Slider"
+    }
+  },
+  "43": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "42",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "C_hybrid: decode"
+    }
+  },
+  "44": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "43",
+        0
+      ],
+      "latent": [
+        "42",
+        0
+      ],
+      "diagnostics": [
+        "42",
+        2
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_hybrid"
+    },
+    "_meta": {
+      "title": "C_hybrid: PNG + audit + latent/prediction"
+    }
+  },
+  "50": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "13",
+        0
+      ],
+      "source": [
+        "12",
+        1
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "multiply"
+    },
+    "_meta": {
+      "title": "Conflict = T_on * P_off (diagnostic only)"
+    }
+  },
+  "51": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "12",
+        0
+      ],
+      "source": [
+        "13",
+        0
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "subtract"
+    },
+    "_meta": {
+      "title": "Old-only = clamp(T_off - T_on); DO NOT erase"
+    }
+  },
+  "60": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "raw_T_off: display mask"
+    }
+  },
+  "61": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "60",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_T_off"
+    },
+    "_meta": {
+      "title": "raw_T_off: ordinary PNG"
+    }
+  },
+  "62": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "raw_P_off: display mask"
+    }
+  },
+  "63": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "62",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_P_off"
+    },
+    "_meta": {
+      "title": "raw_P_off: ordinary PNG"
+    }
+  },
+  "64": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "13",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "raw_T_on: display mask"
+    }
+  },
+  "65": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "64",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_T_on"
+    },
+    "_meta": {
+      "title": "raw_T_on: ordinary PNG"
+    }
+  },
+  "66": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "13",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "raw_P_on: display mask"
+    }
+  },
+  "67": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "66",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_P_on"
+    },
+    "_meta": {
+      "title": "raw_P_on: ordinary PNG"
+    }
+  },
+  "68": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "50",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "conflict_T_on_times_P_off: display mask"
+    }
+  },
+  "69": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "68",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/conflict_T_on_times_P_off"
+    },
+    "_meta": {
+      "title": "conflict_T_on_times_P_off: ordinary PNG"
+    }
+  },
+  "70": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "40",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "hybrid_T_on_minus_P_off: display mask"
+    }
+  },
+  "71": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "70",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/hybrid_T_on_minus_P_off"
+    },
+    "_meta": {
+      "title": "hybrid_T_on_minus_P_off: ordinary PNG"
+    }
+  },
+  "72": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "51",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "old_T_off_minus_T_on: display mask"
+    }
+  },
+  "73": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "72",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/old_T_off_minus_T_on"
+    },
+    "_meta": {
+      "title": "old_T_off_minus_T_on: ordinary PNG"
+    }
+  },
+  "80": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "reference_off: collector continuation, not FINAL input"
+    }
+  },
+  "81": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "80",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/reference_off"
+    },
+    "_meta": {
+      "title": "reference_off: ordinary PNG, no DiagnosticSave"
+    }
+  },
+  "82": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "11",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "reference_on: collector continuation, not FINAL input"
+    }
+  },
+  "83": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "82",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/reference_on"
+    },
+    "_meta": {
+      "title": "reference_on: ordinary PNG, no DiagnosticSave"
+    }
+  },
+  "100": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "21",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "A: FINAL bank, not collector bank"
+    }
+  },
+  "101": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "100",
+        7
+      ]
+    },
+    "_meta": {
+      "title": "A_effective_prediction_mask: mask to image"
+    }
+  },
+  "102": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "101",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_effective_prediction_mask"
+    },
+    "_meta": {
+      "title": "A_effective_prediction_mask: ordinary PNG"
+    }
+  },
+  "103": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "100",
+        8
+      ]
+    },
+    "_meta": {
+      "title": "A_selection_added_mask: mask to image"
+    }
+  },
+  "104": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "103",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_selection_added_mask"
+    },
+    "_meta": {
+      "title": "A_selection_added_mask: ordinary PNG"
+    }
+  },
+  "105": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "100",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "A_reference_target_before_dilation: mask to image"
+    }
+  },
+  "106": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "105",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_reference_target_before_dilation"
+    },
+    "_meta": {
+      "title": "A_reference_target_before_dilation: ordinary PNG"
+    }
+  },
+  "107": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "100",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "A_reference_protected: mask to image"
+    }
+  },
+  "108": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "107",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_reference_protected"
+    },
+    "_meta": {
+      "title": "A_reference_protected: ordinary PNG"
+    }
+  },
+  "110": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "31",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "B: FINAL bank, not collector bank"
+    }
+  },
+  "111": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "110",
+        7
+      ]
+    },
+    "_meta": {
+      "title": "B_effective_prediction_mask: mask to image"
+    }
+  },
+  "112": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "111",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_effective_prediction_mask"
+    },
+    "_meta": {
+      "title": "B_effective_prediction_mask: ordinary PNG"
+    }
+  },
+  "113": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "110",
+        8
+      ]
+    },
+    "_meta": {
+      "title": "B_selection_added_mask: mask to image"
+    }
+  },
+  "114": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "113",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_selection_added_mask"
+    },
+    "_meta": {
+      "title": "B_selection_added_mask: ordinary PNG"
+    }
+  },
+  "115": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "110",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "B_reference_target_before_dilation: mask to image"
+    }
+  },
+  "116": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "115",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_reference_target_before_dilation"
+    },
+    "_meta": {
+      "title": "B_reference_target_before_dilation: ordinary PNG"
+    }
+  },
+  "117": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "110",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "B_reference_protected: mask to image"
+    }
+  },
+  "118": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "117",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_reference_protected"
+    },
+    "_meta": {
+      "title": "B_reference_protected: ordinary PNG"
+    }
+  },
+  "120": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "42",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "C: FINAL bank, not collector bank"
+    }
+  },
+  "121": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "120",
+        7
+      ]
+    },
+    "_meta": {
+      "title": "C_effective_prediction_mask: mask to image"
+    }
+  },
+  "122": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "121",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_effective_prediction_mask"
+    },
+    "_meta": {
+      "title": "C_effective_prediction_mask: ordinary PNG"
+    }
+  },
+  "123": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "120",
+        8
+      ]
+    },
+    "_meta": {
+      "title": "C_selection_added_mask: mask to image"
+    }
+  },
+  "124": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "123",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_selection_added_mask"
+    },
+    "_meta": {
+      "title": "C_selection_added_mask: ordinary PNG"
+    }
+  },
+  "125": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "120",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "C_reference_target_before_dilation: mask to image"
+    }
+  },
+  "126": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "125",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_reference_target_before_dilation"
+    },
+    "_meta": {
+      "title": "C_reference_target_before_dilation: ordinary PNG"
+    }
+  },
+  "127": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "120",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "C_reference_protected: mask to image"
+    }
+  },
+  "128": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "127",
+        0
+      ],
+      "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_reference_protected"
+    },
+    "_meta": {
+      "title": "C_reference_protected: ordinary PNG"
+    }
+  }
+}

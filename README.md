@@ -151,3 +151,11 @@ This is a workflow-level experiment, not a new runtime collection mode. It uses
 18/20 evaluations proposed for a later collection-only implementation. Static
 graph checks do not establish real-machine compatibility or image quality.
 
+
+### Hybrid full-body and strong-overlap validation
+
+See [the Japanese validation protocol](docs/hybrid-overlap-validation.md) for
+A/B/C comparisons with explicit final-selection/margin exports, a manual-D
+control, and a woman-in-front/man-behind strong-overlap case. The case is a
+prompted test condition; its pose must be checked in the actual reference image.
+New workflows are structurally tested, not GPU/image-quality certified.

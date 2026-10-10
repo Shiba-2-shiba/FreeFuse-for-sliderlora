@@ -1,0 +1,1639 @@
+{
+  "last_node_id": 9002,
+  "last_link_id": 34,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        390,
+        103
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "title": "Checkpoint"
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        40,
+        290
+      ],
+      "size": [
+        390,
+        125
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "krea2_darkbrush.safetensors",
+        0.8
+      ],
+      "widgets_values_named": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8
+      },
+      "title": "Shared style baseline (all FINAL models)"
+    },
+    {
+      "id": 3,
+      "type": "CLIPLoader",
+      "pos": [
+        500,
+        100
+      ],
+      "size": [
+        390,
+        132
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_4b_bf16.safetensors",
+        "krea2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "title": "Qwen3-VL CLIP, Krea2 type"
+    },
+    {
+      "id": 4,
+      "type": "Krea2SliderFuseEncode",
+      "pos": [
+        500,
+        320
+      ],
+      "size": [
+        410,
+        290
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            3,
+            10
+          ]
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "links": [
+            6,
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseEncode"
+      },
+      "widgets_values": [
+        "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows."
+      ],
+      "widgets_values_named": {
+        "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows."
+      },
+      "title": "Shared scene: two fully clothed adults"
+    },
+    {
+      "id": 5,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        970,
+        100
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "Shared zero negative"
+    },
+    {
+      "id": 7,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        970,
+        280
+      ],
+      "size": [
+        390,
+        132
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "title": "Shared EMPTY latent, never collector output"
+    },
+    {
+      "id": 9,
+      "type": "VAELoader",
+      "pos": [
+        970,
+        470
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "qwen_image_vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "title": "Shared VAE"
+    },
+    {
+      "type": "LoadImageMask",
+      "size": [
+        390,
+        330
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            4,
+            29
+          ]
+        }
+      ],
+      "widgets_values_named": {
+        "image": "REQUIRED_HUMAN_FULLBODY_SUPPORT_woman_front_strong_overlap_seed42.png",
+        "channel": "red"
+      },
+      "id": 200,
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "title": "REQUIRED human full-body support (not provided)",
+      "properties": {
+        "Node name for S&R": "LoadImageMask"
+      },
+      "pos": [
+        40,
+        930
+      ],
+      "widgets_values": [
+        "REQUIRED_HUMAN_FULLBODY_SUPPORT_woman_front_strong_overlap_seed42.png",
+        "red",
+        "image"
+      ]
+    },
+    {
+      "type": "LoadImageMask",
+      "size": [
+        390,
+        330
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            5,
+            8,
+            31
+          ]
+        }
+      ],
+      "widgets_values_named": {
+        "image": "REQUIRED_SAVED_P_OFF_woman_front_strong_overlap_seed42.png",
+        "channel": "red"
+      },
+      "id": 201,
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "title": "REQUIRED saved P_off from matching case/seed",
+      "properties": {
+        "Node name for S&R": "LoadImageMask"
+      },
+      "pos": [
+        500,
+        930
+      ],
+      "widgets_values": [
+        "REQUIRED_SAVED_P_OFF_woman_front_strong_overlap_seed42.png",
+        "red",
+        "image"
+      ]
+    },
+    {
+      "id": 202,
+      "type": "MaskComposite",
+      "pos": [
+        970,
+        960
+      ],
+      "size": [
+        390,
+        176
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "destination",
+          "type": "MASK",
+          "link": 4
+        },
+        {
+          "name": "source",
+          "type": "MASK",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            7,
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskComposite"
+      },
+      "widgets_values": [
+        0,
+        0,
+        "subtract"
+      ],
+      "widgets_values_named": {
+        "x": 0,
+        "y": 0,
+        "operation": "subtract"
+      },
+      "title": "D target = clamp(human support - P_off)"
+    },
+    {
+      "id": 20,
+      "type": "Krea2SliderFuseSubjects",
+      "pos": [
+        1430,
+        880
+      ],
+      "size": [
+        390,
+        227
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 6
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": 7,
+          "shape": 7
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "link": 8,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseSubjects"
+      },
+      "widgets_values": [
+        "woman",
+        "man",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0
+      },
+      "title": "D: human support minus saved OFF protection"
+    },
+    {
+      "id": 21,
+      "type": "Krea2SliderFusePredictionMixSampler",
+      "pos": [
+        1880,
+        770
+      ],
+      "size": [
+        430,
+        650
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 9
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 10
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 11
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 12
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 13
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            15,
+            18
+          ]
+        },
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            20
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFusePredictionMixSampler"
+      },
+      "widgets_values": [
+        "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        4.0,
+        42,
+        "fixed",
+        8,
+        1.0,
+        "target_mask",
+        0,
+        "audit",
+        "manual",
+        2,
+        18,
+        0.2,
+        10000.0,
+        0,
+        0,
+        4
+      ],
+      "widgets_values_named": {
+        "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "strength": 4.0,
+        "seed": 42,
+        "steps": 8,
+        "cfg": 1.0,
+        "mix_scope": "target_mask",
+        "trial_id": 0,
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 4
+      },
+      "title": "D: FINAL style baseline + local Slider"
+    },
+    {
+      "id": 22,
+      "type": "VAEDecode",
+      "pos": [
+        2360,
+        770
+      ],
+      "size": [
+        390,
+        89
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 15
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "A_off: decode"
+    },
+    {
+      "id": 23,
+      "type": "Krea2SliderFuseDiagnosticSave",
+      "pos": [
+        2820,
+        770
+      ],
+      "size": [
+        440,
+        210
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 17
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 18
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "link": 19
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseDiagnosticSave"
+      },
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_manual_support"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_manual_support"
+      },
+      "title": "D: correlated final diagnostics"
+    },
+    {
+      "id": 100,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        2350,
+        1270
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": [
+            25
+          ]
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": [
+            27
+          ]
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": [
+            21
+          ]
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D: FINAL mask bank"
+    },
+    {
+      "id": 101,
+      "type": "MaskToImage",
+      "pos": [
+        2820,
+        1270
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_effective_prediction_mask: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_effective_prediction_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_effective_prediction_mask"
+      },
+      "id": 102,
+      "pos": [
+        3270,
+        1250
+      ],
+      "order": 16,
+      "mode": 0,
+      "flags": {},
+      "title": "D_effective_prediction_mask: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 103,
+      "type": "MaskToImage",
+      "pos": [
+        2820,
+        1650
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_selection_added_mask: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_selection_added_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_selection_added_mask"
+      },
+      "id": 104,
+      "pos": [
+        3270,
+        1630
+      ],
+      "order": 18,
+      "mode": 0,
+      "flags": {},
+      "title": "D_selection_added_mask: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 105,
+      "type": "MaskToImage",
+      "pos": [
+        2820,
+        2030
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_reference_target_before_dilation: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_reference_target_before_dilation"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_reference_target_before_dilation"
+      },
+      "id": 106,
+      "pos": [
+        3270,
+        2010
+      ],
+      "order": 20,
+      "mode": 0,
+      "flags": {},
+      "title": "D_reference_target_before_dilation: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 107,
+      "type": "MaskToImage",
+      "pos": [
+        2820,
+        2410
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_reference_protected: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_reference_protected"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_reference_protected"
+      },
+      "id": 108,
+      "pos": [
+        3270,
+        2390
+      ],
+      "order": 22,
+      "mode": 0,
+      "flags": {},
+      "title": "D_reference_protected: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 203,
+      "type": "MaskToImage",
+      "pos": [
+        40,
+        1460
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_human_support_input: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_human_support_input"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_human_support_input"
+      },
+      "id": 204,
+      "pos": [
+        500,
+        1440
+      ],
+      "order": 24,
+      "mode": 0,
+      "flags": {},
+      "title": "D_human_support_input: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 205,
+      "type": "MaskToImage",
+      "pos": [
+        40,
+        1870
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_saved_P_off_input: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 32
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_saved_P_off_input"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_saved_P_off_input"
+      },
+      "id": 206,
+      "pos": [
+        500,
+        1850
+      ],
+      "order": 26,
+      "mode": 0,
+      "flags": {},
+      "title": "D_saved_P_off_input: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 207,
+      "type": "MaskToImage",
+      "pos": [
+        970,
+        1460
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "D_support_minus_P_off: mask to image"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 34
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_support_minus_P_off"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_support_minus_P_off"
+      },
+      "id": 208,
+      "pos": [
+        1430,
+        1440
+      ],
+      "order": 28,
+      "mode": 0,
+      "flags": {},
+      "title": "D_support_minus_P_off: ordinary PNG",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 9000,
+      "type": "Note",
+      "pos": [
+        40,
+        -510
+      ],
+      "size": [
+        1250,
+        420
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "D: manual support control. Human full-body support is not provided. REQUIRED_ filenames are intentional placeholders: missing files must fail LoadImageMask validation. No guessed support mask is generated."
+      ],
+      "title": "Validation instructions"
+    },
+    {
+      "id": 9001,
+      "type": "Note",
+      "pos": [
+        1390,
+        -510
+      ],
+      "size": [
+        1250,
+        420
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Both LoadImageMask nodes use red: white=1, black=0. Use binary grayscale PNGs without alpha/palette and identical canvas dimensions. Copy the saved P_off from the same case / seed / model / settings into ComfyUI input. Token-grid P_off and 1024px support cannot be combined without an explicit aligned preparation step. Run --input-dir preflight. D uses original style MODEL + empty latent, one local Slider +4, radius=4; A/C controls use the same settings."
+      ],
+      "title": "Validation instructions"
+    },
+    {
+      "id": 9002,
+      "type": "Note",
+      "pos": [
+        2740,
+        -510
+      ],
+      "size": [
+        1250,
+        420
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "D = clamp(human_support - P_off, 0, 1), with P_off also connected as protected_mask. Initial subtraction is not a persistent exclusion zone: radius>0 may regrow into an initially excluded area when P_off misses it. Compare the before-dilation, effective and selection-added masks; protected/background pixels can still change indirectly."
+      ],
+      "title": "Validation instructions"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      4,
+      200,
+      0,
+      202,
+      0,
+      "MASK"
+    ],
+    [
+      5,
+      201,
+      0,
+      202,
+      1,
+      "MASK"
+    ],
+    [
+      6,
+      4,
+      1,
+      20,
+      0,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      7,
+      202,
+      0,
+      20,
+      1,
+      "MASK"
+    ],
+    [
+      8,
+      201,
+      0,
+      20,
+      2,
+      "MASK"
+    ],
+    [
+      9,
+      2,
+      0,
+      21,
+      0,
+      "MODEL"
+    ],
+    [
+      10,
+      4,
+      0,
+      21,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      11,
+      5,
+      0,
+      21,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      12,
+      4,
+      1,
+      21,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      13,
+      20,
+      0,
+      21,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      14,
+      7,
+      0,
+      21,
+      5,
+      "LATENT"
+    ],
+    [
+      15,
+      21,
+      0,
+      22,
+      0,
+      "LATENT"
+    ],
+    [
+      16,
+      9,
+      0,
+      22,
+      1,
+      "VAE"
+    ],
+    [
+      17,
+      22,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      21,
+      0,
+      23,
+      1,
+      "LATENT"
+    ],
+    [
+      19,
+      21,
+      2,
+      23,
+      2,
+      "KREA2_SLIDER_FUSE_DIAGNOSTICS"
+    ],
+    [
+      20,
+      21,
+      1,
+      100,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      21,
+      100,
+      7,
+      101,
+      0,
+      "MASK"
+    ],
+    [
+      22,
+      101,
+      0,
+      102,
+      0,
+      "IMAGE"
+    ],
+    [
+      23,
+      100,
+      8,
+      103,
+      0,
+      "MASK"
+    ],
+    [
+      24,
+      103,
+      0,
+      104,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      100,
+      0,
+      105,
+      0,
+      "MASK"
+    ],
+    [
+      26,
+      105,
+      0,
+      106,
+      0,
+      "IMAGE"
+    ],
+    [
+      27,
+      100,
+      1,
+      107,
+      0,
+      "MASK"
+    ],
+    [
+      28,
+      107,
+      0,
+      108,
+      0,
+      "IMAGE"
+    ],
+    [
+      29,
+      200,
+      0,
+      203,
+      0,
+      "MASK"
+    ],
+    [
+      30,
+      203,
+      0,
+      204,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      201,
+      0,
+      205,
+      0,
+      "MASK"
+    ],
+    [
+      32,
+      205,
+      0,
+      206,
+      0,
+      "IMAGE"
+    ],
+    [
+      33,
+      202,
+      0,
+      207,
+      0,
+      "MASK"
+    ],
+    [
+      34,
+      207,
+      0,
+      208,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.28,
+      "offset": [
+        160,
+        640
+      ]
+    }
+  },
+  "version": 0.4
+}

@@ -1,0 +1,592 @@
+{
+  "name": "Bounded hybrid + strong-overlap evaluation; no runtime changes",
+  "generator": "tools/build_hybrid_validation_workflows.py",
+  "base_workflow": "krea2_female_slider_collection_comparison.json",
+  "source_revision": "4c53e667",
+  "workflows": {
+    "abc": {
+      "ui": "krea2_female_slider_hybrid_validation.json",
+      "api": "krea2_female_slider_hybrid_validation_api.json"
+    },
+    "manual_d": {
+      "ui": "krea2_female_slider_hybrid_manual_d.json",
+      "api": "krea2_female_slider_hybrid_manual_d_api.json"
+    }
+  },
+  "validation": {
+    "static_graph_and_schema": "tests/test_hybrid_validation_workflows.py",
+    "gpu_execution": "not_run",
+    "image_quality": "not_evaluated",
+    "pose_gate": "not_evaluated"
+  },
+  "selected_case": {
+    "case_id": "woman_front_strong_overlap",
+    "seed": 42,
+    "radius": 4
+  },
+  "cases": [
+    {
+      "case_id": "original",
+      "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on the same studio floor, facing the camera. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both entire figures are visible, with space above their heads and below their shoes, at a consistent scale and camera distance. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "prompt_source": {
+        "path": "workflows/krea2_female_slider_collection_comparison_api.json",
+        "node_id": "4",
+        "status": "historical_exact",
+        "provenance": "Exact prompt transcribed from the provided historical workflow: test-results/u456-20261009/u5_original_seed42_target_mask_strength4/workflow.json; the evidence archive is not a runtime dependency or included deliverable."
+      },
+      "seeds": [
+        42
+      ],
+      "optional_seeds": [],
+      "note": "Historical prompt and recommended seed only; this evaluation reruns matched controls and does not reproduce every historical run setting."
+    },
+    {
+      "case_id": "man_front",
+      "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults posing closely together, with clearly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands slightly behind and to the left of an adult man in a blue T-shirt and black trousers. The man is in the foreground, nearer the camera, and partially occludes the woman's right shoulder, right upper arm and the right side of her torso. The woman's left hand rests lightly on the man's left upper arm. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. Both faces remain clearly visible and look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both entire figures visible from head to shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "prompt_source": {
+        "path": "tools/build_hybrid_validation_workflows.py",
+        "constant": "HISTORICAL_PROMPTS[man_front]",
+        "status": "historical_exact",
+        "provenance": "Exact prompt transcribed from the provided historical workflow: test-results/overlap-20261009/man_front_r4/workflow.json; the evidence archive is not a runtime dependency or included deliverable."
+      },
+      "seeds": [
+        42
+      ],
+      "optional_seeds": [],
+      "note": "Historical prompt and recommended seed only; this evaluation reruns matched controls and does not reproduce every historical run setting."
+    },
+    {
+      "case_id": "park",
+      "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+      "prompt_source": {
+        "path": "tools/build_hybrid_validation_workflows.py",
+        "constant": "HISTORICAL_PROMPTS[park]",
+        "status": "historical_exact",
+        "provenance": "Exact prompt transcribed from the provided historical workflow: test-results/u456-20261009/u5_park_seed444444_target_mask_strength4/workflow.json; the evidence archive is not a runtime dependency or included deliverable."
+      },
+      "seeds": [
+        444444
+      ],
+      "optional_seeds": [],
+      "note": "Historical prompt and recommended seed only; this evaluation reruns matched controls and does not reproduce every historical run setting."
+    },
+    {
+      "case_id": "woman_front_strong_overlap",
+      "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "prompt_source": {
+        "path": "tools/build_hybrid_validation_workflows.py",
+        "constant": "NEW_PROMPT",
+        "status": "new_unexecuted"
+      },
+      "seeds": [
+        42,
+        444444
+      ],
+      "optional_seeds": [
+        444444
+      ],
+      "human_pose_gate": {
+        "required": true,
+        "status": "not_evaluated",
+        "criteria": [
+          "Exactly two fully clothed adults, both standing, with full-body framing and both pairs of feet visible.",
+          "Woman in the foreground; man behind her with only a slight horizontal offset.",
+          "The woman's body substantially occludes the man's torso; the man's face remains clearly visible.",
+          "Hands make modest natural contact; no extra heads or fused/extra limbs.",
+          "A human must inspect generated images: prompt wording and token-mask intersection do not establish this pose."
+        ]
+      }
+    }
+  ],
+  "coordinated_settings": {
+    "seed": {
+      "default": 42,
+      "api_inputs": [
+        [
+          "8",
+          "seed"
+        ],
+        [
+          "11",
+          "seed"
+        ],
+        [
+          "21",
+          "seed"
+        ],
+        [
+          "31",
+          "seed"
+        ],
+        [
+          "42",
+          "seed"
+        ]
+      ],
+      "notes": "Set the same value in all five Samplers; UI control_after_generate stays fixed."
+    },
+    "steps": {
+      "default": 8,
+      "api_inputs": [
+        [
+          "8",
+          "steps"
+        ],
+        [
+          "11",
+          "steps"
+        ],
+        [
+          "21",
+          "steps"
+        ],
+        [
+          "31",
+          "steps"
+        ],
+        [
+          "42",
+          "steps"
+        ]
+      ],
+      "notes": "Set all five together; collect_step must not exceed steps. The reference budget below assumes 8."
+    },
+    "cfg": {
+      "default": 1.0,
+      "api_inputs": [
+        [
+          "8",
+          "cfg"
+        ],
+        [
+          "11",
+          "cfg"
+        ],
+        [
+          "21",
+          "cfg"
+        ],
+        [
+          "31",
+          "cfg"
+        ],
+        [
+          "42",
+          "cfg"
+        ]
+      ],
+      "notes": "Must remain 1.0 for the current implementation."
+    },
+    "trial_id": {
+      "default": 0,
+      "api_inputs": [
+        [
+          "8",
+          "trial_id"
+        ],
+        [
+          "11",
+          "trial_id"
+        ],
+        [
+          "21",
+          "trial_id"
+        ],
+        [
+          "31",
+          "trial_id"
+        ],
+        [
+          "42",
+          "trial_id"
+        ]
+      ],
+      "notes": "Increment all five together for a fresh run with the same seed; leave unchanged when intentionally reusing cached collection."
+    },
+    "slider_strength": {
+      "default": 4.0,
+      "api_inputs": [
+        [
+          "10",
+          "strength_model"
+        ],
+        [
+          "21",
+          "strength"
+        ],
+        [
+          "31",
+          "strength"
+        ],
+        [
+          "42",
+          "strength"
+        ]
+      ],
+      "notes": "Change ON upstream loader plus all FINAL sampler strengths together. Collector sampler strength stays zero. Zero/nonstandard values change the expected NFE or experiment."
+    },
+    "slider_lora": {
+      "default": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "api_inputs": [
+        [
+          "10",
+          "lora_name"
+        ],
+        [
+          "8",
+          "lora_name"
+        ],
+        [
+          "11",
+          "lora_name"
+        ],
+        [
+          "21",
+          "lora_name"
+        ],
+        [
+          "31",
+          "lora_name"
+        ],
+        [
+          "42",
+          "lora_name"
+        ]
+      ],
+      "notes": "Use the same compatible trained Slider file everywhere, including the required collector lora_name although own strength is zero."
+    },
+    "style_lora": {
+      "default": "krea2_darkbrush.safetensors",
+      "api_inputs": [
+        [
+          "2",
+          "lora_name"
+        ]
+      ],
+      "notes": "One shared global style Loader; do not use the Slider as this style."
+    },
+    "style_strength": {
+      "default": 0.8,
+      "api_inputs": [
+        [
+          "2",
+          "strength_model"
+        ]
+      ],
+      "notes": "Shared by every path; changing it recollects both banks."
+    },
+    "prompt": {
+      "default": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "api_inputs": [
+        [
+          "4",
+          "prompt"
+        ]
+      ],
+      "notes": "Keep exact target/protected phrases present and unambiguous; update all four Subjects nodes together if phrases change."
+    },
+    "target_phrase": {
+      "default": "woman",
+      "api_inputs": [
+        [
+          "6",
+          "target_phrase"
+        ],
+        [
+          "20",
+          "target_phrase"
+        ],
+        [
+          "30",
+          "target_phrase"
+        ],
+        [
+          "41",
+          "target_phrase"
+        ]
+      ],
+      "notes": "Same semantic target in collection and all FINAL branches."
+    },
+    "protected_phrase": {
+      "default": "man",
+      "api_inputs": [
+        [
+          "6",
+          "protected_phrase"
+        ],
+        [
+          "20",
+          "protected_phrase"
+        ],
+        [
+          "30",
+          "protected_phrase"
+        ],
+        [
+          "41",
+          "protected_phrase"
+        ]
+      ],
+      "notes": "Same protected person in collection and all FINAL branches."
+    },
+    "target_occurrence": {
+      "default": 0,
+      "api_inputs": [
+        [
+          "6",
+          "target_occurrence"
+        ],
+        [
+          "20",
+          "target_occurrence"
+        ],
+        [
+          "30",
+          "target_occurrence"
+        ],
+        [
+          "41",
+          "target_occurrence"
+        ]
+      ],
+      "notes": "Update together if a phrase occurs more than once."
+    },
+    "protected_occurrence": {
+      "default": 0,
+      "api_inputs": [
+        [
+          "6",
+          "protected_occurrence"
+        ],
+        [
+          "20",
+          "protected_occurrence"
+        ],
+        [
+          "30",
+          "protected_occurrence"
+        ],
+        [
+          "41",
+          "protected_occurrence"
+        ]
+      ],
+      "notes": "Update together if a phrase occurs more than once."
+    },
+    "collect_step": {
+      "default": 2,
+      "api_inputs": [
+        [
+          "8",
+          "collect_step"
+        ],
+        [
+          "11",
+          "collect_step"
+        ]
+      ],
+      "notes": "Collectors only; manual FINAL nodes ignore this setting."
+    },
+    "collect_block": {
+      "default": 18,
+      "api_inputs": [
+        [
+          "8",
+          "collect_block"
+        ],
+        [
+          "11",
+          "collect_block"
+        ]
+      ],
+      "notes": "Collectors only; keep OFF/ON matched."
+    },
+    "top_k_ratio": {
+      "default": 0.2,
+      "api_inputs": [
+        [
+          "8",
+          "top_k_ratio"
+        ],
+        [
+          "11",
+          "top_k_ratio"
+        ]
+      ],
+      "notes": "Collectors only; keep OFF/ON matched."
+    },
+    "temperature": {
+      "default": 10000.0,
+      "api_inputs": [
+        [
+          "8",
+          "temperature"
+        ],
+        [
+          "11",
+          "temperature"
+        ]
+      ],
+      "notes": "Collectors only; keep OFF/ON matched."
+    },
+    "selection_dilate_radius": {
+      "default": 4,
+      "api_inputs": [
+        [
+          "21",
+          "selection_dilate_radius"
+        ],
+        [
+          "31",
+          "selection_dilate_radius"
+        ],
+        [
+          "42",
+          "selection_dilate_radius"
+        ]
+      ],
+      "notes": "FINAL selection only; both collector values remain 0. Does not guarantee an unchanged exterior."
+    }
+  },
+  "manual_d": {
+    "required_files": [
+      {
+        "node_id": "200",
+        "filename": "REQUIRED_HUMAN_FULLBODY_SUPPORT_woman_front_strong_overlap_seed42.png",
+        "required": true,
+        "provided": false,
+        "role": "human_authored_fullbody_support",
+        "polarity": "white=1 intended slider support; black=0 excluded",
+        "source": "User draws after inspecting the same-case OFF reference; no mask is supplied by this package."
+      },
+      {
+        "node_id": "201",
+        "filename": "REQUIRED_SAVED_P_OFF_woman_front_strong_overlap_seed42.png",
+        "required": true,
+        "provided": false,
+        "role": "saved_off_protected_mask",
+        "polarity": "white=1 protected man; black=0 unprotected",
+        "source": "Copy raw_P_off from the matching A/B/C collector run, same case/seed/model/settings, into ComfyUI input."
+      }
+    ],
+    "missing_input_behavior": "fail_validation_no_fallback",
+    "input_validation": "not_run_files_not_provided",
+    "canvas_requirement": "Both PNGs must have identical width/height and represent the same aligned canvas. Saved P_off is token-grid sized; do not mix it with a 1024px support without explicit preparation. No automatic resizing.",
+    "input_format": "PNG mode 1/L or equal-channel RGB; binary black=0/white=255; no alpha/palette. LoadImageMask channel=red means white=1 without alpha inversion.",
+    "initial_target": "clamp(human_support - saved_P_off, 0, 1)",
+    "protected_mask": "same saved_P_off, connected to Subjects.protected_mask",
+    "final_radius": 4,
+    "regrowth_warning": "Initial subtraction is not a persistent exclusion zone: radius>0 may regrow into an initially excluded area when P_off misses it. Compare the before-dilation, effective and selection-added masks; protected/background pixels can still change indirectly.",
+    "comparison_controls": "A and C from the same case/seed/radius, shared style model/empty latent/settings; D adds only human-authored support.",
+    "settings": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "20",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "files_are_not_semantically_verified": true
+  },
+  "output_prefixes": {
+    "abc": {
+      "23": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_off",
+      "33": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_on",
+      "44": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_hybrid",
+      "61": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_T_off",
+      "63": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_P_off",
+      "65": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_T_on",
+      "67": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/raw_P_on",
+      "69": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/conflict_T_on_times_P_off",
+      "71": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/hybrid_T_on_minus_P_off",
+      "73": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/old_T_off_minus_T_on",
+      "81": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/reference_off",
+      "83": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/reference_on",
+      "102": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_effective_prediction_mask",
+      "104": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_selection_added_mask",
+      "106": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_reference_target_before_dilation",
+      "108": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/A_reference_protected",
+      "112": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_effective_prediction_mask",
+      "114": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_selection_added_mask",
+      "116": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_reference_target_before_dilation",
+      "118": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/B_reference_protected",
+      "122": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_effective_prediction_mask",
+      "124": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_selection_added_mask",
+      "126": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_reference_target_before_dilation",
+      "128": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/C_reference_protected"
+    },
+    "manual_d": {
+      "23": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_manual_support",
+      "102": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_effective_prediction_mask",
+      "104": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_selection_added_mask",
+      "106": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_reference_target_before_dilation",
+      "108": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_reference_protected",
+      "204": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_human_support_input",
+      "206": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_saved_P_off_input",
+      "208": "slider_hybrid_validation/woman_front_strong_overlap/seed42/r4/D_support_minus_P_off"
+    }
+  },
+  "mask_slots": {
+    "effective_prediction_mask": 7,
+    "selection_added_mask": 8,
+    "reference_target_before_dilation": 0,
+    "reference_protected": 1,
+    "indexing": "zero_based"
+  },
+  "nfe_estimate": {
+    "collector_each": 10,
+    "final_each_partial_mask": 16,
+    "abc_all_active_outputs": 68,
+    "manual_d_all_active_outputs": 16,
+    "abc_plus_manual_d": 84,
+    "assumptions": "Cold uncached execution; all 24 A/B/C terminal saves and all 8 D saves are active. Two collectors each do collect_step=2 plus steps=8 (10 each); A/B/C/D each use nonzero strength and a nonempty partial target at 2*8=16. Extra mask saves share sampler outputs and add 0 model NFE. Empty/full selection endpoints may skip a branch. Counts exclude VAE, mask operations and audit overhead. Muting only final image saves does not isolate a branch while other terminal mask/reference saves remain active."
+  },
+  "rerun_guidance": "ComfyUI may reuse cached sampler outputs. Increment trial_id on all five Samplers together for a fresh timed comparison. A prefix change alone does not invalidate sampler caches. Use new distinct output prefixes for separate experimental runs and keep the API/UI JSON alongside artifacts. Never set collectors to own nonzero strength or connect ON loader 10 to a FINAL sampler. Apply matching settings to D, and preserve the source A/B/C prefix plus the exact mask files with D artifacts. Generator overwrites only its five named JSON outputs; choose a separate --output-dir per case/seed/radius to retain variants.",
+  "limitations": [
+    "Ordinary mask PNGs are quantized display exports at the bank mask resolution; they are not unnormalized similarity tensors or a complete collection audit.",
+    "Collector continuation images are reference images only and are never FINAL sampler inputs.",
+    "Final DiagnosticSave reports have manual provenance and the final style-only model path; they do not capture a machine-validated OFF/ON collection contract. Preserve API/UI JSON, selected model filenames/hashes, settings, and collected masks together.",
+    "ON collection changes the upstream model globally and is provisional; it does not guarantee geometry correction, isolated subject changes, or protected/background pixel invariance.",
+    "Initial subtraction is not a persistent exclusion zone: radius>0 may regrow into an initially excluded area when P_off misses it. Compare the before-dilation, effective and selection-added masks; protected/background pixels can still change indirectly.",
+    "No human support mask is bundled. The previous manual-half comparison is historical context, not a full-body manual control.",
+    "A zero token-mask intersection does not prove protected appearance is unchanged or the generated pose meets the human gate."
+  ],
+  "load_image_mask_sources": [
+    "https://github.com/Comfy-Org/ComfyUI/blob/master/nodes.py",
+    "https://github.com/Comfy-Org/ComfyUI_frontend/blob/main/apps/website/public/workflow-graphs/edit-selected-region.json"
+  ]
+}
