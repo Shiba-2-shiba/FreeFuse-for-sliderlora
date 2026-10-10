@@ -42,12 +42,15 @@ dimensions do not prove that files depict the same scene or are spatially aligne
 
 JSON describes each variant independently, with no ranking or quality pass/fail.
 Exit 0 means evaluation completed, not that a mask is good. Exit 2 means invalid
-input/output. --output creates a new file exclusively and never overwrites files.
+input/output. --output refuses existing directory entries, including dangling
+symlinks, and creates a new file exclusively. This is not race-free protection
+against concurrent path replacement.
 """
 
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 from io import BytesIO
 from itertools import combinations
@@ -223,7 +226,14 @@ def main(argv=None):
     report, exit_code = evaluate_candidates(candidates, annotations, verified)
     if args.output is not None:
         try:
-            # Exclusive creation refuses existing files, input aliases, and even dangling symlinks.
+            # Inspect the entry itself: exclusive open alone can follow a dangling
+            # symlink on Windows. This check is not atomic with the open below.
+            try:
+                args.output.lstat()
+            except FileNotFoundError:
+                pass
+            else:
+                raise FileExistsError(errno.EEXIST, "Output destination already exists", str(args.output))
             with args.output.open("x", encoding="utf-8") as output:
                 output.write(json.dumps(report, indent=2, allow_nan=False) + "\n")
         except OSError as error:

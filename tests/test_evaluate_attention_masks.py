@@ -218,28 +218,112 @@ def test_output_matches_stdout_and_source_hashes_are_for_unmodified_files(tmp_pa
     assert before == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before}
 
 
-@pytest.mark.parametrize("destination", ["existing", "input", "symlink", "dangling_symlink", "hardlink"])
+@pytest.mark.parametrize("destination", ["existing", "input", "annotation", "symlink",
+    "symlink_annotation", "dangling_symlink", "hardlink", "hardlink_annotation"])
 def test_outputs_never_overwrite_existing_files_or_aliases(tmp_path, destination):
     candidate = png(tmp_path, "candidate", [(0, 0)])
+    annotation = png(tmp_path, "annotation", [(0, 0), (1, 0)])
+    unrelated = tmp_path / "unrelated.txt"
+    unrelated.write_text("keep this unrelated file")
     output = tmp_path / "report.json"
+    absent = tmp_path / "absent.json"
     if destination == "input":
         output = candidate
+    elif destination == "annotation":
+        output = annotation
     elif destination == "symlink":
         output.symlink_to(candidate)
+    elif destination == "symlink_annotation":
+        output.symlink_to(annotation)
     elif destination == "dangling_symlink":
-        output.symlink_to(tmp_path / "absent.json")
+        output.symlink_to(absent)
     elif destination == "hardlink":
         output.hardlink_to(candidate)
+    elif destination == "hardlink_annotation":
+        output.hardlink_to(annotation)
     else:
         output.write_text("keep this")
-    before_candidate = candidate.read_bytes()
+    before_files = {path: (path.read_bytes(), path.stat().st_mtime_ns)
+                    for path in (candidate, annotation, unrelated)}
     before_output = output.read_bytes() if output.exists() else None
-    result, report = evaluate("--candidate", f"trial={candidate}", "--output", output)
+    before_inode = output.lstat().st_ino
+    before_link = output.readlink() if output.is_symlink() else None
+    result, report = evaluate("--candidate", f"trial={candidate}", "--target-full", annotation,
+        "--annotations-human-verified", "true", "--output", output)
     assert result.returncode == 2
+    assert report["status"] == "invalid"
     assert "output_exists" in {error["code"] for error in report["errors"]}
-    assert candidate.read_bytes() == before_candidate
+    assert before_files == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before_files}
     assert (output.read_bytes() if output.exists() else None) == before_output
-    assert not (tmp_path / "absent.json").exists()
+    assert output.lstat().st_ino == before_inode
+    assert (output.readlink() if output.is_symlink() else None) == before_link
+    assert not absent.exists()
+
+
+def test_dangling_output_is_refused_before_platform_exclusive_open(tmp_path, monkeypatch, capsys):
+    from tools.evaluate_attention_masks import main
+
+    candidate = png(tmp_path, "candidate", [(0, 0)])
+    annotation = png(tmp_path, "annotation", [(0, 0), (1, 0)])
+    unrelated = tmp_path / "unrelated.txt"
+    unrelated.write_text("keep this unrelated file")
+    before = {path: (path.read_bytes(), path.stat().st_mtime_ns)
+              for path in (candidate, annotation, unrelated)}
+    absent = tmp_path / "absent.json"
+    output = tmp_path / "report.json"
+    output.symlink_to(absent)
+    original_open = Path.open
+    output_opens = []
+
+    def platform_open(path, mode="r", *args, **kwargs):
+        if path == output:
+            output_opens.append(mode)
+            # Reproduce only the reported Windows dangling-link behavior. All
+            # other opens, including input reads, retain their real semantics.
+            if mode == "x" and path.is_symlink() and not path.exists():
+                return original_open(path.resolve(), mode, *args, **kwargs)
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", platform_open)
+    exit_code = main(["--candidate", f"trial={candidate}", "--target-full", str(annotation),
+        "--annotations-human-verified", "true", "--output", str(output)])
+    report = json.loads(capsys.readouterr().out)
+    assert not absent.exists(), "An existing dangling output link must never create its target"
+    assert exit_code == 2
+    assert report["status"] == "invalid"
+    assert "output_exists" in {error["code"] for error in report["errors"]}
+    assert output_opens == [], "Refuse the existing directory entry before trying to open it"
+    assert output.is_symlink() and output.readlink() == absent
+    assert before == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before}
+
+
+def test_output_creation_still_uses_exclusive_open(tmp_path, monkeypatch, capsys):
+    from tools.evaluate_attention_masks import main
+
+    candidate = png(tmp_path, "candidate", [(0, 0)])
+    before_candidate = candidate.read_bytes()
+    output = tmp_path / "report.json"
+    original_open = Path.open
+    output_modes = []
+
+    def create_competing_file_then_open(path, mode="r", *args, **kwargs):
+        if path == output:
+            output_modes.append(mode)
+            # A regular file can appear after the preflight check. This does
+            # not model or promise protection against every symlink race.
+            with original_open(path, "w", encoding="utf-8") as competing:
+                competing.write("created by another writer")
+        return original_open(path, mode, *args, **kwargs)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "open", create_competing_file_then_open)
+        exit_code = main(["--candidate", f"trial={candidate}", "--output", str(output)])
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert "output_exists" in {error["code"] for error in report["errors"]}
+    assert output_modes == ["x"]
+    assert output.read_text() == "created by another writer"
+    assert candidate.read_bytes() == before_candidate
 
 
 def test_missing_output_parent_returns_json_error(tmp_path):

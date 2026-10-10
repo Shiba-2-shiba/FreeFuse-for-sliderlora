@@ -10,6 +10,10 @@ Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面�
 
 U2はユーザー指定で対象外、U4の永続保存・UI再起動後再実行、U5の指定48条件評価、U6の標準KSampler復帰確認は完了しました。姿勢指定の頭部crop/増殖、公園の服と顔の融合などauto画質の未達は残しています。[最新評価と引き継ぎ](docs/validation.md)から状況と証拠を確認できます。
 
+### 次の最小比較（背景あり k1/k3・同一 mask の +2/+4）
+
+[手順・配布 workflow・評価記録](docs/attention-ablation.md)。park seed444444 と強い重なり seed42 を、完成 OFF の追加なしで比較します。自己完結 cold は合計104 NFE予定。保存済み k3/+4 を厳密に照合できる場合だけ追加68 NFEの再利用経路を使えます。実行量・画質の実証値ではありません。
+
 ## 旧版の検討経緯
 
 **0.1.4 診断実験版:** [全層auditとnative予測混合](docs/prediction-mixing.md)を追加しました。新しいPrediction Mix Samplerは通常LoRAとbaseの予測を二値maskで選び、画像側hookと比較できます。[zero](workflows/krea2_slider_mix_zero.json) → [none](workflows/krea2_slider_mix_none.json) → [all](workflows/krea2_slider_mix_all.json) → [half](workflows/krea2_slider_mix_half.json)の順で実機確認してください。部分maskは1stepに2経路を直列評価します。既存診断Sampler末尾の`diagnostic_level=audit`で全層・全stepの直接差分を保存します。通常Samplerの生成演算は維持し、実INT8/UI/画質の確認は未完了です。

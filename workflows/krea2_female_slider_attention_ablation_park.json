@@ -1,0 +1,2974 @@
+{
+  "last_node_id": 9002,
+  "last_link_id": 76,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        0,
+        40
+      ],
+      "size": [
+        390,
+        103
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "title": "Checkpoint"
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        0,
+        260
+      ],
+      "size": [
+        390,
+        125
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            5,
+            12,
+            24,
+            45,
+            61
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "krea2_darkbrush.safetensors",
+        0.8
+      ],
+      "widgets_values_named": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8
+      },
+      "title": "Shared style baseline (all FINAL models)"
+    },
+    {
+      "id": 3,
+      "type": "CLIPLoader",
+      "pos": [
+        470,
+        40
+      ],
+      "size": [
+        390,
+        132
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_4b_bf16.safetensors",
+        "krea2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "title": "Qwen3-VL CLIP, Krea2 type"
+    },
+    {
+      "id": 4,
+      "type": "Krea2SliderFuseEncode",
+      "pos": [
+        470,
+        310
+      ],
+      "size": [
+        410,
+        290
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            3,
+            6,
+            13,
+            25,
+            46,
+            62
+          ]
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "links": [
+            4,
+            8,
+            15,
+            21,
+            27,
+            42,
+            48,
+            64
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseEncode"
+      },
+      "widgets_values": [
+        "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs."
+      ],
+      "widgets_values_named": {
+        "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs."
+      },
+      "title": "Shared scene: two fully clothed adults"
+    },
+    {
+      "id": 5,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1060,
+        40
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            7,
+            14,
+            26,
+            47,
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "Shared zero negative"
+    },
+    {
+      "id": 6,
+      "type": "Krea2SliderFuseSubjects",
+      "pos": [
+        1060,
+        260
+      ],
+      "size": [
+        390,
+        227
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 4
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "links": [
+            9,
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseSubjects"
+      },
+      "widgets_values": [
+        "woman",
+        "man",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0
+      },
+      "title": "Collection subjects: woman / man"
+    },
+    {
+      "id": 7,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        1510,
+        40
+      ],
+      "size": [
+        390,
+        132
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            10,
+            17,
+            29,
+            50,
+            66
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "title": "Shared EMPTY latent, never collector output"
+    },
+    {
+      "id": 9,
+      "type": "VAELoader",
+      "pos": [
+        1510,
+        260
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            31,
+            52,
+            68
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "qwen_image_vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "title": "Shared VAE"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskCollect",
+      "size": [
+        570,
+        760
+      ],
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 7
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 8
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 9
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "links": [
+            11,
+            19
+          ]
+        }
+      ],
+      "widgets_values_named": {
+        "seed": 444444,
+        "steps": 8,
+        "trial_id": 0,
+        "config_json": "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 1,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "background_phrase": "park path",
+        "background_occurrence": 0,
+        "audit_tensors": true
+      },
+      "id": 8,
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "title": "Background ON: requested k=1; matched two-forward capture",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskCollect"
+      },
+      "pos": [
+        0,
+        860
+      ],
+      "widgets_values": [
+        444444,
+        "fixed",
+        8,
+        0,
+        "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 1,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "park path",
+        0,
+        true
+      ]
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSave",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 11
+        }
+      ],
+      "outputs": [],
+      "widgets_values_named": {
+        "filename_prefix": "attn_ablate_park_s444444_t0_bg_k1"
+      },
+      "id": 10,
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "title": "Save k1 suite and observation hashes",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSave"
+      },
+      "pos": [
+        600,
+        880
+      ],
+      "widgets_values": [
+        "attn_ablate_park_s444444_t0_bg_k1"
+      ]
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskCollect",
+      "size": [
+        570,
+        760
+      ],
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 12
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 13
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 14
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 15
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 16
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "links": [
+            18,
+            40
+          ]
+        }
+      ],
+      "widgets_values_named": {
+        "seed": 444444,
+        "steps": 8,
+        "trial_id": 0,
+        "config_json": "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 3,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "background_phrase": "park path",
+        "background_occurrence": 0,
+        "audit_tensors": true
+      },
+      "id": 11,
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "title": "Background ON: requested k=3; matched two-forward capture",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskCollect"
+      },
+      "pos": [
+        1100,
+        860
+      ],
+      "widgets_values": [
+        444444,
+        "fixed",
+        8,
+        0,
+        "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 3,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "park path",
+        0,
+        true
+      ]
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSave",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 18
+        }
+      ],
+      "outputs": [],
+      "widgets_values_named": {
+        "filename_prefix": "attn_ablate_park_s444444_t0_bg_k3"
+      },
+      "id": 12,
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "title": "Save k3 suite and observation hashes",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSave"
+      },
+      "pos": [
+        1700,
+        880
+      ],
+      "widgets_values": [
+        "attn_ablate_park_s444444_t0_bg_k3"
+      ]
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            20
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "multi_proto_bg"
+      },
+      "id": 100,
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "title": "bg_k1_s4: background-on candidate, configured k1",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        0,
+        1810
+      ],
+      "widgets_values": [
+        "multi_proto_bg"
+      ]
+    },
+    {
+      "id": 101,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        1810
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "k1 background-on source masks"
+    },
+    {
+      "id": 110,
+      "type": "Krea2SliderFuseSubjects",
+      "pos": [
+        920,
+        1810
+      ],
+      "size": [
+        390,
+        227
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 21
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": 22,
+          "shape": 7
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "link": 23,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseSubjects"
+      },
+      "widgets_values": [
+        "woman",
+        "man",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0
+      },
+      "title": "k1 masks; shared unchanged across strengths"
+    },
+    {
+      "id": 111,
+      "type": "Krea2SliderFusePredictionMixSampler",
+      "pos": [
+        1360,
+        1810
+      ],
+      "size": [
+        430,
+        650
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 24
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 25
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 26
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 27
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 28
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            30,
+            33
+          ]
+        },
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            35
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFusePredictionMixSampler"
+      },
+      "widgets_values": [
+        "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        4.0,
+        444444,
+        "fixed",
+        8,
+        1.0,
+        "target_mask",
+        0,
+        "audit",
+        "manual",
+        2,
+        18,
+        0.2,
+        10000.0,
+        0,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "strength": 4.0,
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "mix_scope": "target_mask",
+        "trial_id": 0,
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "title": "bg_k1_s4: manual replay +4, 8 steps, all radii zero"
+    },
+    {
+      "id": 112,
+      "type": "VAEDecode",
+      "pos": [
+        1970,
+        1810
+      ],
+      "size": [
+        390,
+        89
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 30
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k1_s4: edited image"
+    },
+    {
+      "id": 113,
+      "type": "Krea2SliderFuseDiagnosticSave",
+      "pos": [
+        2410,
+        1810
+      ],
+      "size": [
+        440,
+        210
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 32
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 33
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "link": 34
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseDiagnosticSave"
+      },
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k1_s4"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k1_s4"
+      },
+      "title": "bg_k1_s4: image, latent, audit"
+    },
+    {
+      "id": 114,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        1970,
+        2200
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": [
+            36
+          ]
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k1_s4: effective bank"
+    },
+    {
+      "id": 115,
+      "type": "MaskToImage",
+      "pos": [
+        2410,
+        2200
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 36
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k1_s4: effective_prediction_mask"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k1_s4_effective_prediction_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k1_s4_effective_prediction_mask"
+      },
+      "id": 116,
+      "pos": [
+        2850,
+        2200
+      ],
+      "order": 20,
+      "mode": 0,
+      "flags": {},
+      "title": "bg_k1_s4: save effective_prediction_mask",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 117,
+      "type": "MaskToImage",
+      "pos": [
+        2410,
+        2530
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k1_s4: selection_added_mask"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k1_s4_selection_added_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k1_s4_selection_added_mask"
+      },
+      "id": 118,
+      "pos": [
+        2850,
+        2530
+      ],
+      "order": 22,
+      "mode": 0,
+      "flags": {},
+      "title": "bg_k1_s4: save selection_added_mask",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            41
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "multi_proto_bg"
+      },
+      "id": 130,
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "title": "bg_k3_s4: background-on candidate, configured k3",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        0,
+        2970
+      ],
+      "widgets_values": [
+        "multi_proto_bg"
+      ]
+    },
+    {
+      "id": 131,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        2970
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": [
+            43
+          ]
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": [
+            44
+          ]
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "k3 background-on source masks"
+    },
+    {
+      "id": 140,
+      "type": "Krea2SliderFuseSubjects",
+      "pos": [
+        920,
+        2970
+      ],
+      "size": [
+        390,
+        227
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 42
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": 43,
+          "shape": 7
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "link": 44,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "links": [
+            49,
+            65
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseSubjects"
+      },
+      "widgets_values": [
+        "woman",
+        "man",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0
+      },
+      "title": "k3 masks; shared unchanged across strengths"
+    },
+    {
+      "id": 141,
+      "type": "Krea2SliderFusePredictionMixSampler",
+      "pos": [
+        1360,
+        2970
+      ],
+      "size": [
+        430,
+        650
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 45
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 46
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 47
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 48
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 49
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            51,
+            54
+          ]
+        },
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            56
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "links": [
+            55
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFusePredictionMixSampler"
+      },
+      "widgets_values": [
+        "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        4.0,
+        444444,
+        "fixed",
+        8,
+        1.0,
+        "target_mask",
+        0,
+        "audit",
+        "manual",
+        2,
+        18,
+        0.2,
+        10000.0,
+        0,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "strength": 4.0,
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "mix_scope": "target_mask",
+        "trial_id": 0,
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "title": "bg_k3_s4: manual replay +4, 8 steps, all radii zero"
+    },
+    {
+      "id": 142,
+      "type": "VAEDecode",
+      "pos": [
+        1970,
+        2970
+      ],
+      "size": [
+        390,
+        89
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 51
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            53
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s4: edited image"
+    },
+    {
+      "id": 143,
+      "type": "Krea2SliderFuseDiagnosticSave",
+      "pos": [
+        2410,
+        2970
+      ],
+      "size": [
+        440,
+        210
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 53
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 54
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "link": 55
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseDiagnosticSave"
+      },
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k3_s4"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k3_s4"
+      },
+      "title": "bg_k3_s4: image, latent, audit"
+    },
+    {
+      "id": 144,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        1970,
+        3360
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 56
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": [
+            57
+          ]
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": [
+            59
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s4: effective bank"
+    },
+    {
+      "id": 145,
+      "type": "MaskToImage",
+      "pos": [
+        2410,
+        3360
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 57
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            58
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s4: effective_prediction_mask"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 58
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k3_s4_effective_prediction_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k3_s4_effective_prediction_mask"
+      },
+      "id": 146,
+      "pos": [
+        2850,
+        3360
+      ],
+      "order": 31,
+      "mode": 0,
+      "flags": {},
+      "title": "bg_k3_s4: save effective_prediction_mask",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 147,
+      "type": "MaskToImage",
+      "pos": [
+        2410,
+        3690
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 59
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            60
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s4: selection_added_mask"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 60
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k3_s4_selection_added_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k3_s4_selection_added_mask"
+      },
+      "id": 148,
+      "pos": [
+        2850,
+        3690
+      ],
+      "order": 33,
+      "mode": 0,
+      "flags": {},
+      "title": "bg_k3_s4: save selection_added_mask",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 171,
+      "type": "Krea2SliderFusePredictionMixSampler",
+      "pos": [
+        1360,
+        4130
+      ],
+      "size": [
+        430,
+        650
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 61
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 62
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 63
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 64
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 65
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 66
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            67,
+            70
+          ]
+        },
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            72
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFusePredictionMixSampler"
+      },
+      "widgets_values": [
+        "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        2.0,
+        444444,
+        "fixed",
+        8,
+        1.0,
+        "target_mask",
+        0,
+        "audit",
+        "manual",
+        2,
+        18,
+        0.2,
+        10000.0,
+        0,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "strength": 2.0,
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "mix_scope": "target_mask",
+        "trial_id": 0,
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "title": "bg_k3_s2: manual replay +2, 8 steps, all radii zero"
+    },
+    {
+      "id": 172,
+      "type": "VAEDecode",
+      "pos": [
+        1970,
+        4130
+      ],
+      "size": [
+        390,
+        89
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 67
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 68
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            69
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s2: edited image"
+    },
+    {
+      "id": 173,
+      "type": "Krea2SliderFuseDiagnosticSave",
+      "pos": [
+        2410,
+        4130
+      ],
+      "size": [
+        440,
+        210
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 69
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 70
+        },
+        {
+          "name": "diagnostics",
+          "type": "KREA2_SLIDER_FUSE_DIAGNOSTICS",
+          "link": 71
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseDiagnosticSave"
+      },
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k3_s2"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k3_s2"
+      },
+      "title": "bg_k3_s2: image, latent, audit"
+    },
+    {
+      "id": 174,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        1970,
+        4520
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 72
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": [
+            73
+          ]
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": [
+            75
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s2: effective bank"
+    },
+    {
+      "id": 175,
+      "type": "MaskToImage",
+      "pos": [
+        2410,
+        4520
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 73
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            74
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s2: effective_prediction_mask"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k3_s2_effective_prediction_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k3_s2_effective_prediction_mask"
+      },
+      "id": 176,
+      "pos": [
+        2850,
+        4520
+      ],
+      "order": 39,
+      "mode": 0,
+      "flags": {},
+      "title": "bg_k3_s2: save effective_prediction_mask",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 177,
+      "type": "MaskToImage",
+      "pos": [
+        2410,
+        4850
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "bg_k3_s2: selection_added_mask"
+    },
+    {
+      "type": "SaveImage",
+      "size": [
+        390,
+        300
+      ],
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "widgets_values": [
+        "slider_attention_ablation/park/seed444444/trial0/bg_k3_s2_selection_added_mask"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "slider_attention_ablation/park/seed444444/trial0/bg_k3_s2_selection_added_mask"
+      },
+      "id": 178,
+      "pos": [
+        2850,
+        4850
+      ],
+      "order": 41,
+      "mode": 0,
+      "flags": {},
+      "title": "bg_k3_s2: save selection_added_mask",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      }
+    },
+    {
+      "id": 9000,
+      "type": "Note",
+      "pos": [
+        0,
+        -530
+      ],
+      "size": [
+        1080,
+        470
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "FOCUSED EXPERIMENT: background ON in both k1 and k3. Variant names remain multi_proto_bg; titles report actual requested k. Existing centroid_control has background OFF and is not the k1 control here. Only prototypes changes in collection config. Both collectors use the same original model/prompt/latent/seed/full schedule. audit_tensors=true adds hashing/transfer time; compare primary observation hashes before attributing a result to k."
+      ],
+      "title": "Focused ablation instructions"
+    },
+    {
+      "id": 9001,
+      "type": "Note",
+      "pos": [
+        1130,
+        -530
+      ],
+      "size": [
+        1080,
+        470
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "COLD: two matched 2-forward collectors + three partial-mask edits = 52 model NFE per case; both cases104. k3 +2 and +4 share exactly one Subjects/mask source. No completed OFF run. Save both suites and all edit diagnostics."
+      ],
+      "title": "Focused ablation instructions"
+    },
+    {
+      "id": 9002,
+      "type": "Note",
+      "pos": [
+        2260,
+        -530
+      ],
+      "size": [
+        1080,
+        470
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Pose gate first, then separate duplicate anatomy, intended age/size edit and natural proportions. Check male face/eyeglasses/height/build separately from allowed small arm/hand motion. No matched existing OFF means preservation-vs-OFF stays not evaluable. Seeds123/777 have already been inspected; register genuinely unseen seeds after freezing settings. See docs/attention-ablation.md."
+      ],
+      "title": "Focused ablation instructions"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      4,
+      4,
+      1,
+      6,
+      0,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      5,
+      2,
+      0,
+      8,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      4,
+      0,
+      8,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      7,
+      5,
+      0,
+      8,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      8,
+      4,
+      1,
+      8,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      9,
+      6,
+      0,
+      8,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      10,
+      7,
+      0,
+      8,
+      5,
+      "LATENT"
+    ],
+    [
+      11,
+      8,
+      0,
+      10,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      12,
+      2,
+      0,
+      11,
+      0,
+      "MODEL"
+    ],
+    [
+      13,
+      4,
+      0,
+      11,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      5,
+      0,
+      11,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      15,
+      4,
+      1,
+      11,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      16,
+      6,
+      0,
+      11,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      17,
+      7,
+      0,
+      11,
+      5,
+      "LATENT"
+    ],
+    [
+      18,
+      11,
+      0,
+      12,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      19,
+      8,
+      0,
+      100,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      20,
+      100,
+      0,
+      101,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      21,
+      4,
+      1,
+      110,
+      0,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      22,
+      101,
+      0,
+      110,
+      1,
+      "MASK"
+    ],
+    [
+      23,
+      101,
+      1,
+      110,
+      2,
+      "MASK"
+    ],
+    [
+      24,
+      2,
+      0,
+      111,
+      0,
+      "MODEL"
+    ],
+    [
+      25,
+      4,
+      0,
+      111,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      26,
+      5,
+      0,
+      111,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      27,
+      4,
+      1,
+      111,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      28,
+      110,
+      0,
+      111,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      29,
+      7,
+      0,
+      111,
+      5,
+      "LATENT"
+    ],
+    [
+      30,
+      111,
+      0,
+      112,
+      0,
+      "LATENT"
+    ],
+    [
+      31,
+      9,
+      0,
+      112,
+      1,
+      "VAE"
+    ],
+    [
+      32,
+      112,
+      0,
+      113,
+      0,
+      "IMAGE"
+    ],
+    [
+      33,
+      111,
+      0,
+      113,
+      1,
+      "LATENT"
+    ],
+    [
+      34,
+      111,
+      2,
+      113,
+      2,
+      "KREA2_SLIDER_FUSE_DIAGNOSTICS"
+    ],
+    [
+      35,
+      111,
+      1,
+      114,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      36,
+      114,
+      7,
+      115,
+      0,
+      "MASK"
+    ],
+    [
+      37,
+      115,
+      0,
+      116,
+      0,
+      "IMAGE"
+    ],
+    [
+      38,
+      114,
+      8,
+      117,
+      0,
+      "MASK"
+    ],
+    [
+      39,
+      117,
+      0,
+      118,
+      0,
+      "IMAGE"
+    ],
+    [
+      40,
+      11,
+      0,
+      130,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      41,
+      130,
+      0,
+      131,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      42,
+      4,
+      1,
+      140,
+      0,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      43,
+      131,
+      0,
+      140,
+      1,
+      "MASK"
+    ],
+    [
+      44,
+      131,
+      1,
+      140,
+      2,
+      "MASK"
+    ],
+    [
+      45,
+      2,
+      0,
+      141,
+      0,
+      "MODEL"
+    ],
+    [
+      46,
+      4,
+      0,
+      141,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      47,
+      5,
+      0,
+      141,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      48,
+      4,
+      1,
+      141,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      49,
+      140,
+      0,
+      141,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      50,
+      7,
+      0,
+      141,
+      5,
+      "LATENT"
+    ],
+    [
+      51,
+      141,
+      0,
+      142,
+      0,
+      "LATENT"
+    ],
+    [
+      52,
+      9,
+      0,
+      142,
+      1,
+      "VAE"
+    ],
+    [
+      53,
+      142,
+      0,
+      143,
+      0,
+      "IMAGE"
+    ],
+    [
+      54,
+      141,
+      0,
+      143,
+      1,
+      "LATENT"
+    ],
+    [
+      55,
+      141,
+      2,
+      143,
+      2,
+      "KREA2_SLIDER_FUSE_DIAGNOSTICS"
+    ],
+    [
+      56,
+      141,
+      1,
+      144,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      57,
+      144,
+      7,
+      145,
+      0,
+      "MASK"
+    ],
+    [
+      58,
+      145,
+      0,
+      146,
+      0,
+      "IMAGE"
+    ],
+    [
+      59,
+      144,
+      8,
+      147,
+      0,
+      "MASK"
+    ],
+    [
+      60,
+      147,
+      0,
+      148,
+      0,
+      "IMAGE"
+    ],
+    [
+      61,
+      2,
+      0,
+      171,
+      0,
+      "MODEL"
+    ],
+    [
+      62,
+      4,
+      0,
+      171,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      63,
+      5,
+      0,
+      171,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      64,
+      4,
+      1,
+      171,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      65,
+      140,
+      0,
+      171,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      66,
+      7,
+      0,
+      171,
+      5,
+      "LATENT"
+    ],
+    [
+      67,
+      171,
+      0,
+      172,
+      0,
+      "LATENT"
+    ],
+    [
+      68,
+      9,
+      0,
+      172,
+      1,
+      "VAE"
+    ],
+    [
+      69,
+      172,
+      0,
+      173,
+      0,
+      "IMAGE"
+    ],
+    [
+      70,
+      171,
+      0,
+      173,
+      1,
+      "LATENT"
+    ],
+    [
+      71,
+      171,
+      2,
+      173,
+      2,
+      "KREA2_SLIDER_FUSE_DIAGNOSTICS"
+    ],
+    [
+      72,
+      171,
+      1,
+      174,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      73,
+      174,
+      7,
+      175,
+      0,
+      "MASK"
+    ],
+    [
+      74,
+      175,
+      0,
+      176,
+      0,
+      "IMAGE"
+    ],
+    [
+      75,
+      174,
+      8,
+      177,
+      0,
+      "MASK"
+    ],
+    [
+      76,
+      177,
+      0,
+      178,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "bg_k1_s4",
+      "bounding": [
+        -30,
+        1750,
+        3350,
+        1110
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "bg_k3_s4",
+      "bounding": [
+        -30,
+        2910,
+        3350,
+        1110
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "bg_k3_s2",
+      "bounding": [
+        -30,
+        4070,
+        3350,
+        1110
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.32,
+      "offset": [
+        120,
+        640
+      ]
+    }
+  },
+  "version": 0.4
+}
