@@ -1,0 +1,493 @@
+{
+  "name": "Shared-prefix attention mask validation (experimental)",
+  "generator": "tools/build_attention_validation_workflows.py",
+  "workflows": {
+    "mask_only": {
+      "ui": "krea2_female_slider_attention_validation.json",
+      "api": "krea2_female_slider_attention_validation_api.json"
+    },
+    "edited": {
+      "ui": "krea2_female_slider_attention_validation_edited.json",
+      "api": "krea2_female_slider_attention_validation_edited_api.json"
+    }
+  },
+  "selected_case": {
+    "case_id": "woman_front_strong_overlap",
+    "seed": 42,
+    "trial_id": 0
+  },
+  "cases": [
+    {
+      "case_id": "park",
+      "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+      "prompt_source": {
+        "path": "tools/build_hybrid_validation_workflows.py",
+        "constant": "HISTORICAL_PROMPTS[park]",
+        "status": "historical_exact",
+        "provenance": "Exact prompt transcribed from the provided historical workflow: test-results/u456-20261009/u5_park_seed444444_target_mask_strength4/workflow.json; the evidence archive is not a runtime dependency or included deliverable."
+      },
+      "primary_seeds": [
+        444444
+      ],
+      "holdout_seeds": [
+        123,
+        777
+      ],
+      "holdout_policy": "Freeze config before inspecting holdouts; retain failures and every attempted seed. These are planned holdouts, not executed results.",
+      "background_phrase": "park path",
+      "background_occurrence": 0,
+      "human_pose_gate": {
+        "required": true,
+        "status": "not_evaluated",
+        "criteria": [
+          "A human must inspect generated candidates or a separately retained matched image; mask-only output cannot establish pose or quality.",
+          "Exactly two fully clothed adults; both full-body figures and both pairs of feet are visible.",
+          "Check the intended scene and front/behind relation rather than accepting prompt wording as evidence."
+        ]
+      }
+    },
+    {
+      "case_id": "man_front",
+      "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults posing closely together, with clearly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands slightly behind and to the left of an adult man in a blue T-shirt and black trousers. The man is in the foreground, nearer the camera, and partially occludes the woman's right shoulder, right upper arm and the right side of her torso. The woman's left hand rests lightly on the man's left upper arm. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. Both faces remain clearly visible and look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both entire figures visible from head to shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "prompt_source": {
+        "path": "tools/build_hybrid_validation_workflows.py",
+        "constant": "HISTORICAL_PROMPTS[man_front]",
+        "status": "historical_exact",
+        "provenance": "Exact prompt transcribed from the provided historical workflow: test-results/overlap-20261009/man_front_r4/workflow.json; the evidence archive is not a runtime dependency or included deliverable."
+      },
+      "primary_seeds": [
+        42
+      ],
+      "holdout_seeds": [
+        123,
+        777
+      ],
+      "holdout_policy": "Freeze config before inspecting holdouts; retain failures and every attempted seed. These are planned holdouts, not executed results.",
+      "background_phrase": "pale gray concrete wall",
+      "background_occurrence": 0,
+      "human_pose_gate": {
+        "required": true,
+        "status": "not_evaluated",
+        "criteria": [
+          "A human must inspect generated candidates or a separately retained matched image; mask-only output cannot establish pose or quality.",
+          "Exactly two fully clothed adults; both full-body figures and both pairs of feet are visible.",
+          "Check the intended scene and front/behind relation rather than accepting prompt wording as evidence."
+        ]
+      }
+    },
+    {
+      "case_id": "woman_front_strong_overlap",
+      "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "prompt_source": {
+        "path": "tools/build_hybrid_validation_workflows.py",
+        "constant": "NEW_PROMPT",
+        "status": "new_unexecuted"
+      },
+      "primary_seeds": [
+        42,
+        444444
+      ],
+      "holdout_seeds": [
+        123,
+        777
+      ],
+      "holdout_policy": "Freeze config before inspecting holdouts; retain failures and every attempted seed. These are planned holdouts, not executed results.",
+      "background_phrase": "pale gray concrete wall",
+      "background_occurrence": 0,
+      "human_pose_gate": {
+        "required": true,
+        "status": "not_evaluated",
+        "criteria": [
+          "Exactly two fully clothed adults, both standing, with full-body framing and both pairs of feet visible.",
+          "Woman in the foreground; man behind her with only a slight horizontal offset.",
+          "The woman's body substantially occludes the man's torso; the man's face remains clearly visible.",
+          "Hands make modest natural contact; no extra heads or fused/extra limbs.",
+          "A human must inspect generated images: prompt wording and token-mask intersection do not establish this pose."
+        ]
+      },
+      "prior_pose_evaluation": {
+        "attempts": 6,
+        "composition_not_met": 6,
+        "source": "Prior user-reviewed strong-overlap evaluation supplied for this task; historical image archive is not bundled.",
+        "interpretation": "No successful strong-pose reference is established. This is not a result for the new seven-method comparison."
+      }
+    }
+  ],
+  "variants": [
+    {
+      "variant": "baseline",
+      "purpose": "Existing single-prototype attention baseline, collected from the shared prefix.",
+      "select_node": "100",
+      "candidate_preview_node": "101",
+      "edited_sampler_node": "111",
+      "edited_save_node": "113",
+      "effective_prediction_mask_save_node": "116",
+      "selection_added_mask_save_node": "118"
+    },
+    {
+      "variant": "centroid_control",
+      "purpose": "One-prototype control using experimental calibration/seed rules; comparison with multi_proto isolates prototype count.",
+      "select_node": "130",
+      "candidate_preview_node": "131",
+      "edited_sampler_node": "141",
+      "edited_save_node": "143",
+      "effective_prediction_mask_save_node": "146",
+      "selection_added_mask_save_node": "148"
+    },
+    {
+      "variant": "multi_proto",
+      "purpose": "Multiple target/protected prototypes without a background competitor.",
+      "select_node": "160",
+      "candidate_preview_node": "161",
+      "edited_sampler_node": "171",
+      "edited_save_node": "173",
+      "effective_prediction_mask_save_node": "176",
+      "selection_added_mask_save_node": "178"
+    },
+    {
+      "variant": "multi_proto_bg",
+      "purpose": "Multiple prototypes plus an explicit background competitor.",
+      "select_node": "190",
+      "candidate_preview_node": "191",
+      "edited_sampler_node": "201",
+      "edited_save_node": "203",
+      "effective_prediction_mask_save_node": "206",
+      "selection_added_mask_save_node": "208"
+    },
+    {
+      "variant": "adaln_bg",
+      "purpose": "Feature-tap candidate with background competition.",
+      "select_node": "220",
+      "candidate_preview_node": "221",
+      "edited_sampler_node": "231",
+      "edited_save_node": "233",
+      "effective_prediction_mask_save_node": "236",
+      "selection_added_mask_save_node": "238"
+    },
+    {
+      "variant": "ensemble_bg",
+      "purpose": "Adds fixed step/block views to multi_proto_bg, with background competition.",
+      "select_node": "250",
+      "candidate_preview_node": "251",
+      "edited_sampler_node": "261",
+      "edited_save_node": "263",
+      "effective_prediction_mask_save_node": "266",
+      "selection_added_mask_save_node": "268"
+    },
+    {
+      "variant": "propagated_bg",
+      "purpose": "Adds one primary-tap Q/K propagation to multi_proto_bg, not to ensemble_bg; head 0 is provisional.",
+      "select_node": "280",
+      "candidate_preview_node": "281",
+      "edited_sampler_node": "291",
+      "edited_save_node": "293",
+      "effective_prediction_mask_save_node": "296",
+      "selection_added_mask_save_node": "298"
+    }
+  ],
+  "collection_config": {
+    "collect_step": 2,
+    "collect_block": 18,
+    "selected_steps": [
+      1,
+      2
+    ],
+    "selected_blocks": [
+      16,
+      18
+    ],
+    "top_k_ratio": 0.2,
+    "temperature": 10000.0,
+    "prototypes": 3,
+    "seed_confidence": 0.65,
+    "seed_margin": 0.15,
+    "mask_confidence": 0.55,
+    "mask_margin": 0.1,
+    "context_temperature": 1.0,
+    "feature_temperature": 0.15,
+    "propagation_iterations": 1,
+    "propagation_heads": [
+      0
+    ],
+    "affinity_chunk_size": 128,
+    "affinity_threshold": 0.05,
+    "propagation_strength": 0.5
+  },
+  "ablation_pairs": [
+    {
+      "from": "baseline",
+      "to": "centroid_control",
+      "change": "Experimental calibration and seed rules; not a prototype-only comparison."
+    },
+    {
+      "from": "centroid_control",
+      "to": "multi_proto",
+      "change": "Prototype count."
+    },
+    {
+      "from": "multi_proto",
+      "to": "multi_proto_bg",
+      "change": "Explicit background competitor."
+    },
+    {
+      "from": "multi_proto_bg",
+      "to": "adaln_bg",
+      "change": "Feature representation."
+    },
+    {
+      "from": "multi_proto_bg",
+      "to": "ensemble_bg",
+      "change": "Additional step/block views."
+    },
+    {
+      "from": "multi_proto_bg",
+      "to": "propagated_bg",
+      "change": "One primary-tap Q/K propagation; not ensemble plus propagation."
+    }
+  ],
+  "validation": {
+    "static_contracts": "tests/test_attention_validation_workflows.py",
+    "gpu_execution": "not_run",
+    "image_quality": "not_evaluated",
+    "pose_gate": "not_evaluated"
+  },
+  "controls": {
+    "model_node": "2",
+    "initial_latent_node": "7",
+    "prompt_node": "4",
+    "collector_node": "8",
+    "steps": 8,
+    "collect_step": 2,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "slider_strength": 4.0,
+    "fill_holes_max_area": 0,
+    "mask_dilate_radius": 0,
+    "selection_dilate_radius": 0,
+    "schedule_rule": "Use the prefix of the same full eight-step schedule; never substitute a separately generated two-step schedule.",
+    "slider_rule": "Collector sees style-only model. Every optional edited branch applies one local Slider +4 to the original empty latent; collection latent is not reused."
+  },
+  "output_prefixes": {
+    "mask_only": {
+      "10": "attn_validation_woman_front_strong_overlap_s42_t0_mask_only_suite"
+    },
+    "edited": {
+      "10": "attn_validation_woman_front_strong_overlap_s42_t0_edited_suite",
+      "113": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/baseline",
+      "116": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/baseline_effective_prediction_mask",
+      "118": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/baseline_selection_added_mask",
+      "143": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/centroid_control",
+      "146": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/centroid_control_effective_prediction_mask",
+      "148": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/centroid_control_selection_added_mask",
+      "173": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/multi_proto",
+      "176": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/multi_proto_effective_prediction_mask",
+      "178": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/multi_proto_selection_added_mask",
+      "203": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/multi_proto_bg",
+      "206": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/multi_proto_bg_effective_prediction_mask",
+      "208": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/multi_proto_bg_selection_added_mask",
+      "233": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/adaln_bg",
+      "236": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/adaln_bg_effective_prediction_mask",
+      "238": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/adaln_bg_selection_added_mask",
+      "263": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/ensemble_bg",
+      "266": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/ensemble_bg_effective_prediction_mask",
+      "268": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/ensemble_bg_selection_added_mask",
+      "293": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/propagated_bg",
+      "296": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/propagated_bg_effective_prediction_mask",
+      "298": "slider_attention_validation/woman_front_strong_overlap/seed42/trial0/edited/propagated_bg_selection_added_mask"
+    }
+  },
+  "cost_accounting": {
+    "expected_cold_mask_only_model_nfe": 2,
+    "expected_partial_edit_model_nfe_each": 16,
+    "expected_cold_all_edited_model_nfe": 114,
+    "measurement_status": "not_run",
+    "actual_model_nfe": null,
+    "wall_seconds": null,
+    "peak_memory_bytes": null,
+    "suite_save_node": "10",
+    "collection_report_fields": {
+      "collection_id": "run_id",
+      "model_nfe": [
+        "phase1_nfe",
+        "phase2_nfe"
+      ],
+      "time": [
+        "elapsed_seconds",
+        "collection_seconds",
+        "algorithm_seconds"
+      ],
+      "memory": [
+        "memory.peak_allocated_bytes",
+        "memory.peak_reserved_bytes",
+        "memory.scope",
+        "memory.unavailable_reason"
+      ]
+    },
+    "edited_report_fields": {
+      "model_nfe": "total_model_nfe",
+      "link": "variant -> edited_save_node -> correlated diagnostic JSON; match queued graph, masks and collection_id"
+    },
+    "measurement_instructions": "Suite wall time and memory include all candidates and shared hooks, not isolated per-variant end-to-end costs. Per-variant algorithm timings omit shared work. Record the queue wall clock, exact submitted API, suite manifest, collection_id and all edited diagnostic paths. Change collector and every sampler trial_id together for cold cache-independent remeasurement. A cached suite report describes the earlier collection, not new work in this queue. Report cache status explicitly.",
+    "memory_scope_warning": "CUDA peaks may be process-lifetime peaks rather than node-local incremental use. Preserve the runtime memory.scope and unavailable_reason; never add per-node peak memory values or present unavailable memory as zero.",
+    "assumptions": "Cold uncached graph with every terminal output active; each of seven edits has nonzero strength and a nonempty partial mask, requiring 2*8 model evaluations. Endpoints or failures can change the count; actual runtime counts take precedence. NFE excludes VAE, observation hooks, feature transfers, affinity/prototype work, mask operations, audits and saving. Shared observations avoid duplicate model forwards but are not free in time or memory."
+  },
+  "evaluation_record_template": {
+    "case_id": "woman_front_strong_overlap",
+    "seed": 42,
+    "trial_id": 0,
+    "collection_id": null,
+    "suite_manifest_path": null,
+    "queued_api_path": null,
+    "cache_status": "not_recorded",
+    "actual_model_nfe": null,
+    "wall_seconds": null,
+    "peak_memory_bytes": null,
+    "memory_scope": null,
+    "mask_evaluation_json_path": null,
+    "pose_gate": {
+      "status": "not_evaluated",
+      "passed": null,
+      "human_reviewer": null,
+      "evidence_image_paths": [],
+      "notes": null
+    },
+    "variant_results": [
+      {
+        "variant": "baseline",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      },
+      {
+        "variant": "centroid_control",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      },
+      {
+        "variant": "multi_proto",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      },
+      {
+        "variant": "multi_proto_bg",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      },
+      {
+        "variant": "adaln_bg",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      },
+      {
+        "variant": "ensemble_bg",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      },
+      {
+        "variant": "propagated_bg",
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "notes": null
+        },
+        "edit_diagnostic_json_path": null,
+        "image_path": null,
+        "target_body_change": null,
+        "protected_identity": null,
+        "background_leakage": null,
+        "contact_anatomy": null,
+        "old_silhouette_residue": null,
+        "failure_reason": null
+      }
+    ]
+  },
+  "evaluation_order": [
+    "Run mask-only first. Inspect every candidate status in the saved suite; remove all image/mask save outputs for failed variants before optional edited execution.",
+    "Validate runtime collection identity, actual counters, artifact hashes and cleanup evidence.",
+    "Inspect target/protected masks; score against optional same-grid human annotations with tools/evaluate_attention_masks.py.",
+    "If edited candidates are generated, apply the human pose gate first; composition_not_met stays in the report.",
+    "Evaluate full-body change, protected appearance, background leakage, old-region residue and contact anatomy separately.",
+    "Freeze configuration before holdouts; retain every attempted seed and all failures."
+  ],
+  "limitations": [
+    "This static manifest is a plan, not proof of queued execution; preserve runtime artifacts.",
+    "No completed OFF reference image is generated or required; optional archived matched reference images may aid human assessment but their availability is not assumed.",
+    "Different masks intentionally have different partitions; do not relax the existing diagnostic comparison CLI's same-partition requirements.",
+    "Heuristic confidence is not calibrated probability. Base-routed uncertain cells are not established background.",
+    "No forced equal area, no hard seed-area quota, no SAM/external-image dependency, no automatic pose/quality certification.",
+    "Static protected masks are whole-person guesses, not guaranteed anatomical cores; selective small hand/arm adjustments are not guaranteed. Mask-only output cannot establish generated anatomy, occlusion or preservation of identity. Real GPU/INT8/UI-reload/quality validation remains separate."
+  ]
+}

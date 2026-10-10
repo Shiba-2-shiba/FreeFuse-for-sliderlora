@@ -12,11 +12,14 @@ async def comfy_entrypoint():
     from comfy_api.latest import ComfyExtension
     from .nodes import (Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler,
                         Krea2SliderFuseMaskPreview, Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave,
-                        Krea2SliderFusePredictionMixSampler)
+                        Krea2SliderFusePredictionMixSampler, Krea2SliderFuseExperimentalMaskCollect,
+                        Krea2SliderFuseExperimentalMaskSelect, Krea2SliderFuseExperimentalMaskSave)
 
     class SliderFreeFuseExtension(ComfyExtension):
         async def get_node_list(self):
             return [Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler, Krea2SliderFuseMaskPreview,
-                    Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave, Krea2SliderFusePredictionMixSampler]
+                    Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave, Krea2SliderFusePredictionMixSampler,
+                    Krea2SliderFuseExperimentalMaskCollect, Krea2SliderFuseExperimentalMaskSelect,
+                    Krea2SliderFuseExperimentalMaskSave]
 
     return SliderFreeFuseExtension()

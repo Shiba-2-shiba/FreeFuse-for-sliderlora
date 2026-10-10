@@ -152,7 +152,11 @@ class NativeChecks(unittest.TestCase):
         spec=importlib.util.spec_from_file_location("slider_native_extension",root/"__init__.py",submodule_search_locations=[str(root)])
         package=importlib.util.module_from_spec(spec); sys.modules[spec.name]=package; spec.loader.exec_module(package)
         extension=asyncio.run(package.comfy_entrypoint()); nodes=asyncio.run(extension.get_node_list())
-        self.assertEqual(len(nodes),7)
+        self.assertEqual({node.define_schema().node_id for node in nodes}, {
+            "Krea2SliderFuseEncode", "Krea2SliderFuseSubjects", "Krea2SliderFuseSampler",
+            "Krea2SliderFuseMaskPreview", "Krea2SliderFuseDiagnosticSampler", "Krea2SliderFuseDiagnosticSave",
+            "Krea2SliderFusePredictionMixSampler", "Krea2SliderFuseExperimentalMaskCollect",
+            "Krea2SliderFuseExperimentalMaskSelect", "Krea2SliderFuseExperimentalMaskSave"})
         for node in nodes:
             schema=node.define_schema(); schema.validate()
             if schema.node_id=="Krea2SliderFuseSampler":

@@ -21,11 +21,15 @@ from .slider_fuse.masks import similarity_preview
 from .slider_fuse.sampling import sample_krea2, sample_krea2_diagnostic
 from .slider_fuse.diagnostics import save_diagnostic_artifacts, validate_prefix
 from .slider_fuse.native_pair import sample_krea2_prediction_mix
+from .slider_fuse.experimental_collection import collect_experimental_masks, select_experimental_mask
+from .slider_fuse.experimental_masks import VARIANTS, validate_experimental_config
+from .slider_fuse.experimental_artifacts import save_experimental_artifacts, validate_experimental_prefix
 
 PromptType = io.Custom("KREA2_SLIDER_FUSE_PROMPT")
 SubjectsType = io.Custom("KREA2_SLIDER_FUSE_SUBJECTS")
 MasksType = io.Custom("KREA2_SLIDER_FUSE_MASKS")
 DiagnosticsType = io.Custom("KREA2_SLIDER_FUSE_DIAGNOSTICS")
+ExperimentType = io.Custom("KREA2_SLIDER_FUSE_MASK_EXPERIMENT")
 CATEGORY = "Krea2/Slider FreeFuse"
 
 
@@ -239,3 +243,60 @@ class Krea2SliderFuseDiagnosticSave(io.ComfyNode):
             cls.hidden.prompt, cls.hidden.extra_pnginfo, cls.hidden.unique_id)
         return io.NodeOutput(ui={"images": [{"filename": report["artifacts"]["image"],
                                             "subfolder": subfolder, "type": "output"}]})
+
+
+class Krea2SliderFuseExperimentalMaskCollect(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id="Krea2SliderFuseExperimentalMaskCollect",
+            display_name="Krea2 Experimental Mask Collect", category=CATEGORY + "/Experimental",
+            description="Observe the first two evaluations of an eight-step base-only Euler/simple schedule. One shared pass produces seven mask hypotheses; no completed reference image, Slider, VAE or generation phase. Background phrase must already exist in the encoded prompt. Real GPU/image quality remains unvalidated.",
+            inputs=[io.Model.Input("model"), io.Conditioning.Input("positive"), io.Conditioning.Input("negative"),
+                    PromptType.Input("prompt_info"), SubjectsType.Input("subjects"), io.Latent.Input("latent"),
+                    io.Int.Input("seed", default=42, min=0, max=0xFFFFFFFFFFFFFFFF, control_after_generate=True),
+                    io.Int.Input("steps", default=8, min=8, max=8),
+                    io.Int.Input("trial_id", default=0, min=0, max=0x7FFFFFFF),
+                    io.String.Input("config_json", multiline=True, default=json.dumps(validate_experimental_config({}), indent=2)),
+                    io.String.Input("background_phrase", default=""),
+                    io.Int.Input("background_occurrence", default=0, min=0, max=999),
+                    io.Boolean.Input("audit_tensors", optional=True, default=False,
+                        tooltip="Expensive full Q/K/features hash audit; large GPU-to-CPU transfers. Leave off for normal timing.")],
+            outputs=[ExperimentType.Output("suite")])
+
+    @classmethod
+    def execute(cls, model, positive, negative, prompt_info, subjects, latent, seed, steps, trial_id,
+                config_json, background_phrase, background_occurrence=0, audit_tensors=False):
+        return io.NodeOutput(collect_experimental_masks(model, positive, negative, prompt_info, subjects, latent,
+            seed=seed, steps=steps, trial_id=trial_id, config_json=config_json,
+            background_phrase=background_phrase, background_occurrence=background_occurrence, audit_tensors=audit_tensors))
+
+
+class Krea2SliderFuseExperimentalMaskSelect(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id="Krea2SliderFuseExperimentalMaskSelect",
+            display_name="Select Krea2 Experimental Mask", category=CATEGORY + "/Experimental",
+            description="Select a successful candidate as an ordinary mask bank. Failed candidates raise their recorded error; no fallback is substituted.",
+            inputs=[ExperimentType.Input("suite"), io.Combo.Input("variant", options=list(VARIANTS))],
+            outputs=[MasksType.Output("mask_bank"), io.String.Output("report")])
+
+    @classmethod
+    def execute(cls, suite, variant):
+        bank, report = select_experimental_mask(suite, variant)
+        return io.NodeOutput(bank, json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False))
+
+
+class Krea2SliderFuseExperimentalMaskSave(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id="Krea2SliderFuseExperimentalMaskSave",
+            display_name="Save Krea2 Experimental Masks", category=CATEGORY + "/Experimental", is_output_node=True,
+            description="Save all valid mask PNGs, raw float32 maps, uncertainty, attention evidence and a separate JSON experiment manifest. No VAE or latent input is needed. Each call creates a new bundle without overwriting.",
+            inputs=[ExperimentType.Input("suite"), io.String.Input("filename_prefix", default="krea2_attention_experiment")],
+            outputs=[])
+
+    @classmethod
+    def execute(cls, suite, filename_prefix):
+        validate_experimental_prefix(filename_prefix)
+        save_experimental_artifacts(Path(folder_paths.get_output_directory()).resolve(), filename_prefix, suite)
+        return io.NodeOutput()

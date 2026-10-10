@@ -352,7 +352,7 @@ def write_workflows(output_dir=None, case_id=DEFAULT_CASE, seed=None, radius=4,
     pending = []
     try:
         for name, content in rendered.items():
-            with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=destination, prefix=".hybrid-", delete=False) as stream:
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="\n", dir=destination, prefix=".hybrid-", delete=False) as stream:
                 pending.append((Path(stream.name), destination / name))
                 stream.write(content)
         for temporary, target in pending:

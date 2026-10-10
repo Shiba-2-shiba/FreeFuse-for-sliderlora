@@ -159,3 +159,30 @@ A/B/C comparisons with explicit final-selection/margin exports, a manual-D
 control, and a woman-in-front/man-behind strong-overlap case. The case is a
 prompted test condition; its pose must be checked in the actual reference image.
 New workflows are structurally tested, not GPU/image-quality certified.
+
+### Post-expansion core exclusion (stage 1)
+
+[Final-core exclusion guide](docs/final-core-exclusion.md) prepares a final
+selection mask with a separately reviewed protected-person core removed, and
+optionally emits a checked radius-zero replay of the matching manual-D workflow.
+It does not change the sampler or guarantee protected appearance. The eventual
+goal is automatic support without a completed OFF reference image. Image-guided
+extraction is only an optional diagnostic control; the no-OFF-image stage 2
+production backend is not established; the attention-only candidates below are
+experimental comparisons, not validated automatic anatomical protection.
+
+### Attention-only mask validation (experimental)
+
+[検証手順と比較条件](docs/attention-validation.md)を参照してください。
+新しい collection / select / save ノードは、同じ8-stepスケジュールの
+先頭2-stepを一度だけ観測し、現行方式と6つの実験候補を比較します。
+完成OFF画像、VAEデコード、外部segmenterはマスク抽出の入力に不要です。
+既存Samplerの既定値・推論経路は変更しません。
+
+- まず `workflows/krea2_female_slider_attention_validation.json` でマスクだけを確認します。
+- 必要な場合だけ `_edited.json` で同じマスクを既存のmanual Prediction Mixへ渡します。
+- 追加モデル評価なしでも、特徴処理・attention再計算の時間とメモリは増えます。
+- 胴脚の回収率・男性への侵入は、別途確認された評価用ラベルがある場合のみ測定します。
+- 人物の取り違え、強い遮蔽、体型変化後の範囲、実機の時間・VRAM・画質は未検証です。
+
+これらは実装比較のための候補であり、全身復元や男性の外見維持を保証する更新ではありません。

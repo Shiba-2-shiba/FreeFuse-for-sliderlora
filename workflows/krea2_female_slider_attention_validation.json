@@ -1,0 +1,1641 @@
+{
+  "last_node_id": 9002,
+  "last_link_id": 25,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        40,
+        50
+      ],
+      "size": [
+        390,
+        103
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "title": "Checkpoint"
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        390,
+        125
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "krea2_darkbrush.safetensors",
+        0.8
+      ],
+      "widgets_values_named": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8
+      },
+      "title": "Shared style baseline (all FINAL models)"
+    },
+    {
+      "id": 3,
+      "type": "CLIPLoader",
+      "pos": [
+        500,
+        50
+      ],
+      "size": [
+        390,
+        132
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_4b_bf16.safetensors",
+        "krea2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "title": "Qwen3-VL CLIP, Krea2 type"
+    },
+    {
+      "id": 4,
+      "type": "Krea2SliderFuseEncode",
+      "pos": [
+        500,
+        280
+      ],
+      "size": [
+        410,
+        290
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            3,
+            6
+          ]
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "links": [
+            4,
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseEncode"
+      },
+      "widgets_values": [
+        "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows."
+      ],
+      "widgets_values_named": {
+        "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows."
+      },
+      "title": "Shared scene: two fully clothed adults"
+    },
+    {
+      "id": 5,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1000,
+        50
+      ],
+      "size": [
+        390,
+        80
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "Shared zero negative"
+    },
+    {
+      "id": 6,
+      "type": "Krea2SliderFuseSubjects",
+      "pos": [
+        1000,
+        240
+      ],
+      "size": [
+        390,
+        227
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 4
+        },
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseSubjects"
+      },
+      "widgets_values": [
+        "woman",
+        "man",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0
+      },
+      "title": "Collection subjects: woman / man"
+    },
+    {
+      "id": 7,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        40,
+        570
+      ],
+      "size": [
+        390,
+        132
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "title": "Shared EMPTY latent, never collector output"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskCollect",
+      "size": [
+        570,
+        760
+      ],
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 7
+        },
+        {
+          "name": "prompt_info",
+          "type": "KREA2_SLIDER_FUSE_PROMPT",
+          "link": 8
+        },
+        {
+          "name": "subjects",
+          "type": "KREA2_SLIDER_FUSE_SUBJECTS",
+          "link": 9
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "links": [
+            11,
+            12,
+            14,
+            16,
+            18,
+            20,
+            22,
+            24
+          ]
+        }
+      ],
+      "widgets_values_named": {
+        "seed": 42,
+        "steps": 8,
+        "trial_id": 0,
+        "config_json": "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 3,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "background_phrase": "pale gray concrete wall",
+        "background_occurrence": 0,
+        "audit_tensors": false
+      },
+      "id": 8,
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "title": "ONE shared 2-forward prefix of 8-step schedule",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskCollect"
+      },
+      "pos": [
+        1500,
+        50
+      ],
+      "widgets_values": [
+        42,
+        "fixed",
+        8,
+        0,
+        "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 3,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "pale gray concrete wall",
+        0,
+        false
+      ]
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSave",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 11
+        }
+      ],
+      "outputs": [],
+      "widgets_values_named": {
+        "filename_prefix": "attn_validation_woman_front_strong_overlap_s42_t0_mask_only_suite"
+      },
+      "id": 10,
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "title": "Save ALL seven candidates, raw maps and runtime manifest",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSave"
+      },
+      "pos": [
+        2150,
+        60
+      ],
+      "widgets_values": [
+        "attn_validation_woman_front_strong_overlap_s42_t0_mask_only_suite"
+      ]
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "baseline"
+      },
+      "id": 100,
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "title": "baseline: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        1200
+      ],
+      "widgets_values": [
+        "baseline"
+      ]
+    },
+    {
+      "id": 101,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        1200
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "baseline: candidate bank"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            15
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "centroid_control"
+      },
+      "id": 130,
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "title": "centroid_control: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        2520
+      ],
+      "widgets_values": [
+        "centroid_control"
+      ]
+    },
+    {
+      "id": 131,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        2520
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "centroid_control: candidate bank"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "multi_proto"
+      },
+      "id": 160,
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "title": "multi_proto: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        3840
+      ],
+      "widgets_values": [
+        "multi_proto"
+      ]
+    },
+    {
+      "id": 161,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        3840
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "multi_proto: candidate bank"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "multi_proto_bg"
+      },
+      "id": 190,
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "title": "multi_proto_bg: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        5160
+      ],
+      "widgets_values": [
+        "multi_proto_bg"
+      ]
+    },
+    {
+      "id": 191,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        5160
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "multi_proto_bg: candidate bank"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            21
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "adaln_bg"
+      },
+      "id": 220,
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "title": "adaln_bg: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        6480
+      ],
+      "widgets_values": [
+        "adaln_bg"
+      ]
+    },
+    {
+      "id": 221,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        6480
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "adaln_bg: candidate bank"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "ensemble_bg"
+      },
+      "id": 250,
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "title": "ensemble_bg: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        7800
+      ],
+      "widgets_values": [
+        "ensemble_bg"
+      ]
+    },
+    {
+      "id": 251,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        7800
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "ensemble_bg: candidate bank"
+    },
+    {
+      "type": "Krea2SliderFuseExperimentalMaskSelect",
+      "size": [
+        420,
+        230
+      ],
+      "inputs": [
+        {
+          "name": "suite",
+          "type": "KREA2_SLIDER_FUSE_MASK_EXPERIMENT",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "links": [
+            25
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "widgets_values_named": {
+        "variant": "propagated_bg"
+      },
+      "id": 280,
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "title": "propagated_bg: select same collection",
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseExperimentalMaskSelect"
+      },
+      "pos": [
+        40,
+        9120
+      ],
+      "widgets_values": [
+        "propagated_bg"
+      ]
+    },
+    {
+      "id": 281,
+      "type": "Krea2SliderFuseMaskPreview",
+      "pos": [
+        480,
+        9120
+      ],
+      "size": [
+        390,
+        280
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask_bank",
+          "type": "KREA2_SLIDER_FUSE_MASKS",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "background_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "target_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "protected_similarity",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "added_target_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "effective_prediction_mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "selection_added_mask",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Krea2SliderFuseMaskPreview"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "title": "propagated_bg: candidate bank"
+    },
+    {
+      "id": 9000,
+      "type": "Note",
+      "pos": [
+        40,
+        -530
+      ],
+      "size": [
+        1210,
+        460
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "EXPERIMENTAL: one shared style-only collector runs exactly the first 2 forwards of the same 8-step Euler/simple schedule. Seven methods reuse these observations. No completed OFF image, external image, SAM, or VAE is needed for mask-only collection. Save suite once: its runtime manifest, raw maps and masks are the provenance record. Mask-only selectors/previews have no terminal consumers, so a failed candidate cannot prevent the suite report from being saved."
+      ],
+      "title": "Attention validation instructions"
+    },
+    {
+      "id": 9001,
+      "type": "Note",
+      "pos": [
+        1320,
+        -530
+      ],
+      "size": [
+        1210,
+        460
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "This graph stops after masks and reports. Cold model-forward expectation: 2 NFE. A full edit is not generated. Inspect suite candidate statuses before using the separate edited graph; remove all terminal saves for any failed variant before running valid edits. NFE is not time or memory: taps, prototypes, affinity, transfer, saving, and audit have real costs. Read actual runtime reports; cache reuse changes new work."
+      ],
+      "title": "Attention validation instructions"
+    },
+    {
+      "id": 9002,
+      "type": "Note",
+      "pos": [
+        2600,
+        -530
+      ],
+      "size": [
+        1210,
+        460
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Radius=0 and fill_holes=0 are fixed. Keep all attempted seeds; freeze settings before seeds 123/777 holdouts. Prior strong female-front pose failed 6/6 attempts. Prompt wording and mask overlap cannot verify pose. Human gate required; GPU execution and image quality are not validated by these graph files. Confidence scores are heuristic; uncertain cells routed to base are not established background."
+      ],
+      "title": "Attention validation instructions"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      4,
+      4,
+      1,
+      6,
+      0,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      5,
+      2,
+      0,
+      8,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      4,
+      0,
+      8,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      7,
+      5,
+      0,
+      8,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      8,
+      4,
+      1,
+      8,
+      3,
+      "KREA2_SLIDER_FUSE_PROMPT"
+    ],
+    [
+      9,
+      6,
+      0,
+      8,
+      4,
+      "KREA2_SLIDER_FUSE_SUBJECTS"
+    ],
+    [
+      10,
+      7,
+      0,
+      8,
+      5,
+      "LATENT"
+    ],
+    [
+      11,
+      8,
+      0,
+      10,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      12,
+      8,
+      0,
+      100,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      13,
+      100,
+      0,
+      101,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      14,
+      8,
+      0,
+      130,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      15,
+      130,
+      0,
+      131,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      16,
+      8,
+      0,
+      160,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      17,
+      160,
+      0,
+      161,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      18,
+      8,
+      0,
+      190,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      19,
+      190,
+      0,
+      191,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      20,
+      8,
+      0,
+      220,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      21,
+      220,
+      0,
+      221,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      22,
+      8,
+      0,
+      250,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      23,
+      250,
+      0,
+      251,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ],
+    [
+      24,
+      8,
+      0,
+      280,
+      0,
+      "KREA2_SLIDER_FUSE_MASK_EXPERIMENT"
+    ],
+    [
+      25,
+      280,
+      0,
+      281,
+      0,
+      "KREA2_SLIDER_FUSE_MASKS"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "baseline | shared collection",
+      "bounding": [
+        10,
+        1140,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "centroid_control | shared collection",
+      "bounding": [
+        10,
+        2460,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "multi_proto | shared collection",
+      "bounding": [
+        10,
+        3780,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "multi_proto_bg | shared collection",
+      "bounding": [
+        10,
+        5100,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "adaln_bg | shared collection",
+      "bounding": [
+        10,
+        6420,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "ensemble_bg | shared collection",
+      "bounding": [
+        10,
+        7740,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "title": "propagated_bg | shared collection",
+      "bounding": [
+        10,
+        9060,
+        1570,
+        1250
+      ],
+      "color": "#526b87",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.35,
+      "offset": [
+        100,
+        630
+      ]
+    }
+  },
+  "version": 0.4
+}
