@@ -132,3 +132,22 @@ python -B -m pytest -q -p no:cacheprovider tests
 このリポジトリのソースは[Apache-2.0](LICENSE)です。[FreeFuse](https://github.com/yaoliliu/FreeFuse)と[FreeFuse-for-anima](https://github.com/Shiba-2-shiba/FreeFuse-for-anima)からの派生・改変箇所、固定コミット、元の権利表示は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)と[NOTICE](NOTICE)に記載しています。独立した派生実装であり、上流の公式版・公認版を意味しません。
 
 ソースの再配布では`LICENSE`・`NOTICE`・出典文書と改変表示を保持してください。ComfyUIはGPL-3.0の外部ランタイムであり、組み合わせたプログラムの配布ではGPLの義務も確認する必要があります。モデル・LoRA・データセットは同梱せず、それぞれの配布条件が適用されます。確認範囲と限界は[ライセンス監査記録](docs/license-audit.md)を参照してください。
+
+
+## Slider ON/OFF mask collection comparison
+
+An experimental three-way comparison uses existing nodes to collect masks from
+style-only and style-plus-Slider trajectories, then runs the same manual
+Prediction Mix sampler with base, Slider, and hybrid masks. The hybrid keeps
+the estimated base protection mask and subtracts it from the Slider target.
+
+- [Comparison protocol and workflow usage](docs/slider-mask-collection-comparison.md)
+- [Design specification and future collection-only optimization](docs/superpowers/specs/2026-10-10-slider-mask-collection-design.md)
+- [ComfyUI workflow](workflows/krea2_female_slider_collection_comparison.json)
+- [API prompt](workflows/krea2_female_slider_collection_comparison_api.json)
+
+This is a workflow-level experiment, not a new runtime collection mode. It uses
+68 model evaluations for the shared 8-step three-way graph (cold cache), not the
+18/20 evaluations proposed for a later collection-only implementation. Static
+graph checks do not establish real-machine compatibility or image quality.
+

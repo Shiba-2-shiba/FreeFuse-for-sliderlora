@@ -1,0 +1,469 @@
+{
+  "name": "Krea2 Slider collection OFF / ON / protected-priority hybrid comparison",
+  "ui_workflow": "krea2_female_slider_collection_comparison.json",
+  "api_workflow": "krea2_female_slider_collection_comparison_api.json",
+  "source_revision": "4c53e667",
+  "validation": {
+    "static_graph_and_schema": "covered by tests/test_collection_comparison_workflow.py",
+    "gpu_execution": "not_run",
+    "image_quality": "not_evaluated"
+  },
+  "node_ids": {
+    "style_baseline": "2",
+    "shared_prompt": "4",
+    "initial_empty_latent": "7",
+    "collector_off": "8",
+    "collector_on_slider_loader": "10",
+    "collector_on": "11",
+    "preview_off": "12",
+    "preview_on": "13",
+    "final_a": "21",
+    "final_b": "31",
+    "hybrid_subtract": "40",
+    "final_c": "42",
+    "conflict_multiply": "50",
+    "old_minus_new_diagnostic": "51"
+  },
+  "coordinated_settings": {
+    "seed": {
+      "default": 42,
+      "api_inputs": [
+        [
+          "8",
+          "seed"
+        ],
+        [
+          "11",
+          "seed"
+        ],
+        [
+          "21",
+          "seed"
+        ],
+        [
+          "31",
+          "seed"
+        ],
+        [
+          "42",
+          "seed"
+        ]
+      ],
+      "notes": "Set the same value in all five Samplers; UI control_after_generate stays fixed."
+    },
+    "steps": {
+      "default": 8,
+      "api_inputs": [
+        [
+          "8",
+          "steps"
+        ],
+        [
+          "11",
+          "steps"
+        ],
+        [
+          "21",
+          "steps"
+        ],
+        [
+          "31",
+          "steps"
+        ],
+        [
+          "42",
+          "steps"
+        ]
+      ],
+      "notes": "Set all five together; collect_step must not exceed steps. The reference budget below assumes 8."
+    },
+    "cfg": {
+      "default": 1.0,
+      "api_inputs": [
+        [
+          "8",
+          "cfg"
+        ],
+        [
+          "11",
+          "cfg"
+        ],
+        [
+          "21",
+          "cfg"
+        ],
+        [
+          "31",
+          "cfg"
+        ],
+        [
+          "42",
+          "cfg"
+        ]
+      ],
+      "notes": "Must remain 1.0 for the current implementation."
+    },
+    "trial_id": {
+      "default": 0,
+      "api_inputs": [
+        [
+          "8",
+          "trial_id"
+        ],
+        [
+          "11",
+          "trial_id"
+        ],
+        [
+          "21",
+          "trial_id"
+        ],
+        [
+          "31",
+          "trial_id"
+        ],
+        [
+          "42",
+          "trial_id"
+        ]
+      ],
+      "notes": "Increment all five together for a fresh run with the same seed; leave unchanged when intentionally reusing cached collection."
+    },
+    "slider_strength": {
+      "default": 4.0,
+      "api_inputs": [
+        [
+          "10",
+          "strength_model"
+        ],
+        [
+          "21",
+          "strength"
+        ],
+        [
+          "31",
+          "strength"
+        ],
+        [
+          "42",
+          "strength"
+        ]
+      ],
+      "notes": "Change ON upstream loader plus all FINAL sampler strengths together. Collector sampler strength stays zero. Zero/nonstandard values change the expected NFE or experiment."
+    },
+    "slider_lora": {
+      "default": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "api_inputs": [
+        [
+          "10",
+          "lora_name"
+        ],
+        [
+          "8",
+          "lora_name"
+        ],
+        [
+          "11",
+          "lora_name"
+        ],
+        [
+          "21",
+          "lora_name"
+        ],
+        [
+          "31",
+          "lora_name"
+        ],
+        [
+          "42",
+          "lora_name"
+        ]
+      ],
+      "notes": "Use the same compatible trained Slider file everywhere, including the required collector lora_name although own strength is zero."
+    },
+    "style_lora": {
+      "default": "krea2_darkbrush.safetensors",
+      "api_inputs": [
+        [
+          "2",
+          "lora_name"
+        ]
+      ],
+      "notes": "One shared global style Loader; do not use the Slider as this style."
+    },
+    "style_strength": {
+      "default": 0.8,
+      "api_inputs": [
+        [
+          "2",
+          "strength_model"
+        ]
+      ],
+      "notes": "Shared by every path; changing it recollects both banks."
+    },
+    "prompt": {
+      "default": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on the same studio floor, facing the camera. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both entire figures are visible, with space above their heads and below their shoes, at a consistent scale and camera distance. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "api_inputs": [
+        [
+          "4",
+          "prompt"
+        ]
+      ],
+      "notes": "Keep exact target/protected phrases present and unambiguous; update all four Subjects nodes together if phrases change."
+    },
+    "target_phrase": {
+      "default": "woman",
+      "api_inputs": [
+        [
+          "6",
+          "target_phrase"
+        ],
+        [
+          "20",
+          "target_phrase"
+        ],
+        [
+          "30",
+          "target_phrase"
+        ],
+        [
+          "41",
+          "target_phrase"
+        ]
+      ],
+      "notes": "Same semantic target in collection and all FINAL branches."
+    },
+    "protected_phrase": {
+      "default": "man",
+      "api_inputs": [
+        [
+          "6",
+          "protected_phrase"
+        ],
+        [
+          "20",
+          "protected_phrase"
+        ],
+        [
+          "30",
+          "protected_phrase"
+        ],
+        [
+          "41",
+          "protected_phrase"
+        ]
+      ],
+      "notes": "Same protected person in collection and all FINAL branches."
+    },
+    "target_occurrence": {
+      "default": 0,
+      "api_inputs": [
+        [
+          "6",
+          "target_occurrence"
+        ],
+        [
+          "20",
+          "target_occurrence"
+        ],
+        [
+          "30",
+          "target_occurrence"
+        ],
+        [
+          "41",
+          "target_occurrence"
+        ]
+      ],
+      "notes": "Update together if a phrase occurs more than once."
+    },
+    "protected_occurrence": {
+      "default": 0,
+      "api_inputs": [
+        [
+          "6",
+          "protected_occurrence"
+        ],
+        [
+          "20",
+          "protected_occurrence"
+        ],
+        [
+          "30",
+          "protected_occurrence"
+        ],
+        [
+          "41",
+          "protected_occurrence"
+        ]
+      ],
+      "notes": "Update together if a phrase occurs more than once."
+    },
+    "collect_step": {
+      "default": 2,
+      "api_inputs": [
+        [
+          "8",
+          "collect_step"
+        ],
+        [
+          "11",
+          "collect_step"
+        ]
+      ],
+      "notes": "Collectors only; manual FINAL nodes ignore this setting."
+    },
+    "collect_block": {
+      "default": 18,
+      "api_inputs": [
+        [
+          "8",
+          "collect_block"
+        ],
+        [
+          "11",
+          "collect_block"
+        ]
+      ],
+      "notes": "Collectors only; keep OFF/ON matched."
+    },
+    "top_k_ratio": {
+      "default": 0.2,
+      "api_inputs": [
+        [
+          "8",
+          "top_k_ratio"
+        ],
+        [
+          "11",
+          "top_k_ratio"
+        ]
+      ],
+      "notes": "Collectors only; keep OFF/ON matched."
+    },
+    "temperature": {
+      "default": 10000.0,
+      "api_inputs": [
+        [
+          "8",
+          "temperature"
+        ],
+        [
+          "11",
+          "temperature"
+        ]
+      ],
+      "notes": "Collectors only; keep OFF/ON matched."
+    },
+    "selection_dilate_radius": {
+      "default": 4,
+      "api_inputs": [
+        [
+          "21",
+          "selection_dilate_radius"
+        ],
+        [
+          "31",
+          "selection_dilate_radius"
+        ],
+        [
+          "42",
+          "selection_dilate_radius"
+        ]
+      ],
+      "notes": "FINAL selection only; both collector values remain 0. Does not guarantee an unchanged exterior."
+    }
+  },
+  "output_prefixes": {
+    "A_off": {
+      "node_id": "23",
+      "prefix": "slider_collection_compare/A_off",
+      "class_type": "Krea2SliderFuseDiagnosticSave"
+    },
+    "B_on": {
+      "node_id": "33",
+      "prefix": "slider_collection_compare/B_on",
+      "class_type": "Krea2SliderFuseDiagnosticSave"
+    },
+    "C_hybrid": {
+      "node_id": "44",
+      "prefix": "slider_collection_compare/C_hybrid",
+      "class_type": "Krea2SliderFuseDiagnosticSave"
+    },
+    "raw_T_off": {
+      "node_id": "61",
+      "prefix": "slider_collection_compare/raw_T_off",
+      "class_type": "SaveImage"
+    },
+    "raw_P_off": {
+      "node_id": "63",
+      "prefix": "slider_collection_compare/raw_P_off",
+      "class_type": "SaveImage"
+    },
+    "raw_T_on": {
+      "node_id": "65",
+      "prefix": "slider_collection_compare/raw_T_on",
+      "class_type": "SaveImage"
+    },
+    "raw_P_on": {
+      "node_id": "67",
+      "prefix": "slider_collection_compare/raw_P_on",
+      "class_type": "SaveImage"
+    },
+    "conflict_T_on_times_P_off": {
+      "node_id": "69",
+      "prefix": "slider_collection_compare/conflict_T_on_times_P_off",
+      "class_type": "SaveImage"
+    },
+    "hybrid_T_on_minus_P_off": {
+      "node_id": "71",
+      "prefix": "slider_collection_compare/hybrid_T_on_minus_P_off",
+      "class_type": "SaveImage"
+    },
+    "old_T_off_minus_T_on": {
+      "node_id": "73",
+      "prefix": "slider_collection_compare/old_T_off_minus_T_on",
+      "class_type": "SaveImage"
+    },
+    "reference_off": {
+      "node_id": "81",
+      "prefix": "slider_collection_compare/reference_off",
+      "class_type": "SaveImage"
+    },
+    "reference_on": {
+      "node_id": "83",
+      "prefix": "slider_collection_compare/reference_on",
+      "class_type": "SaveImage"
+    }
+  },
+  "mask_semantics": {
+    "raw_T_off": "preview OFF output 0, unmodified collector target partition",
+    "raw_P_off": "preview OFF output 1, unmodified collector protected partition",
+    "raw_T_on": "preview ON output 0, unmodified collector target partition",
+    "raw_P_on": "preview ON output 1, unmodified collector protected partition",
+    "hybrid": "clamp(T_on - P_off, 0, 1), using builtin MaskComposite subtract at x=y=0",
+    "conflict": "T_on * P_off, using builtin MaskComposite multiply at x=y=0",
+    "old_minus_new": "clamp(T_off - T_on, 0, 1), saved only; never applied as an erase mask"
+  },
+  "artifact_limits": [
+    "Ordinary mask PNGs are quantized display exports at the bank mask resolution; they are not unnormalized similarity tensors or a complete collection audit.",
+    "Collector continuation images are reference images only and are never FINAL sampler inputs.",
+    "Final DiagnosticSave reports have manual provenance and the final style-only model path; they do not capture a machine-validated OFF/ON collection contract. Preserve API/UI JSON, selected model filenames/hashes, settings, and collected masks together.",
+    "ON collection changes the upstream model globally and is provisional; it does not guarantee geometry correction, isolated subject changes, or protected/background pixel invariance."
+  ],
+  "nfe_estimate": {
+    "collector_each": 10,
+    "final_each_partial_mask": 16,
+    "shared_full_comparison": 68,
+    "isolated_a_or_b": 26,
+    "isolated_c": 36,
+    "assumptions": "Cold execution; both shared collectors each run once, collect_step=2, steps=8, three nonzero target_mask FINAL samplers. Model NFE counts exclude VAE work, mask operations and audit overhead. Isolated budgets require pruning all unrelated terminal outputs and their unused ancestors; muting only a FINAL save leaves connected mask/reference saves active."
+  },
+  "rerun_guidance": "ComfyUI may reuse cached sampler outputs. Increment trial_id on all five Samplers together for a fresh timed comparison. A prefix change alone does not invalidate sampler caches. Use new distinct output prefixes for separate experimental runs and keep the API/UI JSON alongside artifacts. Never set collectors to own nonzero strength or connect ON loader 10 to a FINAL sampler.",
+  "prerequisites": [
+    "ComfyUI with Krea2 CLIPLoader type and the compatible checkpoint/CLIP/VAE model files.",
+    "Existing FreeFuse-for-sliderlora nodes matching source revision 4c53e667; no collection_mode or new diagnostic schema is required.",
+    "Replace model and LoRA filenames with installed equivalents if needed; default CLIP is qwen3vl_4b_bf16.safetensors.",
+    "UI JSON is imported through the ComfyUI editor; API JSON is the prompt object for POST /prompt, not a complete HTTP request body."
+  ]
+}

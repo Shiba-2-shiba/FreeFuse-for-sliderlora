@@ -1,0 +1,849 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+      "weight_dtype": "default"
+    },
+    "_meta": {
+      "title": "Checkpoint"
+    }
+  },
+  "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "lora_name": "krea2_darkbrush.safetensors",
+      "strength_model": 0.8,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared style baseline (all FINAL models)"
+    }
+  },
+  "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_4b_bf16.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Qwen3-VL CLIP, Krea2 type"
+    }
+  },
+  "4": {
+    "class_type": "Krea2SliderFuseEncode",
+    "inputs": {
+      "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on the same studio floor, facing the camera. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both entire figures are visible, with space above their heads and below their shoes, at a consistent scale and camera distance. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+      "clip": [
+        "3",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared scene: two fully clothed adults"
+    }
+  },
+  "5": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Shared zero negative"
+    }
+  },
+  "6": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Collection subjects: woman / man"
+    }
+  },
+  "7": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Shared EMPTY latent, never collector output"
+    }
+  },
+  "9": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "_meta": {
+      "title": "Shared VAE"
+    }
+  },
+  "10": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "strength_model": 4.0
+    },
+    "_meta": {
+      "title": "ON collector only: ordinary global Slider +4"
+    }
+  },
+  "8": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "6",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 0.0,
+      "trial_id": 0,
+      "mix_scope": "none",
+      "diagnostic_level": "summary",
+      "mask_mode": "auto",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 0
+    },
+    "_meta": {
+      "title": "OFF: style only; own strength=0, no mix"
+    }
+  },
+  "11": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "10",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "6",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 0.0,
+      "trial_id": 0,
+      "mix_scope": "none",
+      "diagnostic_level": "summary",
+      "mask_mode": "auto",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 0
+    },
+    "_meta": {
+      "title": "ON: upstream style + Slider; own strength=0, no mix"
+    }
+  },
+  "12": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "8",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "OFF bank: raw target 0 / protected 1"
+    }
+  },
+  "13": {
+    "class_type": "Krea2SliderFuseMaskPreview",
+    "inputs": {
+      "mask_bank": [
+        "11",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "ON bank: raw target 0 / protected 1"
+    }
+  },
+  "40": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "13",
+        0
+      ],
+      "source": [
+        "12",
+        1
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "subtract"
+    },
+    "_meta": {
+      "title": "C target = clamp(T_on - P_off)"
+    }
+  },
+  "20": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "12",
+        0
+      ],
+      "protected_mask": [
+        "12",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "A_off: manual reference subjects"
+    }
+  },
+  "21": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "20",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "_meta": {
+      "title": "A_off: FINAL style baseline + local Slider"
+    }
+  },
+  "22": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "21",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "A_off: decode"
+    }
+  },
+  "23": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "22",
+        0
+      ],
+      "latent": [
+        "21",
+        0
+      ],
+      "diagnostics": [
+        "21",
+        2
+      ],
+      "filename_prefix": "slider_collection_compare/A_off"
+    },
+    "_meta": {
+      "title": "A_off: PNG + audit + latent/prediction"
+    }
+  },
+  "30": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "13",
+        0
+      ],
+      "protected_mask": [
+        "13",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "B_on: manual reference subjects"
+    }
+  },
+  "31": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "30",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "_meta": {
+      "title": "B_on: FINAL style baseline + local Slider"
+    }
+  },
+  "32": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "31",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "B_on: decode"
+    }
+  },
+  "33": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "32",
+        0
+      ],
+      "latent": [
+        "31",
+        0
+      ],
+      "diagnostics": [
+        "31",
+        2
+      ],
+      "filename_prefix": "slider_collection_compare/B_on"
+    },
+    "_meta": {
+      "title": "B_on: PNG + audit + latent/prediction"
+    }
+  },
+  "41": {
+    "class_type": "Krea2SliderFuseSubjects",
+    "inputs": {
+      "target_phrase": "woman",
+      "protected_phrase": "man",
+      "target_occurrence": 0,
+      "protected_occurrence": 0,
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "target_mask": [
+        "40",
+        0
+      ],
+      "protected_mask": [
+        "12",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "C_hybrid: manual reference subjects"
+    }
+  },
+  "42": {
+    "class_type": "Krea2SliderFusePredictionMixSampler",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "prompt_info": [
+        "4",
+        1
+      ],
+      "subjects": [
+        "41",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ],
+      "lora_name": "Krea2/krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1.0,
+      "strength": 4.0,
+      "trial_id": 0,
+      "mix_scope": "target_mask",
+      "diagnostic_level": "audit",
+      "mask_mode": "manual",
+      "collect_step": 2,
+      "collect_block": 18,
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "fill_holes_max_area": 0,
+      "mask_dilate_radius": 0,
+      "selection_dilate_radius": 4
+    },
+    "_meta": {
+      "title": "C_hybrid: FINAL style baseline + local Slider"
+    }
+  },
+  "43": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "42",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "C_hybrid: decode"
+    }
+  },
+  "44": {
+    "class_type": "Krea2SliderFuseDiagnosticSave",
+    "inputs": {
+      "images": [
+        "43",
+        0
+      ],
+      "latent": [
+        "42",
+        0
+      ],
+      "diagnostics": [
+        "42",
+        2
+      ],
+      "filename_prefix": "slider_collection_compare/C_hybrid"
+    },
+    "_meta": {
+      "title": "C_hybrid: PNG + audit + latent/prediction"
+    }
+  },
+  "50": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "13",
+        0
+      ],
+      "source": [
+        "12",
+        1
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "multiply"
+    },
+    "_meta": {
+      "title": "Conflict = T_on * P_off (diagnostic only)"
+    }
+  },
+  "51": {
+    "class_type": "MaskComposite",
+    "inputs": {
+      "destination": [
+        "12",
+        0
+      ],
+      "source": [
+        "13",
+        0
+      ],
+      "x": 0,
+      "y": 0,
+      "operation": "subtract"
+    },
+    "_meta": {
+      "title": "Old-only = clamp(T_off - T_on); DO NOT erase"
+    }
+  },
+  "60": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "raw_T_off: display mask"
+    }
+  },
+  "61": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "60",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/raw_T_off"
+    },
+    "_meta": {
+      "title": "raw_T_off: ordinary PNG"
+    }
+  },
+  "62": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "12",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "raw_P_off: display mask"
+    }
+  },
+  "63": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "62",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/raw_P_off"
+    },
+    "_meta": {
+      "title": "raw_P_off: ordinary PNG"
+    }
+  },
+  "64": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "13",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "raw_T_on: display mask"
+    }
+  },
+  "65": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "64",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/raw_T_on"
+    },
+    "_meta": {
+      "title": "raw_T_on: ordinary PNG"
+    }
+  },
+  "66": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "13",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "raw_P_on: display mask"
+    }
+  },
+  "67": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "66",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/raw_P_on"
+    },
+    "_meta": {
+      "title": "raw_P_on: ordinary PNG"
+    }
+  },
+  "68": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "50",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "conflict_T_on_times_P_off: display mask"
+    }
+  },
+  "69": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "68",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/conflict_T_on_times_P_off"
+    },
+    "_meta": {
+      "title": "conflict_T_on_times_P_off: ordinary PNG"
+    }
+  },
+  "70": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "40",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "hybrid_T_on_minus_P_off: display mask"
+    }
+  },
+  "71": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "70",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/hybrid_T_on_minus_P_off"
+    },
+    "_meta": {
+      "title": "hybrid_T_on_minus_P_off: ordinary PNG"
+    }
+  },
+  "72": {
+    "class_type": "MaskToImage",
+    "inputs": {
+      "mask": [
+        "51",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "old_T_off_minus_T_on: display mask"
+    }
+  },
+  "73": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "72",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/old_T_off_minus_T_on"
+    },
+    "_meta": {
+      "title": "old_T_off_minus_T_on: ordinary PNG"
+    }
+  },
+  "80": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "reference_off: collector continuation, not FINAL input"
+    }
+  },
+  "81": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "80",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/reference_off"
+    },
+    "_meta": {
+      "title": "reference_off: ordinary PNG, no DiagnosticSave"
+    }
+  },
+  "82": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "11",
+        0
+      ],
+      "vae": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "reference_on: collector continuation, not FINAL input"
+    }
+  },
+  "83": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "82",
+        0
+      ],
+      "filename_prefix": "slider_collection_compare/reference_on"
+    },
+    "_meta": {
+      "title": "reference_on: ordinary PNG, no DiagnosticSave"
+    }
+  }
+}
