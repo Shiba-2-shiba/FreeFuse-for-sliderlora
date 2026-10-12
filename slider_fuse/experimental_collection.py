@@ -178,6 +178,19 @@ def _memory_finish(report):
 def collect_experimental_masks(model, positive, negative, prompt_info, subjects, latent, *, seed=42, steps=8,
                                trial_id=0, config_json="{}", background_phrase="", background_occurrence=0, audit_tensors=False):
     """Run exactly the first two evaluations of the original eight-step schedule."""
+    config = _config_from_json(config_json)
+    if config["collect_step"] != 2:
+        raise ValueError("This bounded experiment requires collect_step=2")
+    return _collect_mask_observations(model, positive, negative, prompt_info, subjects, latent,
+        seed=seed, steps=steps, trial_id=trial_id, config=config, collection_steps=2,
+        accumulator_factory=ExperimentalMaskAccumulator, background_phrase=background_phrase,
+        background_occurrence=background_occurrence, audit_tensors=audit_tensors)
+
+
+def _collect_mask_observations(model, positive, negative, prompt_info, subjects, latent, *, seed, steps,
+                               trial_id, config, collection_steps, accumulator_factory,
+                               background_phrase, background_occurrence, audit_tensors):
+    """Shared owned lifecycle; callers validate their bounded observation configuration."""
     import comfy.model_management
     import comfy.patcher_extension
     import comfy.sample
@@ -185,13 +198,13 @@ def collect_experimental_masks(model, positive, negative, prompt_info, subjects,
 
     if not isinstance(audit_tensors, bool):
         raise ValueError("audit_tensors must be a boolean")
-    config = _config_from_json(config_json)
-    if isinstance(steps, bool) or not isinstance(steps, int) or steps != 8 or config["collect_step"] != 2:
-        raise ValueError("This bounded experiment requires steps=8 and collect_step=2; it uses only sigmas[:3]")
+    if (isinstance(steps, bool) or not isinstance(steps, int) or steps != 8
+            or isinstance(collection_steps, bool) or collection_steps not in (2, 3)):
+        raise ValueError("Bounded observation requires steps=8 and a two/three-forward prefix")
     if isinstance(trial_id, bool) or not isinstance(trial_id, int) or trial_id < 0:
         raise ValueError("trial_id must be a nonnegative integer")
     core = validate_run_inputs(model, positive, prompt_info, subjects, latent, strength=0., seed=seed,
-        steps=steps, cfg=1., mask_mode="auto", collect_step=2, collect_block=config["collect_block"],
+        steps=steps, cfg=1., mask_mode="auto", collect_step=collection_steps, collect_block=config["collect_block"],
         top_k_ratio=config["top_k_ratio"], temperature=config["temperature"])
     validate_mix_options(model)
     if any(metadata.get("hooks") or metadata.get("control") for _, metadata in positive + negative):
@@ -249,10 +262,10 @@ def collect_experimental_masks(model, positive, negative, prompt_info, subjects,
                 model_options=probe.model_options).sigmas
             if (not isinstance(sigmas, torch.Tensor) or sigmas.ndim != 1 or len(sigmas) != steps + 1
                     or not torch.isfinite(sigmas).all() or not torch.all(sigmas[:-1] > sigmas[1:])
-                    or float(sigmas[-1]) != 0. or float(sigmas[2]) <= 0.):
-                raise ValueError("Expected a finite descending eight-step sigma schedule with a nonterminal two-step prefix")
-            used_sigmas = sigmas[:3]
-            accumulator = ExperimentalMaskAccumulator(config, grid, positions)
+                    or float(sigmas[-1]) != 0. or float(sigmas[collection_steps]) <= 0.):
+                raise ValueError("Expected a finite descending eight-step sigma schedule with a nonterminal prefix")
+            used_sigmas = sigmas[:collection_steps + 1]
+            accumulator = accumulator_factory(config, grid, positions)
             collector = ExperimentalAttentionCollector(accumulator, config, grid, text_len, sigmas, audit_tensors=audit_tensors)
             report.update({"grid": list(grid), "text_token_count": text_len,
                 "initial_noise_sha256": tensor_hash(noise), "initial_latent_sha256": tensor_hash(image),
@@ -272,8 +285,8 @@ def collect_experimental_masks(model, positive, negative, prompt_info, subjects,
                         or context.shape[:2] != (1, text_len) or patch_grid(args["input"], core.patch) != grid):
                     raise ValueError("Collection requires matching positive batch1 conditioning and patch grid")
                 step = report["phase1_nfe"] + 1
-                if step > 2:
-                    raise RuntimeError("Experimental collection attempted more than two model evaluations")
+                if step > collection_steps:
+                    raise RuntimeError("Experimental collection exceeded its model evaluation budget")
                 collector.begin_forward(args["timestep"], step)
                 before = tensor_hash(args["input"]) if audit_tensors else None
                 report["phase1_nfe"] += 1
@@ -299,7 +312,7 @@ def collect_experimental_masks(model, positive, negative, prompt_info, subjects,
                                     image.clone(), sigmas=used_sigmas.clone(), seed=seed)
             report["collection_seconds"] = time.perf_counter() - collection_started
             expected = {(step, block) for step in config["selected_steps"] for block in config["selected_blocks"]}
-            if report["phase1_nfe"] != 2 or collector.observed != expected:
+            if report["phase1_nfe"] != collection_steps or collector.observed != expected:
                 raise RuntimeError("Incomplete experimental collection; sigma/token/block alignment did not match every tap")
             if tensor_hash(noise) != report["initial_noise_sha256"] or tensor_hash(image) != report["initial_latent_sha256"]:
                 raise RuntimeError("Experimental collection modified its initial noise or latent")

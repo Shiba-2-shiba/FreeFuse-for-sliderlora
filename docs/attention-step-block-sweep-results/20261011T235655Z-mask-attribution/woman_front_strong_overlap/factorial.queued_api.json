@@ -1,0 +1,556 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "3": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Qwen3-VL CLIP, Krea2 type"
+      }
+    },
+    "4": {
+      "class_type": "Krea2SliderFuseEncode",
+      "inputs": {
+        "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+        "clip": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared scene: two fully clothed adults"
+      }
+    },
+    "5": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "4",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared zero negative"
+      }
+    },
+    "7": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "Shared EMPTY latent, never collector output"
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "103": {
+      "class_type": "Krea2SliderFuseRetainedMask",
+      "inputs": {
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\candidates\\S0\\manifest.json"
+      },
+      "_meta": {
+        "title": "S0 checked masks"
+      }
+    },
+    "104": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "103",
+          0
+        ],
+        "protected_mask": [
+          "103",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "S0 subjects"
+      }
+    },
+    "100": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "104",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 42,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791763015,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "S0"
+      }
+    },
+    "101": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "100",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "S0"
+      }
+    },
+    "102": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "101",
+          0
+        ],
+        "latent": [
+          "100",
+          0
+        ],
+        "diagnostics": [
+          "100",
+          2
+        ],
+        "filename_prefix": "mask_attribution/20261011T235655Z-mask-attribution/woman_front_strong_overlap/factorial_S0"
+      },
+      "_meta": {
+        "title": "S0"
+      }
+    },
+    "203": {
+      "class_type": "Krea2SliderFuseRetainedMask",
+      "inputs": {
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\candidates\\S1\\manifest.json"
+      },
+      "_meta": {
+        "title": "S1 checked masks"
+      }
+    },
+    "204": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "203",
+          0
+        ],
+        "protected_mask": [
+          "203",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "S1 subjects"
+      }
+    },
+    "200": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "204",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 42,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791763015,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "S1"
+      }
+    },
+    "201": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "200",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "S1"
+      }
+    },
+    "202": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "201",
+          0
+        ],
+        "latent": [
+          "200",
+          0
+        ],
+        "diagnostics": [
+          "200",
+          2
+        ],
+        "filename_prefix": "mask_attribution/20261011T235655Z-mask-attribution/woman_front_strong_overlap/factorial_S1"
+      },
+      "_meta": {
+        "title": "S1"
+      }
+    },
+    "303": {
+      "class_type": "Krea2SliderFuseRetainedMask",
+      "inputs": {
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\candidates\\C0\\manifest.json"
+      },
+      "_meta": {
+        "title": "C0 checked masks"
+      }
+    },
+    "304": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "303",
+          0
+        ],
+        "protected_mask": [
+          "303",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "C0 subjects"
+      }
+    },
+    "300": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "304",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 42,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791763015,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "C0"
+      }
+    },
+    "301": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "300",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "C0"
+      }
+    },
+    "302": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "301",
+          0
+        ],
+        "latent": [
+          "300",
+          0
+        ],
+        "diagnostics": [
+          "300",
+          2
+        ],
+        "filename_prefix": "mask_attribution/20261011T235655Z-mask-attribution/woman_front_strong_overlap/factorial_C0"
+      },
+      "_meta": {
+        "title": "C0"
+      }
+    },
+    "403": {
+      "class_type": "Krea2SliderFuseRetainedMask",
+      "inputs": {
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\candidates\\C1\\manifest.json"
+      },
+      "_meta": {
+        "title": "C1 checked masks"
+      }
+    },
+    "404": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "403",
+          0
+        ],
+        "protected_mask": [
+          "403",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "C1 subjects"
+      }
+    },
+    "400": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "404",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 42,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791763015,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "C1"
+      }
+    },
+    "401": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "400",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "C1"
+      }
+    },
+    "402": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "401",
+          0
+        ],
+        "latent": [
+          "400",
+          0
+        ],
+        "diagnostics": [
+          "400",
+          2
+        ],
+        "filename_prefix": "mask_attribution/20261011T235655Z-mask-attribution/woman_front_strong_overlap/factorial_C1"
+      },
+      "_meta": {
+        "title": "C1"
+      }
+    }
+  }
+}

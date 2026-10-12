@@ -293,7 +293,9 @@ def test_dangling_output_is_refused_before_platform_exclusive_open(tmp_path, mon
     assert report["status"] == "invalid"
     assert "output_exists" in {error["code"] for error in report["errors"]}
     assert output_opens == [], "Refuse the existing directory entry before trying to open it"
-    assert output.is_symlink() and output.readlink() == absent
+    assert output.is_symlink()
+    # Windows may retain its extended-path prefix in readlink() results.
+    assert Path(str(output.readlink()).removeprefix("\\\\?\\")) == absent
     assert before == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before}
 
 

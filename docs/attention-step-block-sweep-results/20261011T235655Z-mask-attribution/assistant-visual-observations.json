@@ -1,0 +1,51 @@
+{
+  "status": "assistant_visual_review_complete; human_quality_approval_not_evaluated",
+  "conclusion": "Dとの和集合を外しても、両構図で顔と二人配置を維持した。公園の靴・足首は改善したが、全身体型の明確な追加改善は確認できない。重なりでは共通背景への選択がDより増え、部位の欠落も残るため既定採用は保留。",
+  "cases": {
+    "park": {
+      "interpretation": "S0/C0は旧Dの約300セルを除き、共通背景への選択を210から110/109セルへ減らした。完成像は二人を保ち、足元はDの肌・サンダルの断裂から黒い靴としてまとまる。顔・頭身・胴脚比の追加改善は明瞭でない。S1/C1は対象を広く維持するが、背景選択は215セル。",
+      "routes": {
+        "D": "顔・二人配置は維持。足首・靴に切り欠きが残る。",
+        "S0": "二人と顔を維持。黒い靴として足元がまとまる。全身の追加改善は明瞭でない。",
+        "S1": "二人と顔を維持。足元はDよりまとまる。D由来の広い対象領域を残す。",
+        "C0": "二人と顔を維持。足元は改善するがS0に対する全身の明確な優位はない。",
+        "C1": "二人と顔を維持。足元は改善。S1に対する明確な全身優位はない。"
+      }
+    },
+    "woman_front_strong_overlap": {
+      "interpretation": "全候補が二人構図と対象の顔を維持し、以前のblock23に見られた大きな前腕の穴は今回のblock18候補で見当たらない。S0/C0はDを外して靴・腕・男性との接触に変化が出る。主要体型の一貫した改善は明瞭でない。共通背景選択はD155に対しS0/C0で178/177、S1/C1で219/218となり、背景の分類は改善しない。",
+      "routes": {
+        "D": "二人構図・対象の顔を維持した対照。",
+        "S0": "二人と顔を維持。腕と靴が変化し、大きな人体の穴は見当たらない。",
+        "S1": "二人と顔を維持。Dに近い全身配置。明確な追加改善は未確認。",
+        "C0": "二人と顔を維持。靴・腕の変化はあるが、S0より明確な全身改善は確認できない。",
+        "C1": "二人と顔を維持。D/S1に近い配置。数値上の背景侵入が残る。"
+      }
+    }
+  },
+  "answers": {
+    "1. 新方式単独とDへの追加": "同入力base/LoRA対象の和集合からD支持だけを除いたS0/C0でも顔と二人構図は成立した。今回の顔維持に旧D支持が不可欠という説明は支持されない。Dを外すと背景選択を減らせるが手足の一部も除くため、自動抽出全体の優位は確定しない。",
+    "2. 顔回復と追加領域": "最終候補がDへ加えたセルのうち、今回の独立した顔内部labelに入るセルは両構図とも0。公園では追加32/34セル中、共通背景5セル、足部4セル、腕1セル、残り未label。重なりでは追加130セル中、共通背景64/63セル、足部1セル、腕1セル、残り未label。完成像の変化を顔被覆の追加だけでは説明できない。",
+    "3. 固定保護との衝突": "S0 rawとD保護は公園16セル、重なり53セルで衝突した。疎な両branchの内部label上では両方で対象と確認できるセルは0。公園1セル・重なり19セルは共通背景、重なり9セルは保護内部、残り15/25セルは未確定。解除対象を作らずS0-releaseはnot_applicable。固定保護が切り欠きの原因かは未確定で、未確定衝突の境界確認が残る。"
+  },
+  "quality_gate": {
+    "passed": false,
+    "reason": "顔と二人構図は維持できたが、全身の一貫した追加改善が明瞭でなく、重なりの共通背景侵入はDより増える。公園の手・足、重なりの脚の内部セルにも欠落が残り、LoRA側の重なり左腕はラベル判定不能。既定採用・holdout・動的化には進まない。"
+  },
+  "limitations": [
+    "Sparse assistant labels; human_verified=false; no target_full precision/IoU.",
+    "Pilot labels are not ground truth on candidate replay trajectories.",
+    "No single-head aggregation optimization or seed-only one-hot/prototype causal split.",
+    "Configured native code-reviewer unavailable (unsupported gpt-5.4); separate author self-review used."
+  ],
+  "review": {
+    "kind": "author_separate_self_review",
+    "native_reviewer": "unsupported gpt-5.4 on this account",
+    "fixed": [
+      "JSON path-string boundary handling",
+      "explicit sampler/scheduler/CFG/steps/radius validation",
+      "full-target-only delta accounting",
+      "common-background identity uses both branch labels"
+    ]
+  }
+}

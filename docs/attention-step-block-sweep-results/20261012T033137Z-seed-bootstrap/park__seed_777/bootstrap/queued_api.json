@@ -1,0 +1,152 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "3": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Qwen3-VL CLIP, Krea2 type"
+      }
+    },
+    "4": {
+      "class_type": "Krea2SliderFuseEncode",
+      "inputs": {
+        "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+        "clip": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared scene: two fully clothed adults"
+      }
+    },
+    "5": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "4",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared zero negative"
+      }
+    },
+    "7": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "Shared EMPTY latent, never collector output"
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "6": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "Text roles only; no historical masks"
+      }
+    },
+    "8": {
+      "class_type": "Krea2SliderFuseExperimentalMaskCollect",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "6",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "seed": 777,
+        "steps": 8,
+        "trial_id": 1791776005,
+        "config_json": "{\"collect_step\": 2, \"collect_block\": 18, \"selected_steps\": [1, 2], \"selected_blocks\": [16, 18], \"top_k_ratio\": 0.2, \"temperature\": 10000.0, \"prototypes\": 3, \"seed_confidence\": 0.65, \"seed_margin\": 0.15, \"mask_confidence\": 0.55, \"mask_margin\": 0.1, \"context_temperature\": 1.0, \"feature_temperature\": 0.15, \"propagation_iterations\": 1, \"propagation_heads\": [0], \"affinity_chunk_size\": 128, \"affinity_threshold\": 0.05, \"propagation_strength\": 0.5}",
+        "background_phrase": "park path",
+        "background_occurrence": 0,
+        "audit_tensors": true
+      },
+      "_meta": {
+        "title": "Base-only two forwards"
+      }
+    },
+    "18": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSave",
+      "inputs": {
+        "suite": [
+          "8",
+          0
+        ],
+        "filename_prefix": "sb_20261012T033137Z_seed_bootstrap_park_seed_777_bootstrap"
+      },
+      "_meta": {
+        "title": "Retain bootstrap"
+      }
+    }
+  }
+}

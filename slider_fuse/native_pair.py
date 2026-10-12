@@ -6,6 +6,7 @@ ComfyUI imports are lazy; ordinary ModelPatcher clones share their weight core.
 from __future__ import annotations
 
 import inspect
+from contextlib import nullcontext
 import logging
 from pathlib import Path
 import sys
@@ -38,13 +39,14 @@ def _cleanup(*callbacks):
 
 
 class NativePairRunner:
-    def __init__(self, base_patcher, slider_patcher):
+    def __init__(self, base_patcher, slider_patcher, observer=None):
         if slider_patcher is not None and (base_patcher.model is not slider_patcher.model
                 or base_patcher.load_device != slider_patcher.load_device):
             raise ValueError("Native pair requires same-core, same-device patcher clones")
         self.patchers = {"base": base_patcher, "slider": slider_patcher}
         self.active = None
         self.calls = {"base": 0, "slider": 0}
+        self.observer = observer
 
     def activate(self, branch, x, conds):
         import comfy.model_management
@@ -67,8 +69,11 @@ class NativePairRunner:
         import comfy.samplers
         model = self.activate(branch, x, {"positive": positive, "negative": negative})
         # Isolate input and output storage across shared-core load/offload operations.
-        output = comfy.samplers.sampling_function(model, x.clone(), sigma.clone(), negative,
-            positive, 1., model_options=model_options, seed=seed)
+        capture = (self.observer.capture(model.diffusion_model, branch, self.calls[branch] + 1, x, sigma)
+                   if self.observer is not None else nullcontext())
+        with capture:
+            output = comfy.samplers.sampling_function(model, x.clone(), sigma.clone(), negative,
+                positive, 1., model_options=model_options, seed=seed)
         self.calls[branch] += 1
         if not isinstance(output, torch.Tensor) or not torch.isfinite(output).all():
             raise ValueError("Non-finite or unsupported branch prediction")
@@ -106,7 +111,7 @@ def validate_mix_options(model):
         raise ValueError("Foreign model callbacks are unsupported for prediction mixing")
 
 
-def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, report, mode, restore_base=False):
+def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, report, mode, restore_base=False, observer=None):
     """Define the native subclass lazily so package imports never require ComfyUI."""
     import comfy.samplers
     import comfy.sampler_helpers
@@ -116,7 +121,7 @@ def make_prediction_mix_guider(base, slider, token_mask, *, patch, recorder, rep
     class NativePredictionMixGuider(comfy.samplers.CFGGuider):
         def __init__(self):
             super().__init__(base)
-            self.runner = NativePairRunner(base, slider)
+            self.runner = NativePairRunner(base, slider, observer=observer)
             self.pair_trace = []; self.base_trace = []; self.slider_trace = []
 
         def outer_sample(self, noise, latent_image, sampler, sigmas, denoise_mask=None,
@@ -210,7 +215,7 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
                                strength, seed, steps=8, cfg=1., mix_scope="target_mask", trial_id=0,
                                diagnostic_level="audit", mask_mode="manual", collect_step=2,
                                collect_block=18, top_k_ratio=.3, temperature=4000.,
-                               fill_holes_max_area=0, mask_dilate_radius=0, selection_dilate_radius=0):
+                               fill_holes_max_area=0, mask_dilate_radius=0, selection_dilate_radius=0, _observer=None):
     import comfy.sample
     import comfy.samplers
     import comfy.model_management
@@ -304,9 +309,15 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
                     "zero_strength" if not strength else "single_branch_endpoint",
                 "environment": environment_info(), "int8_real_machine_validated": False,
                 "image_quality_validated": False, **implementation_info(), **collection_report}
+            observer_options = {}
+            if _observer is not None:
+                if mask_mode != "manual" or diagnostic_level != "audit":
+                    raise ValueError("Experimental branch observation requires manual audit mode")
+                _observer.bind(core, grid, len(prompt_info.token_ids), sigmas)
+                observer_options["observer"] = _observer
             guider = make_prediction_mix_guider(base, slider, effective, patch=core.patch,
                                                 recorder=recorder, report=report, mode=mode,
-                                                restore_base=mask_mode == "auto")
+                                                restore_base=mask_mode == "auto", **observer_options)
             guider.set_conds(positive, negative); guider.set_cfg(1.)
             with torch.inference_mode():
                 samples = guider.sample(noise, image, comfy.samplers.sampler_object("euler"), sigmas, seed=seed)

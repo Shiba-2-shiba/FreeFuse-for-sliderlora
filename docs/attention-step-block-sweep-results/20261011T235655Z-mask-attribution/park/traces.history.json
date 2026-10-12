@@ -1,0 +1,542 @@
+{
+  "prompt": [
+    4,
+    "ede99f74-1fef-4e75-aaf0-20556b68a8f3",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "100": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\park\\edits\\control_D\\control_D_s444444_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_park_D"
+        },
+        "_meta": {
+          "title": "D retained predictions"
+        }
+      },
+      "101": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\park\\edits\\factorial_S0\\factorial_S0_s444444_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_park_S0"
+        },
+        "_meta": {
+          "title": "S0 retained predictions"
+        }
+      },
+      "102": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\park\\edits\\factorial_S1\\factorial_S1_s444444_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_park_S1"
+        },
+        "_meta": {
+          "title": "S1 retained predictions"
+        }
+      },
+      "103": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\park\\edits\\factorial_C0\\factorial_C0_s444444_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_park_C0"
+        },
+        "_meta": {
+          "title": "C0 retained predictions"
+        }
+      },
+      "104": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\park\\edits\\factorial_C1\\factorial_C1_s444444_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_park_C1"
+        },
+        "_meta": {
+          "title": "C1 retained predictions"
+        }
+      }
+    },
+    {
+      "create_time": 1791763829223
+    },
+    [
+      "102",
+      "101",
+      "100",
+      "104",
+      "103"
+    ]
+  ],
+  "outputs": {
+    "102": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_park_S1_7f2336bc47654251a754e54129b88e9c\\manifest.json"
+      ]
+    },
+    "101": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_park_S0_205672c480784341b89c11a87c306273\\manifest.json"
+      ]
+    },
+    "100": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_park_D_59dbffbfcf624ea9b13f9285c162e9a9\\manifest.json"
+      ]
+    },
+    "104": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_park_C1_77723ddf46f44f268a6b552a021cedd9\\manifest.json"
+      ]
+    },
+    "103": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_park_C0_494462005cfd4a1a9f03b35189abebc0\\manifest.json"
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "ede99f74-1fef-4e75-aaf0-20556b68a8f3",
+          "timestamp": 1791763829223
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1",
+            "2",
+            "9"
+          ],
+          "prompt_id": "ede99f74-1fef-4e75-aaf0-20556b68a8f3",
+          "timestamp": 1791763829635
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "ede99f74-1fef-4e75-aaf0-20556b68a8f3",
+          "timestamp": 1791763858258
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "102": {
+      "node_id": "102",
+      "display_node": "102",
+      "parent_node": null,
+      "real_node_id": "102"
+    },
+    "101": {
+      "node_id": "101",
+      "display_node": "101",
+      "parent_node": null,
+      "real_node_id": "101"
+    },
+    "100": {
+      "node_id": "100",
+      "display_node": "100",
+      "parent_node": null,
+      "real_node_id": "100"
+    },
+    "104": {
+      "node_id": "104",
+      "display_node": "104",
+      "parent_node": null,
+      "real_node_id": "104"
+    },
+    "103": {
+      "node_id": "103",
+      "display_node": "103",
+      "parent_node": null,
+      "real_node_id": "103"
+    }
+  }
+}

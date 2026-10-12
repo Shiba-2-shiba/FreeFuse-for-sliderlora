@@ -1,0 +1,936 @@
+{
+  "experiment_schema_version": 1,
+  "artifact_id": "3c43e5147b114f56ba8e370075cafca2",
+  "complete": true,
+  "report": {
+    "experiment_schema_version": 1,
+    "run_id": "b4bf1d2ef1574599b312e5b21d3ba3e3",
+    "extension_version": "0.2.0",
+    "implementation": {
+      "implementation_revision": "68fc8a9c3db80736bfa9ee0a275e5bd8f928df6c",
+      "implementation_dirty": true,
+      "implementation_source_sha256": "370fb1f6a0e2c8bd144e5ca8cce61b14ca491c475fc6b3e7d2e938ea92359e0c"
+    },
+    "tensor_audit_enabled": true,
+    "tensor_audit_scope": "optional full-tensor transfer/hash audit; disabled by default to avoid large GPU-to-CPU copies",
+    "seed": 444444,
+    "steps": 8,
+    "trial_id": 1791738306,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "cfg": 1.0,
+    "normalized_config": {
+      "collect_step": 2,
+      "collect_block": 17,
+      "selected_steps": [
+        2
+      ],
+      "selected_blocks": [
+        17
+      ],
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "prototypes": 3,
+      "seed_confidence": 0.65,
+      "seed_margin": 0.15,
+      "mask_confidence": 0.55,
+      "mask_margin": 0.1,
+      "context_temperature": 1.0,
+      "feature_temperature": 0.15,
+      "propagation_iterations": 1,
+      "propagation_heads": [
+        0
+      ],
+      "affinity_chunk_size": 128,
+      "affinity_threshold": 0.05,
+      "propagation_strength": 0.5
+    },
+    "phase1_nfe": 3,
+    "phase2_nfe": 0,
+    "conditioning": {
+      "positive_sha256": "a8765ca6c48219214d6f579b6cfb12663e1276d3e8836ba914f3a088559b3916",
+      "positive_metadata": {
+        "pooled_output": null
+      },
+      "negative_used": false,
+      "negative_sha256": null,
+      "negative_reason": "CFG1 positive-only collection"
+    },
+    "model": {
+      "diffusion_class": "comfy.ldm.krea2.model.SingleStreamDiT",
+      "weights_identity_verified": false,
+      "weights_identity_reason": "Full model weights are not hashed; map hashes do not identify the checkpoint or style LoRAs",
+      "quant_formats": [
+        "None",
+        "int8_tensorwise"
+      ]
+    },
+    "completed_reference_image_generated": false,
+    "slider_loaded": false,
+    "image_quality_validated": false,
+    "native_runtime_validated": false,
+    "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+    "background_phrase": "park path",
+    "background_occurrence": 0,
+    "token_positions": {
+      "target": [
+        29
+      ],
+      "protected": [
+        45
+      ],
+      "background": [
+        20,
+        21
+      ]
+    },
+    "forward_integrity": [
+      {
+        "step": 1,
+        "tensor_audit_enabled": true,
+        "scope": "observer returns the original model output; independent native no-hook parity remains unverified",
+        "input_before_sha256": "61e2fb631ca7a7791863d1ca868eb494026fbcd800f267acc582f31dff0dee39",
+        "input_after_sha256": "61e2fb631ca7a7791863d1ca868eb494026fbcd800f267acc582f31dff0dee39",
+        "output_before_sha256": "ec583ee1cdd24e2be5e7f94b83d40587906ec75f90cb0f11a5bc04ccdb92007d",
+        "output_after_sha256": "ec583ee1cdd24e2be5e7f94b83d40587906ec75f90cb0f11a5bc04ccdb92007d"
+      },
+      {
+        "step": 2,
+        "tensor_audit_enabled": true,
+        "scope": "observer returns the original model output; independent native no-hook parity remains unverified",
+        "input_before_sha256": "28feef00ffe00876b045c517f5a1a6a56fade867bdb0928ebc6b07f90b451111",
+        "input_after_sha256": "28feef00ffe00876b045c517f5a1a6a56fade867bdb0928ebc6b07f90b451111",
+        "output_before_sha256": "5806a3c6b6e46b1f9c5a2ed09d2a1b73d3a9cfc984a6630de13188a4fcff1755",
+        "output_after_sha256": "5806a3c6b6e46b1f9c5a2ed09d2a1b73d3a9cfc984a6630de13188a4fcff1755"
+      },
+      {
+        "step": 3,
+        "tensor_audit_enabled": true,
+        "scope": "observer returns the original model output; independent native no-hook parity remains unverified",
+        "input_before_sha256": "6b9aeaa916370bcd2b26240f12077bca9197d11fbcd8c0e33d5ec6c91f126084",
+        "input_after_sha256": "6b9aeaa916370bcd2b26240f12077bca9197d11fbcd8c0e33d5ec6c91f126084",
+        "output_before_sha256": "231c676af7d6eac060c73ece1f8709594154b88b1dde0ce5ea4aebddf25f5af9",
+        "output_after_sha256": "231c676af7d6eac060c73ece1f8709594154b88b1dde0ce5ea4aebddf25f5af9"
+      }
+    ],
+    "collection_seconds": 34.62661300000002,
+    "algorithm_seconds": 3.490270599999917,
+    "save_seconds": null,
+    "elapsed_seconds": 36.31147520000002,
+    "timing_scope": "One shared three-forward sweep including synchronous per-tap k3/observation; algorithm time is an overlapping subset",
+    "grid": [
+      64,
+      64
+    ],
+    "text_token_count": 132,
+    "initial_noise_sha256": "61e2fb631ca7a7791863d1ca868eb494026fbcd800f267acc582f31dff0dee39",
+    "initial_latent_sha256": "baf0b744830e57327b9eaa9a108341ab287e5e1e1e6f77ba3ba12b79a24c2242",
+    "full_sigmas_sha256": "731c5c7c2db759e6bdf72507e347c59a6e977cd83138ae7dd8fe029e3bc84f69",
+    "used_sigmas_sha256": "f77a85ab078b909f91f3939d2084a87b1660c749599d94b3b3baa9a719979e7b",
+    "full_sigmas": [
+      1.0,
+      0.956723690032959,
+      0.9045307636260986,
+      0.8403487801551819,
+      0.7595109343528748,
+      0.6545668244361877,
+      0.5128440856933594,
+      0.31090107560157776,
+      0.0
+    ],
+    "used_sigmas": [
+      1.0,
+      0.956723690032959,
+      0.9045307636260986,
+      0.8403487801551819
+    ],
+    "memory": {
+      "device": "cuda:0",
+      "scope": "shared seven-variant collection including resident model allocations, model loading and observation; not per-variant cost or baseline overhead",
+      "peak_allocated_bytes": 1340275200,
+      "peak_reserved_bytes": 1753219072,
+      "unavailable_reason": null
+    },
+    "tap_manifest": [
+      {
+        "step": 2,
+        "block": 17,
+        "sigma": 0.956723690032959,
+        "text_tokens": 132,
+        "image_tokens": 4096,
+        "query_heads": 48,
+        "key_value_heads": 12,
+        "gqa_expanded_heads": 48,
+        "tensor_audit_enabled": true,
+        "attention_mask_shape": null,
+        "block_input_before_sha256": "8d33fbb2dc489973763a690287c274ed961a2abac49c9327398cd2351266d079",
+        "block_input_after_sha256": "8d33fbb2dc489973763a690287c274ed961a2abac49c9327398cd2351266d079",
+        "tensor_sha256_before": {
+          "img_q": "96d5443a5feef10252b4e1a87203689eeccafa8ba37741975578a6fb4c92b6d1",
+          "txt_k": "0291a4d8dfeacbe90eba47a92ce027c6b772ba760893aadc5d70065b2a5ff170",
+          "img_k": "a2e693d4581199b2f3037498a71bff840f6c8bf5c79c3050874be182b8a2d179",
+          "attention_output": "ea0389ac6799cdc2e119c7df11918525832b5df776301378d34c387d889a8e37",
+          "attention_input": "0e2fd81b5f15291be63fa5fdf7fa2a351b4e2db106405372333d796d6a0bf376"
+        },
+        "tensor_sha256_after": {
+          "img_q": "96d5443a5feef10252b4e1a87203689eeccafa8ba37741975578a6fb4c92b6d1",
+          "txt_k": "0291a4d8dfeacbe90eba47a92ce027c6b772ba760893aadc5d70065b2a5ff170",
+          "img_k": "a2e693d4581199b2f3037498a71bff840f6c8bf5c79c3050874be182b8a2d179",
+          "attention_output": "ea0389ac6799cdc2e119c7df11918525832b5df776301378d34c387d889a8e37",
+          "attention_input": "0e2fd81b5f15291be63fa5fdf7fa2a351b4e2db106405372333d796d6a0bf376"
+        },
+        "attention_mask_sha256": null
+      }
+    ],
+    "algorithm": {
+      "config": {
+        "collect_step": 2,
+        "collect_block": 17,
+        "selected_steps": [
+          2
+        ],
+        "selected_blocks": [
+          17
+        ],
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "prototypes": 3,
+        "seed_confidence": 0.65,
+        "seed_margin": 0.15,
+        "mask_confidence": 0.55,
+        "mask_margin": 0.1,
+        "context_temperature": 1.0,
+        "feature_temperature": 0.15,
+        "propagation_iterations": 1,
+        "propagation_heads": [
+          0
+        ],
+        "affinity_chunk_size": 128,
+        "affinity_threshold": 0.05,
+        "propagation_strength": 0.5
+      },
+      "positions": {
+        "target": [
+          29
+        ],
+        "protected": [
+          45
+        ],
+        "background": [
+          20,
+          21
+        ]
+      },
+      "grid": [
+        64,
+        64
+      ],
+      "variants": {
+        "baseline": {
+          "status": "failed",
+          "error_code": "not_requested",
+          "error": "Sweep computes only multi_proto_bg"
+        },
+        "centroid_control": {
+          "status": "failed",
+          "error_code": "not_requested",
+          "error": "Sweep computes only multi_proto_bg"
+        },
+        "multi_proto": {
+          "status": "failed",
+          "error_code": "not_requested",
+          "error": "Sweep computes only multi_proto_bg"
+        },
+        "multi_proto_bg": {
+          "status": "ok",
+          "confidence_semantics": "heuristic_not_calibrated",
+          "seed_counts": {
+            "target": 165,
+            "protected": 399,
+            "background": 819
+          },
+          "prototype_indices": {
+            "target": [
+              1109,
+              1563,
+              207
+            ],
+            "protected": [
+              189,
+              1259,
+              2988
+            ],
+            "background": [
+              3275,
+              1990,
+              2423
+            ]
+          },
+          "uncertain_tokens": 265,
+          "real_background_tokens": 2700,
+          "diagnostics": {
+            "target": {
+              "coverage": 0.09521484375,
+              "bbox_xyxy": [
+                1,
+                1,
+                45,
+                58
+              ],
+              "component_count_8": 32,
+              "foreground_tokens": 390,
+              "largest_component_tokens": 309,
+              "largest_component_fraction": 0.7923076923076923
+            },
+            "protected": {
+              "coverage": 0.180908203125,
+              "bbox_xyxy": [
+                10,
+                2,
+                62,
+                64
+              ],
+              "component_count_8": 24,
+              "foreground_tokens": 741,
+              "largest_component_tokens": 629,
+              "largest_component_fraction": 0.8488529014844804
+            },
+            "background": {
+              "coverage": 0.723876953125,
+              "bbox_xyxy": [
+                0,
+                0,
+                64,
+                64
+              ],
+              "component_count_8": 20,
+              "foreground_tokens": 2965,
+              "largest_component_tokens": 2920,
+              "largest_component_fraction": 0.984822934232715
+            }
+          }
+        },
+        "adaln_bg": {
+          "status": "failed",
+          "error_code": "not_requested",
+          "error": "Sweep computes only multi_proto_bg"
+        },
+        "ensemble_bg": {
+          "status": "failed",
+          "error_code": "not_requested",
+          "error": "Sweep computes only multi_proto_bg"
+        },
+        "propagated_bg": {
+          "status": "failed",
+          "error_code": "not_requested",
+          "error": "Sweep computes only multi_proto_bg"
+        }
+      },
+      "missing_taps": [],
+      "observations": [
+        {
+          "step": 2,
+          "block": 17,
+          "context_summary": {
+            "head_count": 48,
+            "semantic_head_selection": "all_allowed_heads_and_tokens_mean",
+            "text_permission_source": "unprovided_assume_all_text_links",
+            "logit_scale": "q_dot_k_div_sqrt_head_dim",
+            "context_temperature_semantics": "provisional_heuristic_scale",
+            "role_tokens": {
+              "target": [
+                {
+                  "token_index": 29,
+                  "head_spatial_mean": [
+                    10.88996696472168,
+                    11.308940887451172,
+                    10.908193588256836,
+                    11.190590858459473,
+                    9.994800567626953,
+                    9.518657684326172,
+                    10.360260963439941,
+                    10.842447280883789,
+                    4.733391284942627,
+                    5.632171630859375,
+                    4.679086685180664,
+                    5.213252544403076,
+                    8.06304931640625,
+                    9.583282470703125,
+                    8.618576049804688,
+                    9.789899826049805,
+                    10.675926208496094,
+                    6.100656509399414,
+                    8.257818222045898,
+                    10.20595932006836,
+                    10.293012619018555,
+                    8.76430606842041,
+                    13.076650619506836,
+                    10.804450988769531,
+                    10.81832504272461,
+                    5.308374404907227,
+                    12.984878540039062,
+                    11.37485122680664,
+                    4.669015884399414,
+                    4.936550140380859,
+                    5.53547477722168,
+                    3.592196464538574,
+                    4.888736248016357,
+                    5.238621234893799,
+                    5.454031944274902,
+                    5.045063018798828,
+                    2.5197105407714844,
+                    4.529791355133057,
+                    3.105198383331299,
+                    2.395447254180908,
+                    4.826942443847656,
+                    8.200636863708496,
+                    8.730315208435059,
+                    6.23399543762207,
+                    6.055323600769043,
+                    4.496033668518066,
+                    7.8863654136657715,
+                    6.444423675537109
+                  ],
+                  "head_spatial_std": [
+                    3.0465760231018066,
+                    2.1592087745666504,
+                    1.6577789783477783,
+                    2.4370038509368896,
+                    1.7984849214553833,
+                    1.9110558032989502,
+                    2.1140658855438232,
+                    2.196108102798462,
+                    2.4041709899902344,
+                    2.7768962383270264,
+                    2.221909761428833,
+                    2.348140001296997,
+                    2.275737762451172,
+                    2.643451690673828,
+                    2.037801742553711,
+                    2.1320688724517822,
+                    1.7431644201278687,
+                    1.9714267253875732,
+                    1.9648103713989258,
+                    2.1302053928375244,
+                    1.8114358186721802,
+                    1.8168338537216187,
+                    1.90105402469635,
+                    1.6940346956253052,
+                    2.0577573776245117,
+                    1.2836378812789917,
+                    1.6703330278396606,
+                    2.414921760559082,
+                    2.608199119567871,
+                    2.5357725620269775,
+                    2.5943868160247803,
+                    1.9001470804214478,
+                    3.9984240531921387,
+                    3.5329575538635254,
+                    3.571185350418091,
+                    4.032351493835449,
+                    2.2720460891723633,
+                    1.9051737785339355,
+                    2.2324135303497314,
+                    1.8395988941192627,
+                    2.063632011413574,
+                    2.0795633792877197,
+                    2.327840566635132,
+                    1.9934043884277344,
+                    2.6931874752044678,
+                    1.8432856798171997,
+                    2.2985408306121826,
+                    2.3356170654296875
+                  ],
+                  "mean_head_disagreement": 3.4370620250701904
+                }
+              ],
+              "protected": [
+                {
+                  "token_index": 45,
+                  "head_spatial_mean": [
+                    10.096956253051758,
+                    8.8593168258667,
+                    9.711446762084961,
+                    9.807208061218262,
+                    10.485239028930664,
+                    10.241515159606934,
+                    10.275875091552734,
+                    9.934261322021484,
+                    5.218562602996826,
+                    6.026902198791504,
+                    5.456727504730225,
+                    5.837909698486328,
+                    7.993313312530518,
+                    9.592716217041016,
+                    8.583531379699707,
+                    10.388720512390137,
+                    11.373417854309082,
+                    6.598453044891357,
+                    9.035504341125488,
+                    11.277811050415039,
+                    10.638521194458008,
+                    9.703084945678711,
+                    13.835453033447266,
+                    11.869813919067383,
+                    12.024129867553711,
+                    6.15651273727417,
+                    14.770273208618164,
+                    12.717819213867188,
+                    4.429929733276367,
+                    4.9584503173828125,
+                    6.114794731140137,
+                    3.530081272125244,
+                    5.174185752868652,
+                    5.1023945808410645,
+                    5.939808368682861,
+                    5.087324619293213,
+                    1.8462696075439453,
+                    4.562479019165039,
+                    2.80757212638855,
+                    2.2555649280548096,
+                    5.381723880767822,
+                    8.696435928344727,
+                    8.846415519714355,
+                    6.612267017364502,
+                    6.6003570556640625,
+                    5.475033760070801,
+                    7.961820125579834,
+                    6.753564834594727
+                  ],
+                  "head_spatial_std": [
+                    2.8014748096466064,
+                    2.331470251083374,
+                    1.5730985403060913,
+                    2.545884609222412,
+                    1.5926464796066284,
+                    1.9898444414138794,
+                    2.0773165225982666,
+                    1.968985915184021,
+                    2.4240145683288574,
+                    2.6851329803466797,
+                    2.5759458541870117,
+                    2.5049009323120117,
+                    2.2966508865356445,
+                    2.983797311782837,
+                    2.5054068565368652,
+                    2.0317609310150146,
+                    1.7628360986709595,
+                    1.9213042259216309,
+                    1.9510046243667603,
+                    2.099937677383423,
+                    1.7667566537857056,
+                    1.7076325416564941,
+                    1.914189100265503,
+                    1.6369959115982056,
+                    1.963678002357483,
+                    1.30232572555542,
+                    1.6642253398895264,
+                    2.02248215675354,
+                    2.439631462097168,
+                    2.313100576400757,
+                    2.510650396347046,
+                    1.9821604490280151,
+                    3.720369338989258,
+                    3.700406789779663,
+                    3.2283174991607666,
+                    3.814009666442871,
+                    1.8651167154312134,
+                    2.105046272277832,
+                    2.2516448497772217,
+                    1.9077011346817017,
+                    1.8198240995407104,
+                    1.971163034439087,
+                    2.032349109649658,
+                    1.8075437545776367,
+                    2.3190619945526123,
+                    1.9526559114456177,
+                    2.3873517513275146,
+                    2.2870025634765625
+                  ],
+                  "mean_head_disagreement": 3.517787456512451
+                }
+              ],
+              "background": [
+                {
+                  "token_index": 20,
+                  "head_spatial_mean": [
+                    12.498641967773438,
+                    12.118598937988281,
+                    10.668571472167969,
+                    11.501638412475586,
+                    10.063579559326172,
+                    10.005102157592773,
+                    12.637152671813965,
+                    12.187089920043945,
+                    5.297173500061035,
+                    6.940105438232422,
+                    5.863589286804199,
+                    6.800525665283203,
+                    10.584297180175781,
+                    13.408243179321289,
+                    9.554759979248047,
+                    12.247605323791504,
+                    12.851334571838379,
+                    7.987490653991699,
+                    12.006884574890137,
+                    13.131391525268555,
+                    10.12881851196289,
+                    8.822685241699219,
+                    13.852039337158203,
+                    12.122917175292969,
+                    11.78610610961914,
+                    7.482075214385986,
+                    14.1625337600708,
+                    15.56069564819336,
+                    5.262258529663086,
+                    6.380366325378418,
+                    7.705896854400635,
+                    5.54207706451416,
+                    8.624297142028809,
+                    7.475831508636475,
+                    7.641777038574219,
+                    8.308465957641602,
+                    5.571979522705078,
+                    5.961799144744873,
+                    5.127017021179199,
+                    3.4847333431243896,
+                    7.8546953201293945,
+                    10.866544723510742,
+                    11.794153213500977,
+                    9.305055618286133,
+                    6.629602909088135,
+                    6.705633163452148,
+                    8.394180297851562,
+                    8.27352237701416
+                  ],
+                  "head_spatial_std": [
+                    2.2450103759765625,
+                    1.9231288433074951,
+                    2.112773895263672,
+                    2.7014288902282715,
+                    1.6641608476638794,
+                    1.6068840026855469,
+                    1.9551150798797607,
+                    1.9174878597259521,
+                    1.8980441093444824,
+                    1.8662687540054321,
+                    2.1331260204315186,
+                    1.8510280847549438,
+                    2.2037277221679688,
+                    2.605314254760742,
+                    1.7156991958618164,
+                    2.3575799465179443,
+                    1.9490211009979248,
+                    1.9455530643463135,
+                    1.7369571924209595,
+                    2.44820499420166,
+                    1.8055651187896729,
+                    1.7164989709854126,
+                    1.7617727518081665,
+                    1.4596035480499268,
+                    1.8595161437988281,
+                    2.055452346801758,
+                    1.919853687286377,
+                    2.5618772506713867,
+                    2.1240437030792236,
+                    2.4882521629333496,
+                    2.2242591381073,
+                    2.1600961685180664,
+                    3.3227603435516357,
+                    2.604832172393799,
+                    3.174609661102295,
+                    3.087404251098633,
+                    2.7761807441711426,
+                    1.6997051239013672,
+                    2.0146853923797607,
+                    1.6463679075241089,
+                    2.1528565883636475,
+                    1.6505998373031616,
+                    2.086756467819214,
+                    2.2081098556518555,
+                    1.412643551826477,
+                    1.7066447734832764,
+                    1.844879388809204,
+                    2.2524852752685547
+                  ],
+                  "mean_head_disagreement": 3.382173538208008
+                },
+                {
+                  "token_index": 21,
+                  "head_spatial_mean": [
+                    12.510623931884766,
+                    12.106280326843262,
+                    12.041585922241211,
+                    11.99552059173584,
+                    8.635529518127441,
+                    10.1234130859375,
+                    10.877853393554688,
+                    10.889749526977539,
+                    4.236696243286133,
+                    5.30576229095459,
+                    4.810366630554199,
+                    5.650051116943359,
+                    8.49978256225586,
+                    11.1924409866333,
+                    8.49560832977295,
+                    10.980892181396484,
+                    10.712923049926758,
+                    7.092635154724121,
+                    11.156803131103516,
+                    12.005859375,
+                    10.844587326049805,
+                    9.576496124267578,
+                    13.79771614074707,
+                    12.099069595336914,
+                    10.994739532470703,
+                    7.122702598571777,
+                    14.633710861206055,
+                    14.989398956298828,
+                    4.525870323181152,
+                    5.445569038391113,
+                    6.972154140472412,
+                    4.854083061218262,
+                    8.223270416259766,
+                    6.5454912185668945,
+                    6.846259117126465,
+                    7.354116916656494,
+                    4.397623062133789,
+                    5.550357818603516,
+                    4.063564777374268,
+                    2.6270718574523926,
+                    8.045856475830078,
+                    9.599349975585938,
+                    10.527639389038086,
+                    8.82345962524414,
+                    6.002431869506836,
+                    6.502802848815918,
+                    6.594101905822754,
+                    7.343411445617676
+                  ],
+                  "head_spatial_std": [
+                    2.345968246459961,
+                    1.962490439414978,
+                    2.1497039794921875,
+                    2.542609453201294,
+                    1.5989196300506592,
+                    1.7715353965759277,
+                    2.006361246109009,
+                    2.3130359649658203,
+                    2.2226858139038086,
+                    2.05420184135437,
+                    2.4319398403167725,
+                    1.9683701992034912,
+                    2.7578117847442627,
+                    3.098848342895508,
+                    2.2241148948669434,
+                    2.54437518119812,
+                    1.9411333799362183,
+                    1.8410272598266602,
+                    2.0103793144226074,
+                    2.2402100563049316,
+                    1.8760592937469482,
+                    1.5470211505889893,
+                    2.1366562843322754,
+                    1.3325995206832886,
+                    2.1051487922668457,
+                    1.5835325717926025,
+                    1.7311362028121948,
+                    2.7785685062408447,
+                    2.233947277069092,
+                    2.5418334007263184,
+                    2.5351407527923584,
+                    2.2188634872436523,
+                    3.8416554927825928,
+                    3.182004451751709,
+                    3.3165318965911865,
+                    3.243992567062378,
+                    2.774909019470215,
+                    1.7539342641830444,
+                    1.9730589389801025,
+                    1.8870757818222046,
+                    2.3274848461151123,
+                    1.8198957443237305,
+                    2.060112714767456,
+                    2.1786575317382812,
+                    1.5222433805465698,
+                    2.007904052734375,
+                    1.9499937295913696,
+                    2.6493568420410156
+                  ],
+                  "mean_head_disagreement": 3.541215419769287
+                }
+              ]
+            },
+            "max_absolute_allowed_logit": 13.696688652038574,
+            "context_saturation_fraction": 0.001220703125,
+            "feature_logit_bound": 6.666666666666667
+          }
+        }
+      ],
+      "limitations": "Same provisional k3 scores/thresholds as existing masks; no calibrated confidence or segmentation labels"
+    },
+    "owned_hooks_removed": true,
+    "sweep_schema_version": 1,
+    "collection_steps": 3,
+    "nfe_scope": "Three model calls for the entire sweep, never sum this across tap suites",
+    "primary_tap": {
+      "step": 2,
+      "block": 17
+    },
+    "shared_collection_id": "b4bf1d2ef1574599b312e5b21d3ba3e3"
+  },
+  "artifacts": {
+    "manifest": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/manifest.json",
+    "tensors": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/maps.safetensors",
+    "mask_pngs": {
+      "multi_proto_bg.masks.target": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.masks.target.png",
+      "multi_proto_bg.masks.protected": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.masks.protected.png",
+      "multi_proto_bg.masks.background": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.masks.background.png",
+      "multi_proto_bg.seed_masks.target": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.seed_masks.target.png",
+      "multi_proto_bg.seed_masks.protected": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.seed_masks.protected.png",
+      "multi_proto_bg.seed_masks.background": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.seed_masks.background.png",
+      "multi_proto_bg.uncertain_mask": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.uncertain_mask.png",
+      "multi_proto_bg.real_background_mask": "step_2_block_17_3c43e5147b114f56ba8e370075cafca2/multi_proto_bg.real_background_mask.png"
+    }
+  },
+  "file_sha256": {
+    "maps.safetensors": "00fced3baf910a7d73d810c0f6f0ea77723ec0f4859f106795b749f4d14368a4",
+    "multi_proto_bg.masks.background.png": "3bccf8ab52cace5f333c75fe58ca19abc102e400165612b31f9e527d116d5338",
+    "multi_proto_bg.masks.protected.png": "92e89cf5d8dda691ed8f7a5c28141f44b8cb1b063ab710fcd6cde9c6dc78faa3",
+    "multi_proto_bg.masks.target.png": "b87ea2151f3256b01e3903fc8536326fe8e6a51dad4144fe822ab612a71fabdb",
+    "multi_proto_bg.real_background_mask.png": "6a66194c9d7bae3ecf390e1fe1d91d782ab56cd287a1f835b15b82f5c2771119",
+    "multi_proto_bg.seed_masks.background.png": "5bc07c9a1d4d95b571bc6feb1bf9414cb034fe92af75900e88228be5106bc418",
+    "multi_proto_bg.seed_masks.protected.png": "1e5b933bc8ec81c8478bd690de744870b346020b9f9ef1928ba8ab40b359e6b1",
+    "multi_proto_bg.seed_masks.target.png": "60f5c81ea7989631c001982f13438016bbb23936f25d7d397acbce487dc338c1",
+    "multi_proto_bg.uncertain_mask.png": "77dd80e954663f68d31b5ce70f4d50b4c9537a70dee55b4e043507a12a7943dc"
+  },
+  "tensor_sha256": {
+    "multi_proto_bg.masks.target": "4c0f00c9a4868b78978347b0080a9046f001c53240fa7fc35b31f2f8d0ce132d",
+    "multi_proto_bg.masks.protected": "e1e63a79e6223d20f1f19cf3422f810b5bae77fda321c8c4b985c1be8531823a",
+    "multi_proto_bg.masks.background": "dbeefd3fc1fff6ff90dab37b0514ce31062e590cff17050b82f0c60b2c640144",
+    "multi_proto_bg.raw_maps.target": "67de11076330b832ddfd1f964506290e7b69b02a665b674d05fb3ec2d6a507ac",
+    "multi_proto_bg.raw_maps.protected": "82d904c1fb2670af458a713a4e595cf3b8e8c304bdf8e7bf85943b5d403df8fe",
+    "multi_proto_bg.raw_maps.background": "02bb11d8d10dd4fc93ee7f1a80fd2dabfaad38d4ba06d556fb057e696e1b0a7d",
+    "multi_proto_bg.seed_masks.target": "b99befcc2d621cd674719e84bac4d701db0cbf1cbae47b88e8aec6a6f2b10ddf",
+    "multi_proto_bg.seed_masks.protected": "6781a448cb6e90cadb8a6c4825416095962e6b979bbe1d3a6e2f9dcde65821c5",
+    "multi_proto_bg.seed_masks.background": "aa56c4854e5418a093f87ec072f034676891354a5a417bf0aedaadb4d6cc3690",
+    "multi_proto_bg.uncertain_mask": "30e75829c6d79ea8df238c0eb09d6b72259762767bc2465ea68373f53271d0d8",
+    "multi_proto_bg.real_background_mask": "27114d6c1f039c35dd34e3fd1a8a5f252e1541f3965aa8b0df7b0e8830a605ff",
+    "evidence.step_2.block_17.target.head_scores": "a793be8434d81603d0410bd542a6e803b7761a29d4fd0f22ea69d789126c0519",
+    "evidence.step_2.block_17.target.token_scores": "e5bafbbbe99487876bcca2ca46e0200f37d1e327dddda6234a8495b454f13ad9",
+    "evidence.step_2.block_17.target.head_allowed_fraction": "9842f12b541d9a330a9bfe36d31cce41bcb70c61c49ab87bda889add07dae627",
+    "evidence.step_2.block_17.target.token_allowed_fraction": "a841aeb4b35d18f7173f2fe4a376b0da3fc98affb7d1da2de5b5607b32604860",
+    "evidence.step_2.block_17.protected.head_scores": "ffe4658407e214fbf9a79fa41330dfa648807cfc3bbfa7d94fd584553de0d23f",
+    "evidence.step_2.block_17.protected.token_scores": "ef694f69a5c1412628066afb5a17ea5eb0882616290fdd5cda7f3b2bd2b60cfa",
+    "evidence.step_2.block_17.protected.head_allowed_fraction": "9842f12b541d9a330a9bfe36d31cce41bcb70c61c49ab87bda889add07dae627",
+    "evidence.step_2.block_17.protected.token_allowed_fraction": "a841aeb4b35d18f7173f2fe4a376b0da3fc98affb7d1da2de5b5607b32604860",
+    "evidence.step_2.block_17.background.head_scores": "49bdf5ad03a71ff73c8c75a757eb51c5aeb5bb6f98bf27a178381fe9f01a2e22",
+    "evidence.step_2.block_17.background.token_scores": "4912143d102c5141dc1dfb2873550c2e48f92ebfde575c8abfa51e461f176a64",
+    "evidence.step_2.block_17.background.head_allowed_fraction": "9842f12b541d9a330a9bfe36d31cce41bcb70c61c49ab87bda889add07dae627",
+    "evidence.step_2.block_17.background.token_allowed_fraction": "5783b731e272c123740ae5b8943420a4c04cfc23e505c12dbf75f90c30bf2fad"
+  },
+  "tensor_shapes": {
+    "multi_proto_bg.masks.target": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.masks.protected": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.masks.background": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.raw_maps.target": [
+      1,
+      4096
+    ],
+    "multi_proto_bg.raw_maps.protected": [
+      1,
+      4096
+    ],
+    "multi_proto_bg.raw_maps.background": [
+      1,
+      4096
+    ],
+    "multi_proto_bg.seed_masks.target": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.seed_masks.protected": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.seed_masks.background": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.uncertain_mask": [
+      1,
+      64,
+      64
+    ],
+    "multi_proto_bg.real_background_mask": [
+      1,
+      64,
+      64
+    ],
+    "evidence.step_2.block_17.target.head_scores": [
+      48,
+      4096
+    ],
+    "evidence.step_2.block_17.target.token_scores": [
+      1,
+      4096
+    ],
+    "evidence.step_2.block_17.target.head_allowed_fraction": [
+      48,
+      4096
+    ],
+    "evidence.step_2.block_17.target.token_allowed_fraction": [
+      1,
+      4096
+    ],
+    "evidence.step_2.block_17.protected.head_scores": [
+      48,
+      4096
+    ],
+    "evidence.step_2.block_17.protected.token_scores": [
+      1,
+      4096
+    ],
+    "evidence.step_2.block_17.protected.head_allowed_fraction": [
+      48,
+      4096
+    ],
+    "evidence.step_2.block_17.protected.token_allowed_fraction": [
+      1,
+      4096
+    ],
+    "evidence.step_2.block_17.background.head_scores": [
+      48,
+      4096
+    ],
+    "evidence.step_2.block_17.background.token_scores": [
+      2,
+      4096
+    ],
+    "evidence.step_2.block_17.background.head_allowed_fraction": [
+      48,
+      4096
+    ],
+    "evidence.step_2.block_17.background.token_allowed_fraction": [
+      2,
+      4096
+    ]
+  },
+  "save_seconds": 0.04798580000004904,
+  "publication": "exclusive bundle with rollback on handled errors; not crash-atomic"
+}

@@ -1,0 +1,174 @@
+{
+  "prompt": [
+    15,
+    "d1c6edaf-d3cf-4d42-85af-632a4cf5e338",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "100": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261012T033137Z-seed-bootstrap\\park__seed_444444\\replay_D-R0\\edits\\D-R0\\pilot_s444444_00001_.json",
+          "filename_prefix": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0"
+        },
+        "_meta": {
+          "title": "Decode retained trace; zero diffusion NFE"
+        }
+      }
+    },
+    {
+      "create_time": 1791790981011
+    },
+    [
+      "100"
+    ]
+  ],
+  "outputs": {
+    "100": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_replay_D-R0_392ebbbbdbb44c96bed12d88a0676056\\manifest.json"
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "d1c6edaf-d3cf-4d42-85af-632a4cf5e338",
+          "timestamp": 1791790981011
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1",
+            "2",
+            "9"
+          ],
+          "prompt_id": "d1c6edaf-d3cf-4d42-85af-632a4cf5e338",
+          "timestamp": 1791790981106
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "d1c6edaf-d3cf-4d42-85af-632a4cf5e338",
+          "timestamp": 1791790986827
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "100": {
+      "node_id": "100",
+      "display_node": "100",
+      "parent_node": null,
+      "real_node_id": "100"
+    }
+  }
+}

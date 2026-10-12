@@ -1,0 +1,29 @@
+{
+  "conclusion": "同じMix入力上の観測・seed修正・輪郭再分類を実装し、4候補を追加生成した。三人状配置は全体ONの独立軌道で既に生じていた。新候補は二人を維持し、公園の足元を改善したが、全身体型の一貫した改善と汎化は未確認。",
+  "status": "assistant_visual_review_complete; human_quality_approval_not_evaluated",
+  "cases": {
+    "park": {
+      "interpretation": "全体ONとMixで顔位置・身体形状が異なる。旧Dと比較し、両候補は顔と二人構図を保ち、足元の肌・靴の切り欠きが減った。頭身・胴脚比の明瞭な追加変化は確認できない。男性の顔・眼鏡・成人らしい外見はこの比較で近いが完全な同一性保持は保証しない。",
+      "routes": {
+        "anchored_s3_b18": "顔・頭部はDと近い。足元の靴と足首のつながりはDよりまとまる。全身縮小の追加改善は明瞭でない。",
+        "anchored_s3_b23": "足元はDよりまとまる。対象の顔・体格はDと近く、b18に対する明確な優位性は確認できない。"
+      }
+    },
+    "woman_front_strong_overlap": {
+      "interpretation": "全体ONのstep3ではbase重み・Slider重みどちらの予測も三人に見える。全体ON完成像も三人。OFF/Mix入力の予測およびMix完成像は二人。新maskの2候補も二人を維持する。b18はDと近い結果、b23は対象の前腕に背景・男性の青い服へ抜ける明瞭な切り欠きがあり不適合。",
+      "routes": {
+        "anchored_s3_b18": "二人構図・対象の顔・頭身はDと近く、腕は垂れた配置。大きな新しい顔の増殖は見当たらない。Dより全身編集が改善したとは判定できない。",
+        "anchored_s3_b23": "二人構図と対象の顔は維持するが、曲げた前腕に大きな穴・境界の切り欠きが出る。不適合。"
+      }
+    }
+  },
+  "quality_gate": {
+    "passed": false,
+    "reason": "両構図で対象の顔・全身体型・保護・境界を一貫して改善した候補は確認できなかった。block23の重なりは前腕の切り欠きがある。block18は継続候補だが、Dより明確な全身編集の改善は未確認のため、計画のholdout/動的化gateは通過としない。"
+  },
+  "causal_result": {
+    "same_input_source_weight_replay": "exactly reproduced at steps2/3",
+    "overlap_third_subject": "visible in globalON trajectory denoised estimates under both weights and globalON final; OFF/Mix rows have two subjects",
+    "interpretation": "Independent globalON trajectory is a confirmed contributor for this seed, not just a mask-labeling artifact. Additional mask-role errors remain in park on actual Mix inputs."
+  }
+}

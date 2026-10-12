@@ -1,0 +1,27 @@
+{
+  "question": "Does collecting with Slider +4 change masks and recover full-body editing?",
+  "server": "http://127.0.0.1:8000",
+  "trial_id": 1791715576,
+  "slider_runtime_path": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+  "cases": [
+    {
+      "case": "park",
+      "seed": 444444
+    },
+    {
+      "case": "woman_front_strong_overlap",
+      "seed": 42
+    }
+  ],
+  "frozen": "same k3 multi_proto_bg config; same prompt/noise/latent/sigmas; +4 edits; all radii zero",
+  "routes": {
+    "A_off": "T_off / P_off",
+    "B_on": "T_on / P_on",
+    "C_on_base_protected": "T_on minus P_off / P_off",
+    "D_union_base_protected": "(T_off union T_on) minus P_off / P_off"
+  },
+  "nfe_budget_per_case": 68,
+  "nfe_budget_total": 136,
+  "scope": "existing nodes; isolated API copies; no source workflow/backend edits; no completed OFF/all reference added",
+  "interpretation_limits": "diagnostic seeds only; assisted visual review is not human approval; masks are not independently labelled ground truth"
+}

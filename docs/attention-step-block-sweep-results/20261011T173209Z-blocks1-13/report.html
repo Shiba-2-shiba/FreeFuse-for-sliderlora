@@ -1,0 +1,276 @@
+<!doctype html><html lang='ja'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>block 1〜13 追加検証</title><style>body{margin:0;font:15px/1.7 system-ui;background:#f2f4f7;color:#192836}main{max-width:1600px;margin:auto;padding:24px}article{background:white;padding:18px;margin:20px 0;border-radius:8px}img{max-width:100%;height:auto}table{border-collapse:collapse;width:100%;background:white}td,th{padding:8px;border-bottom:1px solid #dde1e7;text-align:left}a{color:#1766a8}summary{cursor:pointer}pre{white-space:pre-wrap}</style><main><article><h2>人物構図・輪郭・役割割当の再評価</h2><p>顔中心の旧70セル被覆だけではmaskの採用判断はできない。前半blockの粗い範囲、後半step3の手足・輪郭の細かさ、対象/保護の割当、二人構図の成立を別々に評価する。</p><p><a href='mask-shape-review/observations.json'>ユーザー所見と保存maskの確認</a> · <a href='mask-shape-review/selected-mask-evidence.json'>選択maskのhash検査・形状統計</a></p><h3>woman_front_strong_overlap</h3><p>ON step3/block26は中央の対象頭部状領域と、その左右の保護頭部状領域からなる三頭のような配置。ON step3/block18・23にも同様の三頭状配置が見える。同じstep3/block18のOFFは左の対象・右の保護の二人状配置で、ON側で配置または役割分離が崩れていることと整合する。</p><p>二人の人物領域・役割分離として不適合。保存アルゴリズムstatus=okはmaskを計算できたという意味で、この意味的な不適合を検出していない。</p><a href='mask-shape-review/woman_front_strong_overlap-shape-comparison.png'><img src='mask-shape-review/woman_front_strong_overlap-shape-comparison.png'></a><p>ON step3/block26の対象は645セル、最大連結成分627セル（97.21%）。保護は489セル・19成分で最大209セル（42.74%）。大きな対象の連結性だけでは二人構図の成立や対象/保護の正しさを証明できない。</p><p>maskだけでは収集途中の画像が既に三人なのか、同じ人物の特徴が対象/保護へ分割されているのか確定できない。collectorは完成参照RGBを保存していない。</p><h3>park</h3><p>ON step3/block7・10は広い人物領域を取り、輪郭周囲に細かい散在成分が多い。ON step3/block18・23・26は手足や人物輪郭の構造がより明瞭だが、対象の顔中心に相当する頭部内の領域が保護側へ分類される。block26では対象の胴・脚もかなり欠落し、不確定側が多くなる。</p><p>前半は顔被覆が高い一方、粗い境界・背景側の散在を伴う。後半は輪郭が詳しい一方、顔の誤割当や身体の欠落が残る。69/70という固定ROI被覆だけで前半を最良と判断しない。</p><a href='mask-shape-review/park-shape-comparison.png'><img src='mask-shape-review/park-shape-comparison.png'></a><p>既存編集ではONのraw protectedそのものを使用せず、固定OFF step2/block18 protectedを使用する。ただしraw ON targetから既に落ちた顔領域は、保護maskをOFFへ差し替えても戻らない。</p><p>同一seed・同一sigmaのSliderなし/あり収集途中のRGBを照合し、分類前の構図と分類後の役割割当を切り分ける。公園では後半step3の輪郭と顔の誤割当を別々に調べる。単純に早い/遅いblockを選ぶだけでは両方を解決しない。</p></article><h1>不足していたblock 1〜13の追加検証</h1><article><p>起動中の同じComfyUI :8000 / step 1・2・3 × block 1〜13 × LoRAなし／あり × 2構図 = <strong>156条件追加</strong>。103条件でmask成立、53条件は理由付きで不成立を保存。前回block 14〜27と合わせ、block 1〜27の324条件を網羅しました。</p><p>block18を全step・両branch・両構図で再収集し、12対照tapの全保存tensor hashと候補statusが前回に完全一致しました。収集は各branchで共有3 forward、今回12 NFE、前回188と合わせ200 NFE（元の中断試行は別）。prompt、seed、trial、LoRA強度+4、k3方式・閾値、保護対照、radius 0を維持しています。</p><p>新しいblockの編集画像は生成していません。mask・attentionの成立と、顔・全身・保護人物の画質合格は別です。番号は前回と同じ実装上のblock indexで、block0は今回の指定範囲外です。</p><p><strong>公園の旧70セルの穴は、step3/block7、step3/block8、step3/block9、step2/block10、step3/block10、step2/block13で69/70セルが実効対象へ戻りました。</strong> 前回のstep1/block18の49/70より高い被覆です。早いblockのmaskは周囲の散在成分もあり、顔の被覆だけで採用せず、全身・保護側・生成画像を確認する候補として扱います。</p><p><a href='../20261011T170454Z/report.html'>前回11画像のレポート</a> · <a href='plan.json'>追加条件</a> · <a href='verification.json'>保存監査と対照一致</a> · <a href='blocks1-27-analysis.json'>block 1〜27の全数値</a></p></article><h2>公園：旧70セルの穴を同じ座標で比較</h2><article><p>左から実効対象セル数、Q/K対象役割スコア、ROI平均で対象が最大のhead数。縦線は今回block1〜13と前回14〜27の境目です。Q/Kスコアは3役割内のheuristicで、校正済みconfidenceではありません。</p><a href='park/blocks1-27-fixed-hole-summary.png'><img src='park/blocks1-27-fixed-hole-summary.png'></a></article><table><tr><th>ON step / block</th><th>対象 / 保護 / 背景（70セル）</th><th>実効対象 / 70</th><th>Q/K 対象 / 保護</th><th>対象優勢head / 48</th></tr><tr><td>1 / 1</td><td>failed</td><td>failed</td><td>0.3173 / 0.4262</td><td>8</td></tr><tr><td>2 / 1</td><td>failed</td><td>failed</td><td>0.3249 / 0.4354</td><td>11</td></tr><tr><td>3 / 1</td><td>failed</td><td>failed</td><td>0.3287 / 0.4551</td><td>12</td></tr><tr><td>1 / 2</td><td>failed</td><td>failed</td><td>0.1873 / 0.1293</td><td>5</td></tr><tr><td>2 / 2</td><td>failed</td><td>failed</td><td>0.2256 / 0.1594</td><td>6</td></tr><tr><td>3 / 2</td><td>failed</td><td>failed</td><td>0.2846 / 0.2250</td><td>11</td></tr><tr><td>1 / 3</td><td>failed</td><td>failed</td><td>0.1355 / 0.1886</td><td>3</td></tr><tr><td>2 / 3</td><td>failed</td><td>failed</td><td>0.1645 / 0.2379</td><td>4</td></tr><tr><td>3 / 3</td><td>failed</td><td>failed</td><td>0.1976 / 0.2948</td><td>8</td></tr><tr><td>1 / 4</td><td>failed</td><td>failed</td><td>0.1681 / 0.1574</td><td>8</td></tr><tr><td>2 / 4</td><td>failed</td><td>failed</td><td>0.2245 / 0.1914</td><td>10</td></tr><tr><td>3 / 4</td><td>failed</td><td>failed</td><td>0.3313 / 0.2948</td><td>17</td></tr><tr><td>1 / 5</td><td>48 / 0 / 22</td><td>48</td><td>0.4975 / 0.0965</td><td>20</td></tr><tr><td>2 / 5</td><td>48 / 0 / 22</td><td>48</td><td>0.5229 / 0.1139</td><td>23</td></tr><tr><td>3 / 5</td><td>62 / 0 / 8</td><td>62</td><td>0.6312 / 0.1739</td><td>24</td></tr><tr><td>1 / 6</td><td>54 / 0 / 16</td><td>54</td><td>0.5236 / 0.1563</td><td>27</td></tr><tr><td>2 / 6</td><td>62 / 0 / 8</td><td>62</td><td>0.6336 / 0.2045</td><td>28</td></tr><tr><td>3 / 6</td><td>68 / 0 / 2</td><td>68</td><td>0.6926 / 0.2188</td><td>33</td></tr><tr><td>1 / 7</td><td>54 / 0 / 16</td><td>54</td><td>0.5717 / 0.0980</td><td>28</td></tr><tr><td>2 / 7</td><td>68 / 0 / 2</td><td>68</td><td>0.7100 / 0.1534</td><td>34</td></tr><tr><td>3 / 7</td><td>69 / 0 / 1</td><td>69</td><td>0.7532 / 0.1620</td><td>36</td></tr><tr><td>1 / 8</td><td>59 / 0 / 11</td><td>59</td><td>0.5995 / 0.1052</td><td>28</td></tr><tr><td>2 / 8</td><td>67 / 0 / 3</td><td>67</td><td>0.7590 / 0.0946</td><td>34</td></tr><tr><td>3 / 8</td><td>69 / 0 / 1</td><td>69</td><td>0.7823 / 0.0895</td><td>33</td></tr><tr><td>1 / 9</td><td>61 / 0 / 9</td><td>61</td><td>0.6188 / 0.1314</td><td>34</td></tr><tr><td>2 / 9</td><td>68 / 0 / 2</td><td>68</td><td>0.7452 / 0.1431</td><td>37</td></tr><tr><td>3 / 9</td><td>69 / 0 / 1</td><td>69</td><td>0.7727 / 0.1242</td><td>37</td></tr><tr><td>1 / 10</td><td>62 / 0 / 8</td><td>62</td><td>0.5673 / 0.1342</td><td>28</td></tr><tr><td>2 / 10</td><td>69 / 0 / 1</td><td>69</td><td>0.6911 / 0.1332</td><td>33</td></tr><tr><td>3 / 10</td><td>69 / 0 / 1</td><td>69</td><td>0.7407 / 0.1264</td><td>38</td></tr><tr><td>1 / 11</td><td>10 / 36 / 24</td><td>10</td><td>0.4662 / 0.3991</td><td>19</td></tr><tr><td>2 / 11</td><td>41 / 7 / 22</td><td>41</td><td>0.5684 / 0.3667</td><td>22</td></tr><tr><td>3 / 11</td><td>44 / 0 / 26</td><td>44</td><td>0.5709 / 0.3678</td><td>23</td></tr><tr><td>1 / 12</td><td>33 / 20 / 17</td><td>33</td><td>0.4821 / 0.3316</td><td>18</td></tr><tr><td>2 / 12</td><td>21 / 39 / 10</td><td>21</td><td>0.4907 / 0.3410</td><td>21</td></tr><tr><td>3 / 12</td><td>13 / 35 / 22</td><td>13</td><td>0.4521 / 0.3430</td><td>22</td></tr><tr><td>1 / 13</td><td>66 / 0 / 4</td><td>66</td><td>0.7010 / 0.1754</td><td>32</td></tr><tr><td>2 / 13</td><td>69 / 0 / 1</td><td>69</td><td>0.6830 / 0.2423</td><td>32</td></tr><tr><td>3 / 13</td><td>57 / 4 / 9</td><td>57</td><td>0.6622 / 0.2537</td><td>30</td></tr><tr><td>1 / 14</td><td>57 / 0 / 13</td><td>57</td><td>0.5974 / 0.2906</td><td>25</td></tr><tr><td>2 / 14</td><td>30 / 27 / 13</td><td>30</td><td>0.5757 / 0.3377</td><td>26</td></tr><tr><td>3 / 14</td><td>13 / 41 / 16</td><td>13</td><td>0.5440 / 0.3672</td><td>23</td></tr><tr><td>1 / 15</td><td>21 / 40 / 9</td><td>21</td><td>0.4790 / 0.4229</td><td>21</td></tr><tr><td>2 / 15</td><td>12 / 56 / 2</td><td>12</td><td>0.4349 / 0.4935</td><td>18</td></tr><tr><td>3 / 15</td><td>11 / 53 / 6</td><td>11</td><td>0.3878 / 0.5276</td><td>15</td></tr><tr><td>1 / 16</td><td>30 / 23 / 17</td><td>30</td><td>0.5419 / 0.3628</td><td>20</td></tr><tr><td>2 / 16</td><td>5 / 60 / 5</td><td>5</td><td>0.3820 / 0.5402</td><td>12</td></tr><tr><td>3 / 16</td><td>1 / 66 / 3</td><td>1</td><td>0.3733 / 0.5554</td><td>12</td></tr><tr><td>1 / 17</td><td>49 / 16 / 5</td><td>49</td><td>0.6575 / 0.3106</td><td>31</td></tr><tr><td>2 / 17</td><td>4 / 59 / 7</td><td>4</td><td>0.3964 / 0.5738</td><td>14</td></tr><tr><td>3 / 17</td><td>10 / 57 / 3</td><td>10</td><td>0.3344 / 0.6351</td><td>10</td></tr><tr><td>1 / 18</td><td>49 / 20 / 1</td><td>49</td><td>0.7115 / 0.2805</td><td>38</td></tr><tr><td>2 / 18</td><td>0 / 62 / 8</td><td>0</td><td>0.3721 / 0.6197</td><td>12</td></tr><tr><td>3 / 18</td><td>12 / 58 / 0</td><td>12</td><td>0.3830 / 0.6095</td><td>13</td></tr><tr><td>1 / 19</td><td>29 / 39 / 2</td><td>29</td><td>0.5455 / 0.4058</td><td>25</td></tr><tr><td>2 / 19</td><td>0 / 66 / 4</td><td>0</td><td>0.3093 / 0.6559</td><td>9</td></tr><tr><td>3 / 19</td><td>8 / 61 / 1</td><td>8</td><td>0.2758 / 0.7031</td><td>7</td></tr><tr><td>1 / 20</td><td>26 / 39 / 5</td><td>26</td><td>0.5601 / 0.4138</td><td>25</td></tr><tr><td>2 / 20</td><td>5 / 63 / 2</td><td>5</td><td>0.2694 / 0.7069</td><td>9</td></tr><tr><td>3 / 20</td><td>10 / 59 / 1</td><td>10</td><td>0.3095 / 0.6775</td><td>7</td></tr><tr><td>1 / 21</td><td>28 / 34 / 8</td><td>28</td><td>0.5001 / 0.4706</td><td>25</td></tr><tr><td>2 / 21</td><td>5 / 61 / 4</td><td>5</td><td>0.3104 / 0.6725</td><td>13</td></tr><tr><td>3 / 21</td><td>10 / 60 / 0</td><td>10</td><td>0.3789 / 0.6065</td><td>15</td></tr><tr><td>1 / 22</td><td>22 / 39 / 9</td><td>22</td><td>0.4648 / 0.4641</td><td>18</td></tr><tr><td>2 / 22</td><td>2 / 64 / 4</td><td>2</td><td>0.3470 / 0.5958</td><td>17</td></tr><tr><td>3 / 22</td><td>11 / 53 / 6</td><td>11</td><td>0.4030 / 0.5513</td><td>20</td></tr><tr><td>1 / 23</td><td>12 / 42 / 16</td><td>12</td><td>0.4601 / 0.4618</td><td>19</td></tr><tr><td>2 / 23</td><td>15 / 55 / 0</td><td>15</td><td>0.3944 / 0.5488</td><td>14</td></tr><tr><td>3 / 23</td><td>20 / 47 / 3</td><td>20</td><td>0.4311 / 0.5154</td><td>22</td></tr><tr><td>1 / 24</td><td>12 / 52 / 6</td><td>12</td><td>0.3864 / 0.5258</td><td>12</td></tr><tr><td>2 / 24</td><td>6 / 62 / 2</td><td>6</td><td>0.3489 / 0.5953</td><td>13</td></tr><tr><td>3 / 24</td><td>13 / 56 / 1</td><td>13</td><td>0.3976 / 0.5534</td><td>12</td></tr><tr><td>1 / 25</td><td>1 / 66 / 3</td><td>1</td><td>0.3624 / 0.5246</td><td>15</td></tr><tr><td>2 / 25</td><td>2 / 61 / 7</td><td>2</td><td>0.3322 / 0.5866</td><td>12</td></tr><tr><td>3 / 25</td><td>11 / 54 / 5</td><td>11</td><td>0.3797 / 0.5439</td><td>14</td></tr><tr><td>1 / 26</td><td>15 / 13 / 42</td><td>15</td><td>0.4502 / 0.4374</td><td>16</td></tr><tr><td>2 / 26</td><td>15 / 42 / 13</td><td>15</td><td>0.4438 / 0.4734</td><td>12</td></tr><tr><td>3 / 26</td><td>10 / 51 / 9</td><td>10</td><td>0.3723 / 0.5643</td><td>14</td></tr><tr><td>1 / 27</td><td>failed</td><td>failed</td><td>0.3200 / 0.3207</td><td>13</td></tr><tr><td>2 / 27</td><td>failed</td><td>failed</td><td>0.3105 / 0.4063</td><td>8</td></tr><tr><td>3 / 27</td><td>failed</td><td>failed</td><td>0.3435 / 0.3820</td><td>14</td></tr></table><h2>park / seed 444444</h2><p>追加39条件中、OFF 27成立・ON 27成立。block18対照は全3step・両branchで一致。</p><article><h3>OFF block1〜13</h3><p>黄色：対象、青：保護、紫：不確定、暗色：実背景。成立は正確な人物labelの保証ではありません。</p><a href='park/off-routing-grid.png'><img src='park/off-routing-grid.png'></a><details><summary>前回block14〜27</summary><a href='../20261011T170454Z/park/off-routing-grid.png'><img src='../20261011T170454Z/park/off-routing-grid.png'></a></details></article><article><h3>ON block1〜13</h3><p>黄色：対象、青：保護、紫：不確定、暗色：実背景。成立は正確な人物labelの保証ではありません。</p><a href='park/on-routing-grid.png'><img src='park/on-routing-grid.png'></a><details><summary>前回block14〜27</summary><a href='../20261011T170454Z/park/on-routing-grid.png'><img src='../20261011T170454Z/park/on-routing-grid.png'></a></details></article><details><summary>追加blockの不成立条件</summary><pre>{
+  &quot;off&quot;: {
+    &quot;step_1.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    },
+    &quot;step_3.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    }
+  },
+  &quot;on&quot;: {
+    &quot;step_1.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    }
+  }
+}</pre></details><h2>woman_front_strong_overlap / seed 42</h2><p>追加39条件中、OFF 27成立・ON 22成立。block18対照は全3step・両branchで一致。</p><article><h3>OFF block1〜13</h3><p>黄色：対象、青：保護、紫：不確定、暗色：実背景。成立は正確な人物labelの保証ではありません。</p><a href='woman_front_strong_overlap/off-routing-grid.png'><img src='woman_front_strong_overlap/off-routing-grid.png'></a><details><summary>前回block14〜27</summary><a href='../20261011T170454Z/woman_front_strong_overlap/off-routing-grid.png'><img src='../20261011T170454Z/woman_front_strong_overlap/off-routing-grid.png'></a></details></article><article><h3>ON block1〜13</h3><p>黄色：対象、青：保護、紫：不確定、暗色：実背景。成立は正確な人物labelの保証ではありません。</p><a href='woman_front_strong_overlap/on-routing-grid.png'><img src='woman_front_strong_overlap/on-routing-grid.png'></a><details><summary>前回block14〜27</summary><a href='../20261011T170454Z/woman_front_strong_overlap/on-routing-grid.png'><img src='../20261011T170454Z/woman_front_strong_overlap/on-routing-grid.png'></a></details></article><details><summary>追加blockの不成立条件</summary><pre>{
+  &quot;off&quot;: {
+    &quot;step_1.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    }
+  },
+  &quot;on&quot;: {
+    &quot;step_1.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_1.block_12&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    },
+    &quot;step_1.block_13&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    },
+    &quot;step_2.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_2.block_12&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    },
+    &quot;step_2.block_13&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    },
+    &quot;step_3.block_1&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_2&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    },
+    &quot;step_3.block_3&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_4&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+    },
+    &quot;step_3.block_12&quot;: {
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+      &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+    }
+  }
+}</pre></details></main></html>

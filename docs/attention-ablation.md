@@ -130,3 +130,28 @@ python -B -m unittest discover -s tests -p test_attention_ablation_workflows.py
 graph テストは schema・接続・widget 順序・UI/API 一致・再生成・k/強度の統制・同一 k3 mask 共有・予算・未評価値を確認します。CPU pass は実 GPU、native ComfyUI、INT8、UI reload、人体品質の成功を意味しません。
 
 Windows evaluator の出力拒否は、`lstat()` で既存 entry（dangling symlink を含む）を拒否し、その後も exclusive create を保持します。target 未作成・既存 file / symlink / hardlink / 入力が不変なことを回帰検査します。Linux では実 symlink と Windows 挙動の限定 simulation を使います。事前確認と open は atomic な一体処理ではなく、競合下の race-free no-follow 保証ではありません。native Windows での再実行は別途必要です。
+
+## 実機検証記録：2026-10-11
+
+起動中の ComfyUI 0.37.0（`http://127.0.0.1:8000`）、AMD Radeon AI PRO R9700、INT8 checkpoint で cold graph の2ケース・6画像を実行しました。[比較画像と検証報告](attention-ablation-results/20261010T190433Z/report.html)、[機械検証JSON](attention-ablation-results/20261010T190433Z/verification.json)、[実行一覧](attention-ablation-results/20261010T190433Z/summary.json)を保存しています。
+
+| ケース | 実測NFE | queue wall time | k1対象セル | k3対象セル | 対象mask IoU |
+|---|---:|---:|---:|---:|---:|
+| park / 444444 | 52 | 180.8秒 | 659 | 1046 | 0.578704 |
+| woman_front_strong_overlap / 42 | 52 | 153.5秒 | 885 | 915 | 0.941748 |
+
+両ケースとも、configの `prototypes` 以外、初期noise / latent / sigmas、conditioningとmetadata、全4観測tapのtensor hashesが一致しました。k1は各role 1、k3は各role 3のprototypeを実現しました。k3の+2 / +4は全partition・実効mask・初期入力・Slider hashが一致し、fill / dilation / selection radiusは0です。全4suite・全6編集bundleのfile / tensor hashes、mask PNGとの整合、全stepのtraceとprediction routingを検査しています。元workflowの変更はせず、実投入コピーだけSliderの実環境パス `archive\krea2_deaging_20261001T075826Z_c06cb035.safetensors` と保存prefixを合わせました。
+
+補助目視ではparkのk3/+2で男性の眼鏡が見えなくなる差があります。[補助目視記録](attention-ablation-results/20261010T190433Z/assistant-visual-observations.json)は人の承認ではありません。構図gate・画質の人の判定は全件 `not_evaluated / passed=null` のままです。OFFへの保持、独立labelによるmask精度、未見seed holdout、UI再読み込み、独立no-hook parityは未検証です。VRAMはcollectionごとの `memory.scope` を保持し、全queue peakは欠測nullとしました。
+
+native Windowsの対象CPU回帰は **80 passed、1 failed、8 subtests passed** でした。[ログ](attention-ablation-results/20261010T190433Z/cpu-tests.log)の唯一の失敗は `test_dangling_output_is_refused_before_platform_exclusive_open` 末尾のsymlink target直接比較で、`//?/C:/...` と `C:/...` の表記差によります。それ以前の出力拒否・target未作成・input不変のassertは通過しています。テストは修正しておらず、CPU全成功とは記録していません。
+
+## 追試：Sliderあり／なしのmask収集
+
+同じ2ケース・k3・強度+4・全radius 0で、収集時Sliderなし／あり／ON対象＋OFF保護／対象の和集合＋OFF保護の4経路を比較しました。[8画像とattentionのレポート](mask-source-comparison-results/20261011T104616Z/report.html)、[統制・結果・顔中心の診断](slider-mask-collection-comparison.md#2026-10-11k3方式で収集元を比較した実機追試)に記録しています。合計136 NFE。Sliderなし対照は本節のk3/+4と最終latentまで一致しました。
+
+mask収集元は編集量・破綻へ大きく影響しましたが、Sliderありmaskだけの採用は安定しませんでした。対象maskの和集合では目立つ欠損が解消し、重なりで頭身・体格の変化が強まりましたが、男性の完全保持や全身縮小の問題を解決したとは判断していません。公園の顔中心付近の穴は主にprotectedへ分類され、同じblock 18でもstep 1から2で役割の優勢が反転します。blockだけでなくstep・head集約・prototype競合の切り分けが必要です。step 3は未検証です。
+
+## 続行追試：step 1/2/3 × block 14〜27
+
+2026-10-12（日本時間）、中断していたstep/block sweepを起動中のComfyUIで完了しました。[結果と統制](attention-step-block-sweep.md)、[168条件・11編集画像のレポート](attention-step-block-sweep-results/20261011T170454Z/report.html)を参照。実測188 NFE。step1/block18は両構図で有望ですが、公園の口・顎に継ぎ目が残り完全解決ではありません。block27は高信頼seed不足、重なりblock22は残像・人物増殖があり、遅いblockへの移動を解決策とは判定していません。上の「step3未検証」は前回試行時点の記録です。

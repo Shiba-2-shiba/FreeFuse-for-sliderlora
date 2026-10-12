@@ -1,6 +1,12 @@
 # 検証記録
 
-2026-10-09 / **U4・U5・U6評価完了とチャット引き継ぎ**：ユーザー指定でU2の旧commit回帰を完了条件から除外した。T1〜T7とU1/U3/U4/U6は完了、U5は指定比較表の評価・採用判定を完了した。autoの汎用画質は未達のまま。ユーザーがチャット終了を希望したため新しい生成・実装修正を追加せず、[引き継ぎノート](../.omx/notepad.md)と最新plan/progressを残した。
+2026-10-12 / **顔mask欠如・三人化の追加検証まで反映**：収集元比較、step1〜3 / block1〜27 sweep、同一Mix入力のbase/Slider観測、semantic seed再分類、Dとの和集合の分離、base-only初期化とseed固定の比較を実装・検証した。[検討経緯と結果](attention-step-block-sweep.md)、[最新画像とmask](attention-step-block-sweep-results/20261012T033137Z-seed-bootstrap/visual-summary-v2/index.html)、[詳細レポート](attention-step-block-sweep-results/20261012T033137Z-seed-bootstrap/report-r2.html)へ集約している。
+
+顔と二人構図は診断2構図およびbase-only初期化A-R0のholdout4条件で維持された。全体ON独立軌道には三人化が既にあり、同じMix入力上での観測と区別した。顔内部の固定保護1セルを診断解除すると公園の疎なbase顔label被覆は8/9から9/9になったが、完成顔の追加画質改善は未確認。重なりseed123の旧身体状残片はG2不合格、接触境界の保護G3は判定不能。背景漏れ・四肢欠落・全身改善の未確定が残るため、R1〜R4の新候補選定および既定autoへの採用は行っていない。
+
+最新試行は284 diffusion NFE、17完成画像、80 raw bank、17 trace bundleを監査。コミット前にCPU回帰を再実行し、780 passed・2 skipped・85 subtests passedを確認した。skipはWindowsで作れない不正filename条件。lint/typecheckの設定はない。追加のGPU生成は行わず、保存済み成果物を使って確認する。[共有資料とローカル生データの保存範囲](validation-artifacts.md)も参照。以下の記録は各日付時点の評価であり、当時の「未検証」や「未解決」は後続結果と併せて読む。
+
+2026-10-09 / **U4・U5・U6評価完了とチャット引き継ぎ**：ユーザー指定でU2の旧commit回帰を完了条件から除外した。T1〜T7とU1/U3/U4/U6は完了、U5は指定比較表の評価・採用判定を完了した。autoの汎用画質は未達のまま。ユーザーがチャット終了を希望したため新しい生成・実装修正を追加せず、ローカルの引き継ぎノートと[plan/progress](../.omx/plans/2026-10-09-prediction-mix-adoption.progress.md)を残した。
 
 - **U4完了**：new manual、new auto、旧mix halfをComfyUIユーザーフォルダーの`workflows/codex_u4_20261009/{manual,auto,legacy}.json`へ別名保存。専用Edgeを終了・再起動し、保存JSON構造・widget値・linkが一致することを確認。UIの`app.queuePrompt`から3条件を再実行し、キャッシュではなくSamplerを評価してすべて成功した。バックエンドの再起動は行っていない。証拠`test-results/u456-20261009/u4-summary.json`。
 - **U5評価完了**：元prompt、正面スタジオ、腰手/腕組み、公園、それぞれseed42/444444、強度2/4、none/all/targetで48生成成功。16部分run全128stepの予測選択は完全一致。全8prompt/seed群で参照partition一致、none強度2/4の全step入力・予測・最終latent・RGBも完全一致。生protected mapは公園seed42のall強度4に限り120要素・最大4.0745362639427185e-10の差を確認した。二値maskは同一だが、生mapを完全一致とは報告しない。事後の許容値で合格へ変更せず測定を保持した。証拠`u5-summary.json`、`u5-raw-map-difference-investigation.json`、比較図8枚、`u5-visual-observations.json`。

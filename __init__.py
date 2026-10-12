@@ -14,12 +14,19 @@ async def comfy_entrypoint():
                         Krea2SliderFuseMaskPreview, Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave,
                         Krea2SliderFusePredictionMixSampler, Krea2SliderFuseExperimentalMaskCollect,
                         Krea2SliderFuseExperimentalMaskSelect, Krea2SliderFuseExperimentalMaskSave)
+    from .sweep_nodes import (Krea2SliderFuseAttentionSweepCollect, Krea2SliderFuseAttentionSweepSelect,
+                             Krea2SliderFuseAttentionSweepSave)
+    from .probe_nodes import (Krea2SliderFuseTraceDecode,Krea2SliderFuseObservedPredictionMix,
+                             Krea2SliderFuseCrossReplay,Krea2SliderFusePairedProbeSave,Krea2SliderFuseRetainedMask)
 
     class SliderFreeFuseExtension(ComfyExtension):
         async def get_node_list(self):
             return [Krea2SliderFuseEncode, Krea2SliderFuseSubjects, Krea2SliderFuseSampler, Krea2SliderFuseMaskPreview,
                     Krea2SliderFuseDiagnosticSampler, Krea2SliderFuseDiagnosticSave, Krea2SliderFusePredictionMixSampler,
                     Krea2SliderFuseExperimentalMaskCollect, Krea2SliderFuseExperimentalMaskSelect,
-                    Krea2SliderFuseExperimentalMaskSave]
+                    Krea2SliderFuseExperimentalMaskSave, Krea2SliderFuseAttentionSweepCollect,
+                    Krea2SliderFuseAttentionSweepSelect, Krea2SliderFuseAttentionSweepSave,
+                    Krea2SliderFuseTraceDecode,Krea2SliderFuseObservedPredictionMix,
+                    Krea2SliderFuseCrossReplay,Krea2SliderFusePairedProbeSave,Krea2SliderFuseRetainedMask]
 
     return SliderFreeFuseExtension()

@@ -10,9 +10,19 @@ Krea2用のComfyUI V3カスタムノードです。男女2人を一つの場面�
 
 U2はユーザー指定で対象外、U4の永続保存・UI再起動後再実行、U5の指定48条件評価、U6の標準KSampler復帰確認は完了しました。姿勢指定の頭部crop/増殖、公園の服と顔の融合などauto画質の未達は残しています。[最新評価と引き継ぎ](docs/validation.md)から状況と証拠を確認できます。
 
-### 次の最小比較（背景あり k1/k3・同一 mask の +2/+4）
+## 最新の検討結果（2026-10-12）
 
-[手順・配布 workflow・評価記録](docs/attention-ablation.md)。park seed444444 と強い重なり seed42 を、完成 OFF の追加なしで比較します。自己完結 cold は合計104 NFE予定。保存済み k3/+4 を厳密に照合できる場合だけ追加68 NFEの再利用経路を使えます。実行量・画質の実証値ではありません。
+顔mask欠如と三人化は、検証した条件ではある程度改善しています。[検討経緯と結果](docs/attention-step-block-sweep.md)、[最新の画像・mask一覧](docs/attention-step-block-sweep-results/20261012T033137Z-seed-bootstrap/visual-summary-v2/index.html)、[17画像の詳細レポート](docs/attention-step-block-sweep-results/20261012T033137Z-seed-bootstrap/report-r2.html)を参照してください。上のauto失敗例は以前の評価で、今回の改善は追加の実験経路で確認しました。
+
+- 顔の欠如は、顔の情報不足だけでなく収集時期・prototype競合・保護側への誤割当と整合しました。同じPrediction Mix入力でbase/Sliderを観測し、前半の人物対応で後半の領域を再分類すると、診断2構図とholdout4条件で完成顔を維持しました。公園の固定保護による顔内部1セルの欠落も特定・診断解除しましたが、自動解除は導入していません。
+- 三人化は独立した全体Slider ON軌道のstep3入力に既に存在しました。Mix軌道とbase-only初期化を用いたA-R0では、holdout4条件にも独立した第三の頭部・人物は見当たりませんでした。
+- 重なりseed123の旧身体状残片、背景への選択漏れ、四肢のmask欠落は残っています。R1〜R4は非悪化条件を満たさず新しい候補は未選定です。既定autoへの採用・汎化・全身改善は未確認で、manual推奨を継続します。部位labelと補助目視は人の承認ではありません。
+
+最新試行は284 diffusion NFE、17完成画像、80 raw bank、17 trace bundleを検証しました。実装は実験用sweep・同一入力のbranch観測・trace復号・保存mask読込・offline scoringとして収めています。[保存範囲と再検証](docs/validation-artifacts.md)に、Gitで共有する比較資料とローカルの生tensorの扱いを記載しています。
+
+### 検討の出発点（背景あり k1/k3・同一 mask の +2/+4、実施済み）
+
+[手順・配布 workflow・評価記録](docs/attention-ablation.md)。park seed444444 と強い重なり seed42のcold比較は、2ケース・6画像、実測104 NFEで完了しています。その後、収集元比較、step/block sweep、同一Mix入力での再分類、seed固定・base-only初期化へ検証を進めました。
 
 ## 旧版の検討経緯
 
@@ -28,7 +38,7 @@ U2はユーザー指定で対象外、U4の永続保存・UI再起動後再実�
 
 その後、`woman/man`、top_k_ratio0.2、temperature10000、既知のSlider強度4で、seed42のマスク改善と効果が報告されました。[候補設定と同条件の強度0/4比較](docs/auto-mask-candidate.md)を保存しています。単一例なので既定値は変更していません。
 
-**実験版です。** ユーザーの実機からmanual/auto生成結果を受領し、manualの効果とautoの顔mask欠落を確認しました。同じLoRA・強度による統制比較、自動マスクの品質合格、ConvRot INT8のprobe結果は未確認です。CPUの数値・状態・接続テストと公式ソース照合を行っています。男性への直接LoRA差分は0にしますが、共有attentionを通じた間接的な属性変化や、領域外の画素変化は起こり得ます。
+**初期実験版の記録:** ユーザーの実機からmanual/auto生成結果を受領し、manualの効果とautoの顔mask欠落を確認しました。当時は統制比較・自動mask品質・ConvRot INT8 probeが未確認でした。後続の実機検証は[検証記録](docs/validation.md)と上の最新結果を参照してください。共有attentionを通じた間接的な属性変化や、領域外の画素変化は起こり得ます。
 
 ## 導入
 
@@ -127,7 +137,7 @@ python -B -m pytest -q -p no:cacheprovider tests
 
 通常suiteはComfyUI境界のtest doubleを含むCPU検証です。`tests/native_checks.py`は専用validatorだけで実行され、test doubleによる代用はありません。
 
-開発環境: Python3.10.11、torch2.10.0+cpu、CUDAなし。公式ComfyUIソースの検証用checkout `b26625f23a888367b92153b28d93e159e83e677b`では、既存`comfy_aimdo.storage`不足と`comfy_kitchen`のConvRot API版差によりimportが停止しました。依存は変更していません。ネイティブ6件、実INT8 probe、UI上の保存/再読込、実画像品質は未検証です。状態は[検証記録](docs/validation.md)に記載します。
+初期開発環境はPython3.10.11、torch2.10.0+cpuでした。当時の検証用ComfyUI checkout `b26625f23a888367b92153b28d93e159e83e677b`は依存APIの差でimportが停止しました。その後の実機でnative12件・実INT8 probe・UI保存/再読込を確認しています。[検証記録](docs/validation.md)に条件と限界を記載しています。2026-10-12のコミット前CPU回帰は780 passed・2 Windows platform skips・85 subtests passedでした。
 
 実装は[計画書](.omx/plans/2026-10-07-krea2-female-only-slider-freefuse.md)に対応します。FreeFuseのアルゴリズム、Anima版の二段階生成・復帰設計を参考にしています。Apache-2.0の出典・変更点は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
 

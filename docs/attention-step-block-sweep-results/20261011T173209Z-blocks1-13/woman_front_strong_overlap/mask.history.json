@@ -1,0 +1,290 @@
+{
+  "prompt": [
+    5,
+    "5194592b-fc0e-480b-b604-4d594a46ee5f",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "3": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_bf16.safetensors",
+          "type": "krea2",
+          "device": "default"
+        },
+        "_meta": {
+          "title": "Qwen3-VL CLIP, Krea2 type"
+        }
+      },
+      "4": {
+        "class_type": "Krea2SliderFuseEncode",
+        "inputs": {
+          "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+          "clip": [
+            "3",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared scene: two fully clothed adults"
+        }
+      },
+      "5": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared zero negative"
+        }
+      },
+      "6": {
+        "class_type": "Krea2SliderFuseSubjects",
+        "inputs": {
+          "target_phrase": "woman",
+          "protected_phrase": "man",
+          "target_occurrence": 0,
+          "protected_occurrence": 0,
+          "prompt_info": [
+            "4",
+            1
+          ]
+        },
+        "_meta": {
+          "title": "Collection subjects: woman / man"
+        }
+      },
+      "7": {
+        "class_type": "EmptySD3LatentImage",
+        "inputs": {
+          "width": 1024,
+          "height": 1024,
+          "batch_size": 1
+        },
+        "_meta": {
+          "title": "Shared EMPTY latent, never collector output"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "10": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+          "strength_model": 4.0
+        },
+        "_meta": {
+          "title": "Slider +4 for ON collection only"
+        }
+      },
+      "8": {
+        "class_type": "Krea2SliderFuseAttentionSweepCollect",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "5",
+            0
+          ],
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "subjects": [
+            "6",
+            0
+          ],
+          "latent": [
+            "7",
+            0
+          ],
+          "seed": 42,
+          "steps": 8,
+          "trial_id": 1791738306,
+          "config_json": "{\"collect_step\": 3, \"collect_block\": 18, \"selected_steps\": [1, 2, 3], \"selected_blocks\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 18], \"top_k_ratio\": 0.2, \"temperature\": 10000.0, \"prototypes\": 3, \"seed_confidence\": 0.65, \"seed_margin\": 0.15, \"mask_confidence\": 0.55, \"mask_margin\": 0.1, \"context_temperature\": 1.0, \"feature_temperature\": 0.15, \"propagation_iterations\": 1, \"propagation_heads\": [0], \"affinity_chunk_size\": 128, \"affinity_threshold\": 0.05, \"propagation_strength\": 0.5}",
+          "background_phrase": "pale gray concrete wall",
+          "background_occurrence": 0,
+          "audit_tensors": true
+        },
+        "_meta": {
+          "title": "off: shared three-forward sweep"
+        }
+      },
+      "18": {
+        "class_type": "Krea2SliderFuseAttentionSweepSave",
+        "inputs": {
+          "sweep": [
+            "8",
+            0
+          ],
+          "filename_prefix": "sw_20261011T173209Z-blocks1-13_woman_front_strong_overlap_mask_off"
+        },
+        "_meta": {
+          "title": "off: all 42 masks and head evidence"
+        }
+      },
+      "11": {
+        "class_type": "Krea2SliderFuseAttentionSweepCollect",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "5",
+            0
+          ],
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "subjects": [
+            "6",
+            0
+          ],
+          "latent": [
+            "7",
+            0
+          ],
+          "seed": 42,
+          "steps": 8,
+          "trial_id": 1791738306,
+          "config_json": "{\"collect_step\": 3, \"collect_block\": 18, \"selected_steps\": [1, 2, 3], \"selected_blocks\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 18], \"top_k_ratio\": 0.2, \"temperature\": 10000.0, \"prototypes\": 3, \"seed_confidence\": 0.65, \"seed_margin\": 0.15, \"mask_confidence\": 0.55, \"mask_margin\": 0.1, \"context_temperature\": 1.0, \"feature_temperature\": 0.15, \"propagation_iterations\": 1, \"propagation_heads\": [0], \"affinity_chunk_size\": 128, \"affinity_threshold\": 0.05, \"propagation_strength\": 0.5}",
+          "background_phrase": "pale gray concrete wall",
+          "background_occurrence": 0,
+          "audit_tensors": true
+        },
+        "_meta": {
+          "title": "on: shared three-forward sweep"
+        }
+      },
+      "19": {
+        "class_type": "Krea2SliderFuseAttentionSweepSave",
+        "inputs": {
+          "sweep": [
+            "11",
+            0
+          ],
+          "filename_prefix": "sw_20261011T173209Z-blocks1-13_woman_front_strong_overlap_mask_on"
+        },
+        "_meta": {
+          "title": "on: all 42 masks and head evidence"
+        }
+      }
+    },
+    {
+      "create_time": 1791740018424
+    },
+    [
+      "19",
+      "18"
+    ]
+  ],
+  "outputs": {
+    "19": {
+      "text": [
+        "{\"bundle\": \"sw_20261011T173209Z-blocks1-13_woman_front_strong_overlap_mask_on_8632d57dca9e4107b39107d6a60daffb\", \"manifest\": \"sw_20261011T173209Z-blocks1-13_woman_front_strong_overlap_mask_on_8632d57dca9e4107b39107d6a60daffb/manifest.json\", \"tap_count\": 42}"
+      ]
+    },
+    "18": {
+      "text": [
+        "{\"bundle\": \"sw_20261011T173209Z-blocks1-13_woman_front_strong_overlap_mask_off_9e96dc17154741c1bfef98fcf7c1bef9\", \"manifest\": \"sw_20261011T173209Z-blocks1-13_woman_front_strong_overlap_mask_off_9e96dc17154741c1bfef98fcf7c1bef9/manifest.json\", \"tap_count\": 42}"
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "5194592b-fc0e-480b-b604-4d594a46ee5f",
+          "timestamp": 1791740018424
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1",
+            "2",
+            "3",
+            "7",
+            "9",
+            "10"
+          ],
+          "prompt_id": "5194592b-fc0e-480b-b604-4d594a46ee5f",
+          "timestamp": 1791740018424
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "5194592b-fc0e-480b-b604-4d594a46ee5f",
+          "timestamp": 1791740086862
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "19": {
+      "node_id": "19",
+      "display_node": "19",
+      "parent_node": null,
+      "real_node_id": "19"
+    },
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

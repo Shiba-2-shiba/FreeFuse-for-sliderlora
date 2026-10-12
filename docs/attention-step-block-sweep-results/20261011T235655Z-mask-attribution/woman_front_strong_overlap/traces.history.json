@@ -1,0 +1,542 @@
+{
+  "prompt": [
+    5,
+    "09044f7e-fbf0-4f08-ad2b-a11c041fe7ce",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "100": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\control_D\\control_D_s42_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D"
+        },
+        "_meta": {
+          "title": "D retained predictions"
+        }
+      },
+      "101": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_S0\\factorial_S0_s42_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0"
+        },
+        "_meta": {
+          "title": "S0 retained predictions"
+        }
+      },
+      "102": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_S1\\factorial_S1_s42_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1"
+        },
+        "_meta": {
+          "title": "S1 retained predictions"
+        }
+      },
+      "103": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_C0\\factorial_C0_s42_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0"
+        },
+        "_meta": {
+          "title": "C0 retained predictions"
+        }
+      },
+      "104": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_C1\\factorial_C1_s42_00001_.json",
+          "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1"
+        },
+        "_meta": {
+          "title": "C1 retained predictions"
+        }
+      }
+    },
+    {
+      "create_time": 1791763859563
+    },
+    [
+      "102",
+      "101",
+      "100",
+      "104",
+      "103"
+    ]
+  ],
+  "outputs": {
+    "102": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1_4e1c5e6b949c4e2e8b5e8c5258796d67\\manifest.json"
+      ]
+    },
+    "101": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0_18ebd9b7643d4ed18ff68c676e082d75\\manifest.json"
+      ]
+    },
+    "100": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D_58a198b4d1e64899a86d48b7fe578f54\\manifest.json"
+      ]
+    },
+    "104": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1_b1b16f5a27ce4fd0844a39cefa967f8e\\manifest.json"
+      ]
+    },
+    "103": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0_71a24e847b594bf1951d9dc6acce3374\\manifest.json"
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "09044f7e-fbf0-4f08-ad2b-a11c041fe7ce",
+          "timestamp": 1791763859563
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1",
+            "2",
+            "9"
+          ],
+          "prompt_id": "09044f7e-fbf0-4f08-ad2b-a11c041fe7ce",
+          "timestamp": 1791763859960
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "09044f7e-fbf0-4f08-ad2b-a11c041fe7ce",
+          "timestamp": 1791763888699
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "102": {
+      "node_id": "102",
+      "display_node": "102",
+      "parent_node": null,
+      "real_node_id": "102"
+    },
+    "101": {
+      "node_id": "101",
+      "display_node": "101",
+      "parent_node": null,
+      "real_node_id": "101"
+    },
+    "100": {
+      "node_id": "100",
+      "display_node": "100",
+      "parent_node": null,
+      "real_node_id": "100"
+    },
+    "104": {
+      "node_id": "104",
+      "display_node": "104",
+      "parent_node": null,
+      "real_node_id": "104"
+    },
+    "103": {
+      "node_id": "103",
+      "display_node": "103",
+      "parent_node": null,
+      "real_node_id": "103"
+    }
+  }
+}

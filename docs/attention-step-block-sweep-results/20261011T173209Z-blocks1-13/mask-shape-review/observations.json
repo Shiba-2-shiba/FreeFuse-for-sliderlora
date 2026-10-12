@@ -1,0 +1,29 @@
+{
+  "source": "User observation checked against retained raw target/protected masks and same-step OFF/ON comparison",
+  "human_quality_approval": "not_evaluated; user observation is not an approval",
+  "conclusion": "顔中心の旧70セル被覆だけではmaskの採用判断はできない。前半blockの粗い範囲、後半step3の手足・輪郭の細かさ、対象/保護の割当、二人構図の成立を別々に評価する。",
+  "cases": {
+    "woman_front_strong_overlap": {
+      "user_observation": "ON step3/block26のmaskは3人いるように見え、woman frontのmask生成がうまくいっていない。",
+      "assistant_verified": "ON step3/block26は中央の対象頭部状領域と、その左右の保護頭部状領域からなる三頭のような配置。ON step3/block18・23にも同様の三頭状配置が見える。同じstep3/block18のOFFは左の対象・右の保護の二人状配置で、ON側で配置または役割分離が崩れていることと整合する。",
+      "interpretation": "二人の人物領域・役割分離として不適合。保存アルゴリズムstatus=okはmaskを計算できたという意味で、この意味的な不適合を検出していない。",
+      "geometry_counterexample": "ON step3/block26の対象は645セル、最大連結成分627セル（97.21%）。保護は489セル・19成分で最大209セル（42.74%）。大きな対象の連結性だけでは二人構図の成立や対象/保護の正しさを証明できない。",
+      "unknown": "maskだけでは収集途中の画像が既に三人なのか、同じ人物の特徴が対象/保護へ分割されているのか確定できない。collectorは完成参照RGBを保存していない。"
+    },
+    "park": {
+      "user_observation": "前半blockはざっくりしたmask。後半blockでは対象の顔が保護maskに入るが、step3は手足を含め人物にかなり限定したmask。",
+      "assistant_verified": "ON step3/block7・10は広い人物領域を取り、輪郭周囲に細かい散在成分が多い。ON step3/block18・23・26は手足や人物輪郭の構造がより明瞭だが、対象の顔中心に相当する頭部内の領域が保護側へ分類される。block26では対象の胴・脚もかなり欠落し、不確定側が多くなる。",
+      "interpretation": "前半は顔被覆が高い一方、粗い境界・背景側の散在を伴う。後半は輪郭が詳しい一方、顔の誤割当や身体の欠落が残る。69/70という固定ROI被覆だけで前半を最良と判断しない。",
+      "generation_mask_control": "既存編集ではONのraw protectedそのものを使用せず、固定OFF step2/block18 protectedを使用する。ただしraw ON targetから既に落ちた顔領域は、保護maskをOFFへ差し替えても戻らない。"
+    }
+  },
+  "evaluation_axes": [
+    "二人構図と余分な頭部・人物状領域",
+    "対象と保護の人物対応",
+    "顔・胴・手足の被覆",
+    "人物輪郭の細かさと身体内の欠落",
+    "背景への散在・漏れ",
+    "編集後の顔・体格・残像・保護人物の保持"
+  ],
+  "next_discriminating_probe": "同一seed・同一sigmaのSliderなし/あり収集途中のRGBを照合し、分類前の構図と分類後の役割割当を切り分ける。公園では後半step3の輪郭と顔の誤割当を別々に調べる。単純に早い/遅いblockを選ぶだけでは両方を解決しない。"
+}

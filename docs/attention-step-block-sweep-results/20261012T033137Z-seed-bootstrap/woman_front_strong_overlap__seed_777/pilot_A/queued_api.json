@@ -1,0 +1,224 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "3": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Qwen3-VL CLIP, Krea2 type"
+      }
+    },
+    "4": {
+      "class_type": "Krea2SliderFuseEncode",
+      "inputs": {
+        "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+        "clip": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared scene: two fully clothed adults"
+      }
+    },
+    "5": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "4",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared zero negative"
+      }
+    },
+    "7": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "Shared EMPTY latent, never collector output"
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "60": {
+      "class_type": "Krea2SliderFuseRetainedMask",
+      "inputs": {
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261012T033137Z-seed-bootstrap\\woman_front_strong_overlap__seed_777\\bootstrap\\mask\\manifest.json"
+      },
+      "_meta": {
+        "title": "Explicit initial masks"
+      }
+    },
+    "6": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "60",
+          0
+        ],
+        "protected_mask": [
+          "60",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "Initial paired routing"
+      }
+    },
+    "100": {
+      "class_type": "Krea2SliderFuseObservedPredictionMix",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "6",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 777,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791776022,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0,
+        "background_phrase": "pale gray concrete wall"
+      },
+      "_meta": {
+        "title": "Passive observed Mix"
+      }
+    },
+    "101": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "100",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Pilot RGB"
+      }
+    },
+    "102": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "101",
+          0
+        ],
+        "latent": [
+          "100",
+          0
+        ],
+        "diagnostics": [
+          "100",
+          2
+        ],
+        "filename_prefix": "seed_bootstrap/sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_pilot_A/pilot"
+      },
+      "_meta": {
+        "title": "Pilot audit"
+      }
+    },
+    "105": {
+      "class_type": "Krea2SliderFusePairedProbeSave",
+      "inputs": {
+        "probe": [
+          "100",
+          3
+        ],
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "filename_prefix": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_pilot_A"
+      },
+      "_meta": {
+        "title": "Retain raw paired observations and RGB"
+      }
+    }
+  }
+}

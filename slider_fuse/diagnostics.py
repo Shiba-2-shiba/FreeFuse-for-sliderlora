@@ -13,7 +13,8 @@ import uuid
 
 import torch
 
-DIAGNOSTIC_SAMPLERS = ("Krea2SliderFuseDiagnosticSampler", "Krea2SliderFusePredictionMixSampler")
+DIAGNOSTIC_SAMPLERS = ("Krea2SliderFuseDiagnosticSampler", "Krea2SliderFusePredictionMixSampler",
+                      "Krea2SliderFuseObservedPredictionMix")
 
 
 @dataclass
@@ -538,7 +539,7 @@ def diagnostic_provenance(prompt, save_node_id, report):
             raise ValueError("Images, latent and diagnostics must use the same Sampler")
         vae_id, _ = linked_node(prompt, decode_id, "vae", "VAELoader")
         generation = generation_config(prompt, sampler_id, vae_id)
-        mix = prompt[sampler_id]["class_type"] == "Krea2SliderFusePredictionMixSampler"
+        mix = prompt[sampler_id]["class_type"] in ("Krea2SliderFusePredictionMixSampler", "Krea2SliderFuseObservedPredictionMix")
         if mix and report["backend"] != "prediction_mix":
             raise ValueError("Prediction mix backend mismatch")
         if report.get("diagnostic_schema_version") == 3:

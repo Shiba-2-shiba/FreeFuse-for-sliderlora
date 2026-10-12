@@ -1,0 +1,999 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "3": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Qwen3-VL CLIP, Krea2 type"
+      }
+    },
+    "4": {
+      "class_type": "Krea2SliderFuseEncode",
+      "inputs": {
+        "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+        "clip": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared scene: two fully clothed adults"
+      }
+    },
+    "5": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "4",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared zero negative"
+      }
+    },
+    "6": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "Collection subjects: woman / man"
+      }
+    },
+    "7": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "Shared EMPTY latent, never collector output"
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "10": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "strength_model": 4.0
+      },
+      "_meta": {
+        "title": "Slider +4 ONLY for ON collection"
+      }
+    },
+    "8": {
+      "class_type": "Krea2SliderFuseExperimentalMaskCollect",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "6",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "seed": 444444,
+        "steps": 8,
+        "trial_id": 1791715576,
+        "config_json": "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 3,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "background_phrase": "park path",
+        "background_occurrence": 0,
+        "audit_tensors": true
+      },
+      "_meta": {
+        "title": "off: same k3 algorithm, two forwards, selected model weights"
+      }
+    },
+    "18": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSave",
+      "inputs": {
+        "suite": [
+          "8",
+          0
+        ],
+        "filename_prefix": "ms_20261011T104616Z_park_off"
+      },
+      "_meta": {
+        "title": "Retain off raw evidence and seven candidate statuses"
+      }
+    },
+    "12": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSelect",
+      "inputs": {
+        "suite": [
+          "8",
+          0
+        ],
+        "variant": "multi_proto_bg"
+      },
+      "_meta": {
+        "title": "Select off k3 background-on mask"
+      }
+    },
+    "13": {
+      "class_type": "Krea2SliderFuseMaskPreview",
+      "inputs": {
+        "mask_bank": [
+          "12",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "off partition"
+      }
+    },
+    "11": {
+      "class_type": "Krea2SliderFuseExperimentalMaskCollect",
+      "inputs": {
+        "model": [
+          "10",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "6",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "seed": 444444,
+        "steps": 8,
+        "trial_id": 1791715576,
+        "config_json": "{\n  \"collect_step\": 2,\n  \"collect_block\": 18,\n  \"selected_steps\": [\n    1,\n    2\n  ],\n  \"selected_blocks\": [\n    16,\n    18\n  ],\n  \"top_k_ratio\": 0.2,\n  \"temperature\": 10000.0,\n  \"prototypes\": 3,\n  \"seed_confidence\": 0.65,\n  \"seed_margin\": 0.15,\n  \"mask_confidence\": 0.55,\n  \"mask_margin\": 0.1,\n  \"context_temperature\": 1.0,\n  \"feature_temperature\": 0.15,\n  \"propagation_iterations\": 1,\n  \"propagation_heads\": [\n    0\n  ],\n  \"affinity_chunk_size\": 128,\n  \"affinity_threshold\": 0.05,\n  \"propagation_strength\": 0.5\n}",
+        "background_phrase": "park path",
+        "background_occurrence": 0,
+        "audit_tensors": true
+      },
+      "_meta": {
+        "title": "on: same k3 algorithm, two forwards, selected model weights"
+      }
+    },
+    "19": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSave",
+      "inputs": {
+        "suite": [
+          "11",
+          0
+        ],
+        "filename_prefix": "ms_20261011T104616Z_park_on"
+      },
+      "_meta": {
+        "title": "Retain on raw evidence and seven candidate statuses"
+      }
+    },
+    "14": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSelect",
+      "inputs": {
+        "suite": [
+          "11",
+          0
+        ],
+        "variant": "multi_proto_bg"
+      },
+      "_meta": {
+        "title": "Select on k3 background-on mask"
+      }
+    },
+    "15": {
+      "class_type": "Krea2SliderFuseMaskPreview",
+      "inputs": {
+        "mask_bank": [
+          "14",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "on partition"
+      }
+    },
+    "40": {
+      "class_type": "MaskComposite",
+      "inputs": {
+        "destination": [
+          "15",
+          0
+        ],
+        "source": [
+          "13",
+          1
+        ],
+        "x": 0,
+        "y": 0,
+        "operation": "subtract"
+      },
+      "_meta": {
+        "title": "C: ON target minus OFF protected"
+      }
+    },
+    "45": {
+      "class_type": "MaskComposite",
+      "inputs": {
+        "destination": [
+          "13",
+          0
+        ],
+        "source": [
+          "15",
+          0
+        ],
+        "x": 0,
+        "y": 0,
+        "operation": "add"
+      },
+      "_meta": {
+        "title": "D: binary clamped OFF/ON target union"
+      }
+    },
+    "46": {
+      "class_type": "MaskComposite",
+      "inputs": {
+        "destination": [
+          "45",
+          0
+        ],
+        "source": [
+          "13",
+          1
+        ],
+        "x": 0,
+        "y": 0,
+        "operation": "subtract"
+      },
+      "_meta": {
+        "title": "D: target union minus OFF protected"
+      }
+    },
+    "51": {
+      "class_type": "MaskComposite",
+      "inputs": {
+        "destination": [
+          "15",
+          0
+        ],
+        "source": [
+          "13",
+          1
+        ],
+        "x": 0,
+        "y": 0,
+        "operation": "multiply"
+      },
+      "_meta": {
+        "title": "ON target / OFF protected collision"
+      }
+    },
+    "52": {
+      "class_type": "MaskComposite",
+      "inputs": {
+        "destination": [
+          "13",
+          0
+        ],
+        "source": [
+          "15",
+          0
+        ],
+        "x": 0,
+        "y": 0,
+        "operation": "subtract"
+      },
+      "_meta": {
+        "title": "Old OFF-only target region"
+      }
+    },
+    "20": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "13",
+          0
+        ],
+        "protected_mask": [
+          "13",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "A_off subjects"
+      }
+    },
+    "21": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "20",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791715576,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "A_off +4 / all radii zero"
+      }
+    },
+    "22": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "21",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "A_off"
+      }
+    },
+    "23": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "22",
+          0
+        ],
+        "latent": [
+          "21",
+          0
+        ],
+        "diagnostics": [
+          "21",
+          2
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/A_off"
+      },
+      "_meta": {
+        "title": "A_off full audit bundle"
+      }
+    },
+    "30": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "15",
+          0
+        ],
+        "protected_mask": [
+          "15",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "B_on subjects"
+      }
+    },
+    "31": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "30",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791715576,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "B_on +4 / all radii zero"
+      }
+    },
+    "32": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "31",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "B_on"
+      }
+    },
+    "33": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "32",
+          0
+        ],
+        "latent": [
+          "31",
+          0
+        ],
+        "diagnostics": [
+          "31",
+          2
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/B_on"
+      },
+      "_meta": {
+        "title": "B_on full audit bundle"
+      }
+    },
+    "41": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "40",
+          0
+        ],
+        "protected_mask": [
+          "13",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "C_on_base_protected subjects"
+      }
+    },
+    "42": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "41",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791715576,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "C_on_base_protected +4 / all radii zero"
+      }
+    },
+    "43": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "42",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "C_on_base_protected"
+      }
+    },
+    "44": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "43",
+          0
+        ],
+        "latent": [
+          "42",
+          0
+        ],
+        "diagnostics": [
+          "42",
+          2
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/C_on_base_protected"
+      },
+      "_meta": {
+        "title": "C_on_base_protected full audit bundle"
+      }
+    },
+    "47": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "46",
+          0
+        ],
+        "protected_mask": [
+          "13",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "D_union_base_protected subjects"
+      }
+    },
+    "48": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "47",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "strength": 4.0,
+        "trial_id": 1791715576,
+        "mix_scope": "target_mask",
+        "diagnostic_level": "audit",
+        "mask_mode": "manual",
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      },
+      "_meta": {
+        "title": "D_union_base_protected +4 / all radii zero"
+      }
+    },
+    "49": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "48",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "D_union_base_protected"
+      }
+    },
+    "50": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "49",
+          0
+        ],
+        "latent": [
+          "48",
+          0
+        ],
+        "diagnostics": [
+          "48",
+          2
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/D_union_base_protected"
+      },
+      "_meta": {
+        "title": "D_union_base_protected full audit bundle"
+      }
+    },
+    "60": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "13",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "raw_T_off"
+      }
+    },
+    "61": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "60",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/raw_T_off"
+      },
+      "_meta": {
+        "title": "raw_T_off"
+      }
+    },
+    "62": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "13",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "raw_P_off"
+      }
+    },
+    "63": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "62",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/raw_P_off"
+      },
+      "_meta": {
+        "title": "raw_P_off"
+      }
+    },
+    "64": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "15",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "raw_T_on"
+      }
+    },
+    "65": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "64",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/raw_T_on"
+      },
+      "_meta": {
+        "title": "raw_T_on"
+      }
+    },
+    "66": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "15",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "raw_P_on"
+      }
+    },
+    "67": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "66",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/raw_P_on"
+      },
+      "_meta": {
+        "title": "raw_P_on"
+      }
+    },
+    "68": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "40",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "C_target"
+      }
+    },
+    "69": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "68",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/C_target"
+      },
+      "_meta": {
+        "title": "C_target"
+      }
+    },
+    "70": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "46",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "D_target"
+      }
+    },
+    "71": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "70",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/D_target"
+      },
+      "_meta": {
+        "title": "D_target"
+      }
+    },
+    "72": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "51",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "conflict_T_on_P_off"
+      }
+    },
+    "73": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "72",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/conflict_T_on_P_off"
+      },
+      "_meta": {
+        "title": "conflict_T_on_P_off"
+      }
+    },
+    "74": {
+      "class_type": "MaskToImage",
+      "inputs": {
+        "mask": [
+          "52",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "old_T_off_only"
+      }
+    },
+    "75": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "74",
+          0
+        ],
+        "filename_prefix": "mask_source_compare/20261011T104616Z/park/old_T_off_only"
+      },
+      "_meta": {
+        "title": "old_T_off_only"
+      }
+    }
+  }
+}

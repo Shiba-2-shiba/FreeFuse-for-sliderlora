@@ -1,0 +1,203 @@
+<!doctype html><html lang='ja'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Attention step / block sweep</title><style>body{background:#f2f4f7;color:#192836;font:15px/1.7 system-ui;margin:0}main{max-width:1600px;margin:auto;padding:24px}article,.box{background:white;padding:18px;margin:18px 0;border-radius:8px}img{max-width:100%;height:auto}table{border-collapse:collapse;width:100%;background:white}td,th{padding:8px;border-bottom:1px solid #dde1e7;text-align:left}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid article{margin:0}.mask{max-width:240px;image-rendering:pixelated}a{color:#1766a8}@media(max-width:800px){.grid{grid-template-columns:1fr}}</style><main><h1>Attention step / block sweep：中断検証の続行結果</h1><p>起動済みComfyUI :8000 / 公園seed 444444・女性手前の重なりseed 42 / 1024×1024 / Slider +4 / Euler simple 8 steps CFG 1 / k3 multi_proto_bg / 全radius 0</p><div class='box'><strong>block 1〜13の追加検証が完了しました。</strong> <a href='../20261011T173209Z-blocks1-13/report.html'>block 1〜27の統合比較と追加mask・attentionを見る</a><p>このページは当初のblock14〜27・11編集画像の記録です。</p></div><div class='box'><strong>step 1 / block 18は両構図で有望。公園の旧70セルの抜けは0/70から49/70へ改善したが、口・顎の継ぎ目が残り、完全解決ではない。step 3や遅いblockへの単純な変更は安定した解決にならなかった。</strong><p>収集はstep 1/2/3 × block 14〜27 × LoRAなし/あり × 2構図。画像生成は事前指定block 18/22/27の成功条件だけ。各生成はON対象から固定OFF step2/block18保護を引き、同じ保護maskを使います。</p><p>168 tapを検査、11編集bundleを保存・検証。今回の実測188 NFE。中断済み試行の既知3 NFEと不明分は含めません。hash、元スコアからのmask再構成、固定保護、全stepのinside=Slider/outside=base、初回base/Slider予測の候補間一致を確認しました。</p><p>mask被覆は独立した顔labelに対する精度ではありません。補助目視はCodexの観察であり、人の承認・未見seedの汎化・未編集OFF画像への保持を証明しません。</p><p><a href='plan.json'>凍結条件</a> · <a href='continuation.json'>中断からの引継ぎ</a> · <a href='summary.json'>実行一覧</a> · <a href='verification.json'>機械検証と70セル診断</a> · <a href='assistant-visual-observations.json'>補助目視</a> · <a href='../../mask-source-comparison-results/20261011T104616Z/report.html'>前回比較</a></p></div><h2>park / seed 444444</h2><p>step1/block18はstep2/block18の大きな顔欠損を減らし、頭が大きく四肢が短い見た目になる。ただし拡大すると口・顎に白い継ぎ目が残る。step2/block22は大きな欠損が少ないが、顔位置が異なり旧ROIは2/70しか対象でないため、ROI被覆だけで画質を順位付けできない。男性の顔・眼鏡の見た目にも候補間の差がある。</p><p>6画像 / 102 NFE / 生成対象外3条件。前回ON step2/block18 partition一致：{&#x27;target&#x27;: True, &#x27;protected&#x27;: True, &#x27;background&#x27;: True}</p><details><summary>前回4経路と今回6候補の顔・首crop</summary><a href='park/face-comparison-crops.png'><img src='park/face-comparison-crops.png'></a></details><article><h3>同じ70セルの抜けを全step/blockで比較</h3><p>前回公園ON step2/block18の閉じた穴を固定座標で評価。白率や役割スコアの改善は生成画質の合格とは別です。</p><a href='park/fixed-hole-summary.png'><img src='park/fixed-hole-summary.png'></a><table><tr><th>step / block</th><th>対象 / 保護 / 背景</th><th>実効対象 / 70</th><th>Q/K対象 / 保護</th><th>対象優勢head</th></tr><tr><td>1 / 14</td><td>57 / 0 / 13</td><td>57</td><td>0.5974 / 0.2906</td><td>25 / 48</td></tr><tr><td>2 / 14</td><td>30 / 27 / 13</td><td>30</td><td>0.5757 / 0.3377</td><td>26 / 48</td></tr><tr><td>3 / 14</td><td>13 / 41 / 16</td><td>13</td><td>0.5440 / 0.3672</td><td>23 / 48</td></tr><tr><td>1 / 18</td><td>49 / 20 / 1</td><td>49</td><td>0.7115 / 0.2805</td><td>38 / 48</td></tr><tr><td>2 / 18</td><td>0 / 62 / 8</td><td>0</td><td>0.3721 / 0.6197</td><td>12 / 48</td></tr><tr><td>3 / 18</td><td>12 / 58 / 0</td><td>12</td><td>0.3830 / 0.6095</td><td>13 / 48</td></tr><tr><td>1 / 22</td><td>22 / 39 / 9</td><td>22</td><td>0.4648 / 0.4641</td><td>18 / 48</td></tr><tr><td>2 / 22</td><td>2 / 64 / 4</td><td>2</td><td>0.3470 / 0.5958</td><td>17 / 48</td></tr><tr><td>3 / 22</td><td>11 / 53 / 6</td><td>11</td><td>0.4030 / 0.5513</td><td>20 / 48</td></tr><tr><td>1 / 27</td><td>failed</td><td>failed</td><td>0.3200 / 0.3207</td><td>13 / 48</td></tr><tr><td>2 / 27</td><td>failed</td><td>failed</td><td>0.3105 / 0.4063</td><td>8 / 48</td></tr><tr><td>3 / 27</td><td>failed</td><td>failed</td><td>0.3435 / 0.3820</td><td>14 / 48</td></tr></table><p>block 14はmask観測のみで、画像生成の事前候補に含まれていません。今回の数値だけで採用しません。</p></article><div class='grid'><article><h3>step 1 / block 18</h3><a href='park/edits/on_s1_b18/on_s1_b18_s444444_00001_.png'><img src='park/edits/on_s1_b18/on_s1_b18_s444444_00001_.png'></a><p>旧条件の大きな顔欠損は減る。頭身と四肢に強い変化が見えるが、口から顎に白い混合領域・継ぎ目が残る。完全合格とはしない。男性は成人らしい外見と眼鏡を保つ見た目だが、未編集OFFへの保持は未検証。</p><p>実効対象718セル · <a href='park/edits/on_s1_b18/on_s1_b18_s444444_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='park/edits/on_s1_b18/on_s1_b18_s444444_00001__effective_mask.png'></details></article><article><h3>step 2 / block 18</h3><a href='park/edits/on_s2_b18/on_s2_b18_s444444_00001_.png'><img src='park/edits/on_s2_b18/on_s2_b18_s444444_00001_.png'></a><p>前回Cと最終latentまで同じ。対象の目・顔中心・首周囲に大きな切り欠きが残る。不適合の対照。</p><p>実効対象682セル · <a href='park/edits/on_s2_b18/on_s2_b18_s444444_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='park/edits/on_s2_b18/on_s2_b18_s444444_00001__effective_mask.png'></details></article><article><h3>step 3 / block 18</h3><a href='park/edits/on_s3_b18/on_s3_b18_s444444_00001_.png'><img src='park/edits/on_s3_b18/on_s3_b18_s444444_00001_.png'></a><p>対象の顔・目・頬が崩れ、背景が顔の一部へ食い込む。step3への移動だけでは解決しない。</p><p>実効対象601セル · <a href='park/edits/on_s3_b18/on_s3_b18_s444444_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='park/edits/on_s3_b18/on_s3_b18_s444444_00001__effective_mask.png'></details></article><article><h3>step 1 / block 22</h3><a href='park/edits/on_s1_b22/on_s1_b22_s444444_00001_.png'><img src='park/edits/on_s1_b22/on_s1_b22_s444444_00001_.png'></a><p>目は見えるが口・顎とシャツ襟が融合し、首周囲に白い切れ目がある。男性の眼鏡の見た目もblock18候補と異なる。</p><p>実効対象403セル · <a href='park/edits/on_s1_b22/on_s1_b22_s444444_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='park/edits/on_s1_b22/on_s1_b22_s444444_00001__effective_mask.png'></details></article><article><h3>step 2 / block 22</h3><a href='park/edits/on_s2_b22/on_s2_b22_s444444_00001_.png'><img src='park/edits/on_s2_b22/on_s2_b22_s444444_00001_.png'></a><p>候補中では顔の大きな切り欠きが少なく、全身も比較的連続する。口・鼻の形状と境界は不自然さが残り、全身縮小はstep1/block18ほど明瞭でない。旧ROI被覆が低いことだけで画質不良とは判定しない。</p><p>実効対象584セル · <a href='park/edits/on_s2_b22/on_s2_b22_s444444_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='park/edits/on_s2_b22/on_s2_b22_s444444_00001__effective_mask.png'></details></article><article><h3>step 3 / block 22</h3><a href='park/edits/on_s3_b22/on_s3_b22_s444444_00001_.png'><img src='park/edits/on_s3_b22/on_s3_b22_s444444_00001_.png'></a><p>頭部・顔の残存像や混合が残り、髪と目・鼻周囲が不自然。首・服の形も要確認。</p><p>実効対象704セル · <a href='park/edits/on_s3_b22/on_s3_b22_s444444_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='park/edits/on_s3_b22/on_s3_b22_s444444_00001__effective_mask.png'></details></article></div><details><summary>全42条件の対象／保護／不確定分類（OFF / ON）</summary><h3>OFF</h3><a href='park/off-routing-grid.png'><img src='park/off-routing-grid.png'></a><h3>ON</h3><a href='park/on-routing-grid.png'><img src='park/on-routing-grid.png'></a></details><details><summary>候補失敗と生成対象外</summary><pre>{
+  &quot;failed_taps&quot;: {
+    &quot;off&quot;: {
+      &quot;step_3.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_1.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_2.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    },
+    &quot;on&quot;: {
+      &quot;step_3.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_1.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_2.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    }
+  },
+  &quot;not_generated&quot;: [
+    {
+      &quot;step&quot;: 1,
+      &quot;block&quot;: 27,
+      &quot;label&quot;: &quot;on_s1_b27&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    },
+    {
+      &quot;step&quot;: 2,
+      &quot;block&quot;: 27,
+      &quot;label&quot;: &quot;on_s2_b27&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    },
+    {
+      &quot;step&quot;: 3,
+      &quot;block&quot;: 27,
+      &quot;label&quot;: &quot;on_s3_b27&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    }
+  ]
+}</pre></details><h2>woman_front_strong_overlap / seed 42</h2><p>step1/block18は対象の顔がまとまり、前回Cの髪・目・腕の欠損を減らし、前回A/Cより低い頭身・短い四肢に見える。男性は成人らしい見た目だが、顔・髪・接触する手に候補間の差が残る。block22は旧人物や服・脚の残像を増やし、step2では大きな第三人物が現れる。共通の有望候補はstep1/block18だが、公園の残存破綻があり採用確定しない。</p><p>5画像 / 86 NFE / 生成対象外4条件。前回ON step2/block18 partition一致：{&#x27;target&#x27;: True, &#x27;protected&#x27;: True, &#x27;background&#x27;: True}</p><details><summary>前回4経路の全身比較</summary><a href='woman_front_strong_overlap/prior-comparison.png'><img src='woman_front_strong_overlap/prior-comparison.png'></a></details><div class='grid'><article><h3>step 1 / block 18</h3><a href='woman_front_strong_overlap/edits/on_s1_b18/on_s1_b18_s42_00001_.png'><img src='woman_front_strong_overlap/edits/on_s1_b18/on_s1_b18_s42_00001_.png'></a><p>顔・目・髪は比較的連続し、低い頭身と短い四肢が見える。明瞭な余分な顔や頭はこのプレビューでは見当たらない。対象の曲がった腕と男性の接触する手は細部確認が必要。</p><p>実効対象1159セル · <a href='woman_front_strong_overlap/edits/on_s1_b18/on_s1_b18_s42_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='woman_front_strong_overlap/edits/on_s1_b18/on_s1_b18_s42_00001__effective_mask.png'></details></article><article><h3>step 2 / block 18</h3><a href='woman_front_strong_overlap/edits/on_s2_b18/on_s2_b18_s42_00001_.png'><img src='woman_front_strong_overlap/edits/on_s2_b18/on_s2_b18_s42_00001_.png'></a><p>前回Cと最終latentまで同じ。髪・目の外側に断片が残り、対象の腕・手首にも切り欠きがある。</p><p>実効対象1086セル · <a href='woman_front_strong_overlap/edits/on_s2_b18/on_s2_b18_s42_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='woman_front_strong_overlap/edits/on_s2_b18/on_s2_b18_s42_00001__effective_mask.png'></details></article><article><h3>step 3 / block 18</h3><a href='woman_front_strong_overlap/edits/on_s3_b18/on_s3_b18_s42_00001_.png'><img src='woman_front_strong_overlap/edits/on_s3_b18/on_s3_b18_s42_00001_.png'></a><p>顔は比較的まとまるが、対象の前腕に大きな穴・切れ目があり、左側に余分な手指状の断片が見える。</p><p>実効対象970セル · <a href='woman_front_strong_overlap/edits/on_s3_b18/on_s3_b18_s42_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='woman_front_strong_overlap/edits/on_s3_b18/on_s3_b18_s42_00001__effective_mask.png'></details></article><article><h3>step 1 / block 22</h3><a href='woman_front_strong_overlap/edits/on_s1_b22/on_s1_b22_s42_00001_.png'><img src='woman_front_strong_overlap/edits/on_s1_b22/on_s1_b22_s42_00001_.png'></a><p>頭上に余分な髪・壁状の残像、身体左側と足元に旧服・脚の残像がある。頭部の被覆改善だけでは採用できない。</p><p>実効対象1180セル · <a href='woman_front_strong_overlap/edits/on_s1_b22/on_s1_b22_s42_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='woman_front_strong_overlap/edits/on_s1_b22/on_s1_b22_s42_00001__effective_mask.png'></details></article><article><h3>step 2 / block 22</h3><a href='woman_front_strong_overlap/edits/on_s2_b22/on_s2_b22_s42_00001_.png'><img src='woman_front_strong_overlap/edits/on_s2_b22/on_s2_b22_s42_00001_.png'></a><p>背後に大きな別の顔・身体が発生し、第三人物のように増殖する。衣服・脚も重複し不適合。</p><p>実効対象1442セル · <a href='woman_front_strong_overlap/edits/on_s2_b22/on_s2_b22_s42_00001_.json'>診断JSON</a></p><details><summary>実効mask</summary><img class='mask' src='woman_front_strong_overlap/edits/on_s2_b22/on_s2_b22_s42_00001__effective_mask.png'></details></article></div><details><summary>全42条件の対象／保護／不確定分類（OFF / ON）</summary><h3>OFF</h3><a href='woman_front_strong_overlap/off-routing-grid.png'><img src='woman_front_strong_overlap/off-routing-grid.png'></a><h3>ON</h3><a href='woman_front_strong_overlap/on-routing-grid.png'><img src='woman_front_strong_overlap/on-routing-grid.png'></a></details><details><summary>候補失敗と生成対象外</summary><pre>{
+  &quot;failed_taps&quot;: {
+    &quot;off&quot;: {
+      &quot;step_3.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_2.block_25&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      },
+      &quot;step_3.block_25&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      },
+      &quot;step_1.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_1.block_26&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      },
+      &quot;step_2.block_26&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      },
+      &quot;step_2.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_3.block_26&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      }
+    },
+    &quot;on&quot;: {
+      &quot;step_3.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_1.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_1.block_25&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      },
+      &quot;step_1.block_26&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      },
+      &quot;step_2.block_27&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      },
+      &quot;step_3.block_22&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      }
+    }
+  },
+  &quot;not_generated&quot;: [
+    {
+      &quot;step&quot;: 3,
+      &quot;block&quot;: 22,
+      &quot;label&quot;: &quot;on_s3_b22&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for protected&quot;
+      }
+    },
+    {
+      &quot;step&quot;: 1,
+      &quot;block&quot;: 27,
+      &quot;label&quot;: &quot;on_s1_b27&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    },
+    {
+      &quot;step&quot;: 2,
+      &quot;block&quot;: 27,
+      &quot;label&quot;: &quot;on_s2_b27&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    },
+    {
+      &quot;step&quot;: 3,
+      &quot;block&quot;: 27,
+      &quot;label&quot;: &quot;on_s3_b27&quot;,
+      &quot;status&quot;: &quot;not_generated&quot;,
+      &quot;reason&quot;: &quot;source_candidate_failed&quot;,
+      &quot;candidate&quot;: {
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_code&quot;: &quot;empty_seed_pool&quot;,
+        &quot;error&quot;: &quot;No high-confidence context seeds for target&quot;
+      }
+    }
+  ]
+}</pre></details><article><h2>次の判断</h2><p>既定step/blockは変更しない。次の検証軸はstep1/block18を対照にしたhead集約・prototypeによる対象/保護競合の切り分け。block14/step1は57/70を対象へ戻すが、今回はmask観測だけで画像は未生成。独立した全身・保護側評価と別seedで確認し、穴を保護側へ誤分類する現象と生成後の形状変化の境界破綻を分けて扱う。</p><p>本番の既定step/blockやmask算法は変更していません。今回の結果は既存k3方式の収集時期・blockを切り分ける検証です。</p></article></main></html>

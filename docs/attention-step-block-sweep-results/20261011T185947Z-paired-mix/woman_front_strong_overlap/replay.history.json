@@ -1,0 +1,432 @@
+{
+  "prompt": [
+    5,
+    "7a3e7dfd-9d02-497d-a8bf-428d14287193",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "3": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_bf16.safetensors",
+          "type": "krea2",
+          "device": "default"
+        },
+        "_meta": {
+          "title": "Qwen3-VL CLIP, Krea2 type"
+        }
+      },
+      "4": {
+        "class_type": "Krea2SliderFuseEncode",
+        "inputs": {
+          "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+          "clip": [
+            "3",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared scene: two fully clothed adults"
+        }
+      },
+      "5": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared zero negative"
+        }
+      },
+      "7": {
+        "class_type": "EmptySD3LatentImage",
+        "inputs": {
+          "width": 1024,
+          "height": 1024,
+          "batch_size": 1
+        },
+        "_meta": {
+          "title": "Shared EMPTY latent, never collector output"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "60": {
+        "class_type": "Krea2SliderFuseRetainedMask",
+        "inputs": {
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\mask-source-comparison-results\\20261011T104616Z\\woman_front_strong_overlap\\edits\\D_union_base_protected\\D_union_base_protected_s42_00001_.json"
+        },
+        "_meta": {
+          "title": "Verified D control masks"
+        }
+      },
+      "6": {
+        "class_type": "Krea2SliderFuseSubjects",
+        "inputs": {
+          "target_phrase": "woman",
+          "protected_phrase": "man",
+          "target_occurrence": 0,
+          "protected_occurrence": 0,
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "target_mask": [
+            "60",
+            0
+          ],
+          "protected_mask": [
+            "60",
+            1
+          ]
+        },
+        "_meta": {
+          "title": "Fixed D pilot subjects"
+        }
+      },
+      "103": {
+        "class_type": "Krea2SliderFuseRetainedMask",
+        "inputs": {
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T185947Z-paired-mix\\woman_front_strong_overlap\\candidates\\anchored_s3_b18\\manifest.json"
+        },
+        "_meta": {
+          "title": "anchored_s3_b18"
+        }
+      },
+      "104": {
+        "class_type": "Krea2SliderFuseSubjects",
+        "inputs": {
+          "target_phrase": "woman",
+          "protected_phrase": "man",
+          "target_occurrence": 0,
+          "protected_occurrence": 0,
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "target_mask": [
+            "103",
+            0
+          ],
+          "protected_mask": [
+            "103",
+            1
+          ]
+        },
+        "_meta": {
+          "title": "anchored_s3_b18"
+        }
+      },
+      "100": {
+        "class_type": "Krea2SliderFusePredictionMixSampler",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "5",
+            0
+          ],
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "subjects": [
+            "104",
+            0
+          ],
+          "latent": [
+            "7",
+            0
+          ],
+          "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+          "seed": 42,
+          "steps": 8,
+          "cfg": 1.0,
+          "strength": 4.0,
+          "trial_id": 42,
+          "mix_scope": "target_mask",
+          "diagnostic_level": "audit",
+          "mask_mode": "manual",
+          "collect_step": 2,
+          "collect_block": 18,
+          "top_k_ratio": 0.2,
+          "temperature": 10000.0,
+          "fill_holes_max_area": 0,
+          "mask_dilate_radius": 0,
+          "selection_dilate_radius": 0
+        },
+        "_meta": {
+          "title": "anchored_s3_b18"
+        }
+      },
+      "101": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "100",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "anchored_s3_b18"
+        }
+      },
+      "102": {
+        "class_type": "Krea2SliderFuseDiagnosticSave",
+        "inputs": {
+          "images": [
+            "101",
+            0
+          ],
+          "latent": [
+            "100",
+            0
+          ],
+          "diagnostics": [
+            "100",
+            2
+          ],
+          "filename_prefix": "paired_mix/20261011T185947Z-paired-mix/woman_front_strong_overlap/replay_anchored_s3_b18"
+        },
+        "_meta": {
+          "title": "anchored_s3_b18"
+        }
+      },
+      "203": {
+        "class_type": "Krea2SliderFuseRetainedMask",
+        "inputs": {
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T185947Z-paired-mix\\woman_front_strong_overlap\\candidates\\anchored_s3_b23\\manifest.json"
+        },
+        "_meta": {
+          "title": "anchored_s3_b23"
+        }
+      },
+      "204": {
+        "class_type": "Krea2SliderFuseSubjects",
+        "inputs": {
+          "target_phrase": "woman",
+          "protected_phrase": "man",
+          "target_occurrence": 0,
+          "protected_occurrence": 0,
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "target_mask": [
+            "203",
+            0
+          ],
+          "protected_mask": [
+            "203",
+            1
+          ]
+        },
+        "_meta": {
+          "title": "anchored_s3_b23"
+        }
+      },
+      "200": {
+        "class_type": "Krea2SliderFusePredictionMixSampler",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "5",
+            0
+          ],
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "subjects": [
+            "204",
+            0
+          ],
+          "latent": [
+            "7",
+            0
+          ],
+          "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+          "seed": 42,
+          "steps": 8,
+          "cfg": 1.0,
+          "strength": 4.0,
+          "trial_id": 42,
+          "mix_scope": "target_mask",
+          "diagnostic_level": "audit",
+          "mask_mode": "manual",
+          "collect_step": 2,
+          "collect_block": 18,
+          "top_k_ratio": 0.2,
+          "temperature": 10000.0,
+          "fill_holes_max_area": 0,
+          "mask_dilate_radius": 0,
+          "selection_dilate_radius": 0
+        },
+        "_meta": {
+          "title": "anchored_s3_b23"
+        }
+      },
+      "201": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "200",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "anchored_s3_b23"
+        }
+      },
+      "202": {
+        "class_type": "Krea2SliderFuseDiagnosticSave",
+        "inputs": {
+          "images": [
+            "201",
+            0
+          ],
+          "latent": [
+            "200",
+            0
+          ],
+          "diagnostics": [
+            "200",
+            2
+          ],
+          "filename_prefix": "paired_mix/20261011T185947Z-paired-mix/woman_front_strong_overlap/replay_anchored_s3_b23"
+        },
+        "_meta": {
+          "title": "anchored_s3_b23"
+        }
+      }
+    },
+    {
+      "create_time": 1791748426340
+    },
+    [
+      "102",
+      "202"
+    ]
+  ],
+  "outputs": {
+    "102": {
+      "images": [
+        {
+          "filename": "replay_anchored_s3_b18_s42_00001_.png",
+          "subfolder": "paired_mix\\20261011T185947Z-paired-mix\\woman_front_strong_overlap",
+          "type": "output"
+        }
+      ]
+    },
+    "202": {
+      "images": [
+        {
+          "filename": "replay_anchored_s3_b23_s42_00001_.png",
+          "subfolder": "paired_mix\\20261011T185947Z-paired-mix\\woman_front_strong_overlap",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "7a3e7dfd-9d02-497d-a8bf-428d14287193",
+          "timestamp": 1791748426341
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1",
+            "2",
+            "3",
+            "7",
+            "9"
+          ],
+          "prompt_id": "7a3e7dfd-9d02-497d-a8bf-428d14287193",
+          "timestamp": 1791748426506
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "7a3e7dfd-9d02-497d-a8bf-428d14287193",
+          "timestamp": 1791748515020
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "102": {
+      "node_id": "102",
+      "display_node": "102",
+      "parent_node": null,
+      "real_node_id": "102"
+    },
+    "202": {
+      "node_id": "202",
+      "display_node": "202",
+      "parent_node": null,
+      "real_node_id": "202"
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "100": {
+      "class_type": "Krea2SliderFuseTraceDecode",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\control_D\\control_D_s42_00001_.json",
+        "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_D"
+      },
+      "_meta": {
+        "title": "D retained predictions"
+      }
+    },
+    "101": {
+      "class_type": "Krea2SliderFuseTraceDecode",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_S0\\factorial_S0_s42_00001_.json",
+        "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S0"
+      },
+      "_meta": {
+        "title": "S0 retained predictions"
+      }
+    },
+    "102": {
+      "class_type": "Krea2SliderFuseTraceDecode",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_S1\\factorial_S1_s42_00001_.json",
+        "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_S1"
+      },
+      "_meta": {
+        "title": "S1 retained predictions"
+      }
+    },
+    "103": {
+      "class_type": "Krea2SliderFuseTraceDecode",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_C0\\factorial_C0_s42_00001_.json",
+        "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C0"
+      },
+      "_meta": {
+        "title": "C0 retained predictions"
+      }
+    },
+    "104": {
+      "class_type": "Krea2SliderFuseTraceDecode",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261011T235655Z-mask-attribution\\woman_front_strong_overlap\\edits\\factorial_C1\\factorial_C1_s42_00001_.json",
+        "filename_prefix": "ma_trace_20261011T235655Z_mask_attribution_woman_front_strong_overlap_C1"
+      },
+      "_meta": {
+        "title": "C1 retained predictions"
+      }
+    }
+  }
+}

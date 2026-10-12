@@ -1,0 +1,500 @@
+{
+  "name": "Background-on k1/k3 and fixed-k3-mask strength ablation",
+  "generator": "tools/build_attention_ablation_workflows.py",
+  "mode": "cold",
+  "selected_case": {
+    "case_id": "woman_front_strong_overlap",
+    "seed": 42,
+    "trial_id": 0
+  },
+  "workflows": {
+    "ui": "krea2_female_slider_attention_ablation_woman_front_strong_overlap.json",
+    "api": "krea2_female_slider_attention_ablation_woman_front_strong_overlap_api.json"
+  },
+  "variants": [
+    {
+      "label": "bg_k1_s4",
+      "variant": "multi_proto_bg",
+      "requested_prototypes": 1,
+      "background_competitor": true,
+      "strength": 4.0,
+      "collector_node": "8",
+      "subjects_node": "110",
+      "sampler_node": "111",
+      "save_node": "113",
+      "effective_prediction_mask_save_node": "116",
+      "selection_added_mask_save_node": "118"
+    },
+    {
+      "label": "bg_k3_s4",
+      "variant": "multi_proto_bg",
+      "requested_prototypes": 3,
+      "background_competitor": true,
+      "strength": 4.0,
+      "collector_node": "11",
+      "subjects_node": "140",
+      "sampler_node": "141",
+      "save_node": "143",
+      "effective_prediction_mask_save_node": "146",
+      "selection_added_mask_save_node": "148"
+    },
+    {
+      "label": "bg_k3_s2",
+      "variant": "multi_proto_bg",
+      "requested_prototypes": 3,
+      "background_competitor": true,
+      "strength": 2.0,
+      "collector_node": "11",
+      "subjects_node": "140",
+      "sampler_node": "171",
+      "save_node": "173",
+      "effective_prediction_mask_save_node": "176",
+      "selection_added_mask_save_node": "178"
+    }
+  ],
+  "collection_configs": {
+    "1": {
+      "collect_step": 2,
+      "collect_block": 18,
+      "selected_steps": [
+        1,
+        2
+      ],
+      "selected_blocks": [
+        16,
+        18
+      ],
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "prototypes": 1,
+      "seed_confidence": 0.65,
+      "seed_margin": 0.15,
+      "mask_confidence": 0.55,
+      "mask_margin": 0.1,
+      "context_temperature": 1.0,
+      "feature_temperature": 0.15,
+      "propagation_iterations": 1,
+      "propagation_heads": [
+        0
+      ],
+      "affinity_chunk_size": 128,
+      "affinity_threshold": 0.05,
+      "propagation_strength": 0.5
+    },
+    "3": {
+      "collect_step": 2,
+      "collect_block": 18,
+      "selected_steps": [
+        1,
+        2
+      ],
+      "selected_blocks": [
+        16,
+        18
+      ],
+      "top_k_ratio": 0.2,
+      "temperature": 10000.0,
+      "prototypes": 3,
+      "seed_confidence": 0.65,
+      "seed_margin": 0.15,
+      "mask_confidence": 0.55,
+      "mask_margin": 0.1,
+      "context_temperature": 1.0,
+      "feature_temperature": 0.15,
+      "propagation_iterations": 1,
+      "propagation_heads": [
+        0
+      ],
+      "affinity_chunk_size": 128,
+      "affinity_threshold": 0.05,
+      "propagation_strength": 0.5
+    }
+  },
+  "validation": {
+    "gpu_execution": "not_run",
+    "native_comfy": "not_run",
+    "image_quality": "not_evaluated",
+    "pose_gate": "not_evaluated"
+  },
+  "cost_accounting": {
+    "expected_cold_model_nfe": 52,
+    "expected_cold_two_cases_model_nfe": 104,
+    "conditional_reuse_model_nfe": 34,
+    "conditional_reuse_two_cases_model_nfe": 68,
+    "expected_this_graph_model_nfe": 52,
+    "actual_model_nfe": null,
+    "actual_wall_seconds": null,
+    "peak_memory_bytes": null,
+    "cache_status": "not_recorded",
+    "assumptions": "Cold uncached active outputs, valid nonempty partial masks, 8-step two-branch edits. Actual counters override nominal values. NFE excludes VAE, feature hooks, audit hashes, transfers, algorithms and saving.",
+    "memory_rule": "Retain runtime memory.scope; process-lifetime or resident-model peaks are not incremental VRAM. Do not sum peaks. Missing measurements stay null."
+  },
+  "output_prefixes": {
+    "10": "attn_ablate_strong_s42_t0_bg_k1",
+    "12": "attn_ablate_strong_s42_t0_bg_k3",
+    "113": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k1_s4",
+    "116": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k1_s4_effective_prediction_mask",
+    "118": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k1_s4_selection_added_mask",
+    "143": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k3_s4",
+    "146": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k3_s4_effective_prediction_mask",
+    "148": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k3_s4_selection_added_mask",
+    "173": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k3_s2",
+    "176": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k3_s2_effective_prediction_mask",
+    "178": "slider_attention_ablation/woman_front_strong_overlap/seed42/trial0/bg_k3_s2_selection_added_mask"
+  },
+  "pose_gate_criteria": [
+    "Exactly two people with distinct heads, full-body framing and both pairs of feet visible.",
+    "Younger target appearance is an intended slider effect, not itself a pose or quality failure.",
+    "A human checks actual images before any pose-conditioned score; mask overlap and prompt wording do not prove pose.",
+    "Woman in the foreground; man behind her. The woman's body substantially occludes the man's torso and his face remains visible.",
+    "Side-by-side placement or shoulder contact alone is composition_not_met; keep every failure."
+  ],
+  "holdout_policy": {
+    "previously_seen_seeds": [
+      42,
+      123,
+      777,
+      444444
+    ],
+    "confirmed_unseen_seeds": [],
+    "instruction": "Freeze config, then choose and record new seeds not previously inspected in any tuning. Check the run log; a new number is not proof it is unseen. Keep every attempted seed/failure and use both cases."
+  },
+  "mask_semantics": {
+    "baseline": "Stored baseline uncertain_mask is the whole residual routing background. It is not zero and is not equivalent to new confidence/margin-based unknown cells; do not rank confidence across these definitions.",
+    "background": "Routing background = explicit background competitor cells + uncertain cells for bg candidates. Neither is a human ground-truth annotation."
+  },
+  "reuse_verification": null,
+  "evaluation_record_template": {
+    "case_id": "woman_front_strong_overlap",
+    "seed": 42,
+    "trial_id": 0,
+    "queued_api_path": null,
+    "queued_api_sha256": null,
+    "collection_run_ids": {
+      "k1": null,
+      "k3": null
+    },
+    "suite_manifest_paths": {
+      "k1": null,
+      "k3": null
+    },
+    "collection_evidence": {
+      "k1": {
+        "normalized_config": null,
+        "initial_noise_sha256": null,
+        "initial_latent_sha256": null,
+        "full_sigmas_sha256": null,
+        "used_sigmas_sha256": null,
+        "token_positions": null,
+        "conditioning": null,
+        "primary_tap": null,
+        "source_partition_sha256": null,
+        "implementation": null
+      },
+      "k3": {
+        "normalized_config": null,
+        "initial_noise_sha256": null,
+        "initial_latent_sha256": null,
+        "full_sigmas_sha256": null,
+        "used_sigmas_sha256": null,
+        "token_positions": null,
+        "conditioning": null,
+        "primary_tap": null,
+        "source_partition_sha256": null,
+        "implementation": null
+      }
+    },
+    "observation_parity": {
+      "status": "not_checked",
+      "primary_step": 2,
+      "primary_block": 18,
+      "evidence": [],
+      "required": [
+        "normalized_config except prototypes",
+        "seed/prompt/token_positions/conditioning including metadata",
+        "initial_noise_sha256",
+        "initial_latent_sha256",
+        "full_sigmas_sha256",
+        "used_sigmas_sha256",
+        "primary tensor_sha256_before and tensor_sha256_after",
+        "attention_mask_sha256 and shape"
+      ],
+      "rule": "Check actual hashes, not seeds alone. Missing historical tensor audit is unverified, not equal."
+    },
+    "asset_identity": {
+      "status": "same_graph_sources_pending_runtime_evidence",
+      "evidence": []
+    },
+    "strength_pair_mask_parity": {
+      "status": "not_checked",
+      "required": [
+        "all three reference_partition_sha256 values",
+        "effective_image_mask_sha256"
+      ],
+      "rule": "Equal source masks alone do not prove equal effective selection. Require all fill/dilation controls zero."
+    },
+    "actual_model_nfe": null,
+    "wall_seconds": null,
+    "peak_memory_bytes": null,
+    "cache_status": "not_recorded",
+    "mask_accuracy": {
+      "value": null,
+      "reason": "not_evaluable_without_independent_human_verified_same_grid_labels",
+      "evidence": []
+    },
+    "variant_results": [
+      {
+        "label": "bg_k1_s4",
+        "strength": 4.0,
+        "requested_prototypes": 1,
+        "achieved_prototypes_by_role": {
+          "target": null,
+          "protected": null,
+          "background": null
+        },
+        "achieved_count_source": "len(report.algorithm.variants.multi_proto_bg.prototype_indices[role]); requested k is an upper bound",
+        "image_path": null,
+        "edit_diagnostic_json_path": null,
+        "final_latent_sha256": null,
+        "reference_partition_sha256": null,
+        "effective_image_mask_sha256": null,
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "evidence": [],
+          "notes": null
+        },
+        "duplicate_anatomy": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "target_edit_achievement": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "natural_body_proportions": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_face": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_eyeglasses": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_height": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_build": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "small_arm_hand_adjustment": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "background_change": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "old_silhouette_residue": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "preservation_vs_off": {
+          "value": null,
+          "reason": "not_evaluable_without_verified_matched_existing_OFF_reference; do not generate an extra OFF",
+          "evidence": []
+        },
+        "failure_reason": null
+      },
+      {
+        "label": "bg_k3_s4",
+        "strength": 4.0,
+        "requested_prototypes": 3,
+        "achieved_prototypes_by_role": {
+          "target": null,
+          "protected": null,
+          "background": null
+        },
+        "achieved_count_source": "len(report.algorithm.variants.multi_proto_bg.prototype_indices[role]); requested k is an upper bound",
+        "image_path": null,
+        "edit_diagnostic_json_path": null,
+        "final_latent_sha256": null,
+        "reference_partition_sha256": null,
+        "effective_image_mask_sha256": null,
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "evidence": [],
+          "notes": null
+        },
+        "duplicate_anatomy": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "target_edit_achievement": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "natural_body_proportions": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_face": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_eyeglasses": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_height": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_build": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "small_arm_hand_adjustment": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "background_change": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "old_silhouette_residue": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "preservation_vs_off": {
+          "value": null,
+          "reason": "not_evaluable_without_verified_matched_existing_OFF_reference; do not generate an extra OFF",
+          "evidence": []
+        },
+        "failure_reason": null
+      },
+      {
+        "label": "bg_k3_s2",
+        "strength": 2.0,
+        "requested_prototypes": 3,
+        "achieved_prototypes_by_role": {
+          "target": null,
+          "protected": null,
+          "background": null
+        },
+        "achieved_count_source": "len(report.algorithm.variants.multi_proto_bg.prototype_indices[role]); requested k is an upper bound",
+        "image_path": null,
+        "edit_diagnostic_json_path": null,
+        "final_latent_sha256": null,
+        "reference_partition_sha256": null,
+        "effective_image_mask_sha256": null,
+        "pose_gate": {
+          "status": "not_evaluated",
+          "passed": null,
+          "human_reviewer": null,
+          "evidence": [],
+          "notes": null
+        },
+        "duplicate_anatomy": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "target_edit_achievement": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "natural_body_proportions": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_face": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_eyeglasses": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_height": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "male_build": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "small_arm_hand_adjustment": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "background_change": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "old_silhouette_residue": {
+          "value": null,
+          "reason": "not_evaluated",
+          "evidence": []
+        },
+        "preservation_vs_off": {
+          "value": null,
+          "reason": "not_evaluable_without_verified_matched_existing_OFF_reference; do not generate an extra OFF",
+          "evidence": []
+        },
+        "failure_reason": null
+      }
+    ],
+    "reused_k3_s4": null
+  },
+  "evaluation_order": [
+    "Verify runtime provenance, primary observation equality, prototype counts and mask/selection hashes.",
+    "Apply human pose gate to each image before pose-conditioned quality scoring. Retain composition_not_met cases.",
+    "Score edit achievement separately from natural proportions and duplicate anatomy; reduced effect is not automatically improved editing.",
+    "Compare male face/eyeglasses/height/build while recording small plausible arm/hand changes separately.",
+    "Freeze decisions before genuinely unseen-seed followup; identical k1/k3 masks are a valid null result."
+  ],
+  "limitations": [
+    "This index is a generated plan, not a runtime or quality certificate. UI edits require a new queued API provenance record.",
+    "Two separately collected observations are matched by controls, not automatically proven identical; enabled tensor audit permits checking.",
+    "Requested k3 can realize fewer prototypes; use runtime prototype_indices lengths per role.",
+    "No extra completed OFF generation; old edited baseline +4 is not OFF. Absent matched existing OFF cannot certify preservation.",
+    "No equal-area allocation, uniform dilation, propagation retuning, architecture changes or automatic quality ranking."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "observer": "Codex multimodal assistant",
+  "human_approval": false,
+  "scope": "Four current generated images, compared against each other; no independently verified OFF reference or mask labels.",
+  "composition": "全4枚で2人が横並び、別々の頭と全身が見える。人物の配置は近い。",
+  "routes": {
+    "A_off": {
+      "overall": "顔・頭部は強く若返るが、胴・脚の大きな縮小は控えめ。今回の対照。",
+      "target_edit": "頭部が大きく若い顔つき。身長と脚の長さは相対的に残る。",
+      "anatomy": "この全体表示では明らかな余分な顔・腕・脚は見当たらない。",
+      "protected": "男性には眼鏡があり、成人らしい顔・体格。これは候補間比較の基準で、OFFへの保持証明ではない。"
+    },
+    "B_on": {
+      "overall": "顔に背景へ抜けるような欠損・不連続があり、品質が悪化。",
+      "target_edit": "顔周辺が破綻しており、編集達成を成功と判定できない。胴・脚は細長く、全身の縮小改善も明確でない。",
+      "anatomy": "頬・顎・首周辺が途切れ、顔の部分が背景色へ抜けるように見える。",
+      "protected": "男性の眼鏡と主要体格はAに近いが、顔と服の細部に差がある。"
+    },
+    "C_on_base_protected": {
+      "overall": "OFF保護maskへ戻しても対象の顔の破綻は残る。",
+      "target_edit": "対象の顔が部分的に欠損し、胴・脚は細長い。全身編集改善とは扱わない。",
+      "anatomy": "顔中央・頬・首付近に大きな不連続が残る。Bとは欠損の形が異なる。",
+      "protected": "男性の眼鏡と主要体格は近いが、顔つき・頭部位置に差がある。保護maskの一致は画素保持を意味しない。"
+    },
+    "D_union_base_protected": {
+      "overall": "B/Cの大きな顔欠損は解消。Aに対する全身縮小の明確な増強は確認できない。",
+      "target_edit": "若い顔と大きな頭部は保たれる。服・脚・足元は変わるが、身長や四肢の大きな縮小がAより強まったとは判断しない。",
+      "anatomy": "B/Cの顔欠損は見当たらない。明らかな余分な顔・腕・脚も、この全体表示では見当たらない。",
+      "protected": "男性の眼鏡、位置、主要体格はAに近い。顔・服・背景の細部は異なる。"
+    }
+  },
+  "interpretation": "Slider ONで収集maskは大きく変わるが、単独採用は顔の破綻を生んだ。ON対象＋OFF保護でも破綻が残り、対象maskの和集合で解消したため、対象選択範囲の欠落・切替が有力な説明。ただし独立mask labelがなく、欠落位置の正解や全身縮小の制約量は未確定。"
+}

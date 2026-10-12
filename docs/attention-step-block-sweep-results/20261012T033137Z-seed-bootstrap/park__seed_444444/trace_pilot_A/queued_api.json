@@ -1,0 +1,55 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "100": {
+      "class_type": "Krea2SliderFuseTraceDecode",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ],
+        "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261012T033137Z-seed-bootstrap\\park__seed_444444\\pilot_A\\edits\\A\\pilot_s444444_00001_.json",
+        "filename_prefix": "sb_20261012T033137Z_seed_bootstrap_park_seed_444444_trace_pilot_A"
+      },
+      "_meta": {
+        "title": "Decode retained trace; zero diffusion NFE"
+      }
+    }
+  }
+}

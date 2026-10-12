@@ -1,0 +1,646 @@
+{
+  "run_id": "93052647bb4d",
+  "extension_version": "0.2.0",
+  "backend": "prediction_mix",
+  "mix_scope": "target_mask",
+  "model_text_scope": "all",
+  "image_scope": "target_mask",
+  "text_scope": "all",
+  "mask_mode": "manual",
+  "prediction_selection": {
+    "dilate_radius": 0,
+    "method": "largest_component_background_only"
+  },
+  "mask_generation": {
+    "mode": "manual",
+    "collection_branch": null,
+    "collect_step": null,
+    "collect_block": null,
+    "top_k_ratio": null,
+    "temperature": null,
+    "fill_holes_max_area": 0,
+    "mask_dilate_radius": 0
+  },
+  "strength": 4.0,
+  "effective_slider_strength": 4.0,
+  "seed": 42,
+  "steps": 8,
+  "cfg": 1.0,
+  "trial_id": 42,
+  "sampler": "euler",
+  "scheduler": "simple",
+  "phase1_nfe": 0,
+  "phase2_nfe": 8,
+  "sampler_nfe": 8,
+  "diagnostic_schema_version": 3,
+  "prediction_space": "comfy_cfg1_denoised",
+  "lora_file_name": "krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+  "lora_sha256": "6d3f75e1ab9b9a13fea094177fc80bd2dbc598a0b5bacc5ce05eddf6d79e4ecc",
+  "matched_modules": 140,
+  "reached_modules": null,
+  "adapter_stats": null,
+  "base_quant_formats": [
+    "int8_tensorwise"
+  ],
+  "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+  "grid": [
+    64,
+    64
+  ],
+  "patch_size": 2,
+  "text_token_count": 205,
+  "token_positions": {
+    "target": [
+      27
+    ],
+    "protected": [
+      47
+    ]
+  },
+  "reference_partition_sha256": {
+    "target": "31cfdede8da3918668c47d27a4e8827fc5c82d8655884d8d6325175a1fd077fe",
+    "protected": "c52da9c6620027dbf251fa9f9f3c7f338fa45024614295e3dfc75aa3b7351cb7",
+    "background": "ccdb216e487928cf88642aea3bf9f370284530f8ea4f101b7fd199dc85e4859e"
+  },
+  "effective_image_mask_sha256": "31cfdede8da3918668c47d27a4e8827fc5c82d8655884d8d6325175a1fd077fe",
+  "effective_image_mask_coverage": 0.322021484375,
+  "initial_noise_sha256": "d34bc916b963bc764276c94d48612a226bb24479ee1e15a03217fc8a35eaafa0",
+  "initial_latent_sha256": "baf0b744830e57327b9eaa9a108341ab287e5e1e1e6f77ba3ba12b79a24c2242",
+  "full_sigmas_sha256": "731c5c7c2db759e6bdf72507e347c59a6e977cd83138ae7dd8fe029e3bc84f69",
+  "masks": {
+    "target": {
+      "coverage": 0.322021484375,
+      "bbox_xyxy": [
+        0,
+        1,
+        63,
+        64
+      ],
+      "component_count_8": 97,
+      "foreground_tokens": 1319,
+      "largest_component_tokens": 1082,
+      "largest_component_fraction": 0.8203184230477635
+    },
+    "protected": {
+      "coverage": 0.15673828125,
+      "bbox_xyxy": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "component_count_8": 111,
+      "foreground_tokens": 642,
+      "largest_component_tokens": 491,
+      "largest_component_fraction": 0.764797507788162
+    },
+    "background": {
+      "coverage": 0.521240234375,
+      "bbox_xyxy": [
+        0,
+        0,
+        64,
+        64
+      ],
+      "component_count_8": 23,
+      "foreground_tokens": 2135,
+      "largest_component_tokens": 2108,
+      "largest_component_fraction": 0.9873536299765808
+    }
+  },
+  "mask_postprocess": {
+    "enabled": false,
+    "fill_holes_max_area": 0,
+    "mask_dilate_radius": 0,
+    "external_components_skipped": null,
+    "enclosed_holes_total": null,
+    "oversize_holes_skipped": null,
+    "protected_holes_blocked": null,
+    "filled_hole_count": 0,
+    "dilation_candidate_count": null,
+    "dilation_protected_blocked_count": null,
+    "filled_token_count": 0,
+    "dilated_token_count": 0,
+    "added_token_count": 0,
+    "protected_changed_token_count": 0,
+    "partition_valid": true,
+    "before": {
+      "target": {
+        "coverage": 0.322021484375,
+        "bbox_xyxy": [
+          0,
+          1,
+          63,
+          64
+        ],
+        "component_count_8": 97,
+        "foreground_tokens": 1319,
+        "largest_component_tokens": 1082,
+        "largest_component_fraction": 0.8203184230477635
+      },
+      "protected": {
+        "coverage": 0.15673828125,
+        "bbox_xyxy": [
+          1,
+          1,
+          64,
+          64
+        ],
+        "component_count_8": 111,
+        "foreground_tokens": 642,
+        "largest_component_tokens": 491,
+        "largest_component_fraction": 0.764797507788162
+      },
+      "background": {
+        "coverage": 0.521240234375,
+        "bbox_xyxy": [
+          0,
+          0,
+          64,
+          64
+        ],
+        "component_count_8": 23,
+        "foreground_tokens": 2135,
+        "largest_component_tokens": 2108,
+        "largest_component_fraction": 0.9873536299765808
+      }
+    },
+    "after": {
+      "target": {
+        "coverage": 0.322021484375,
+        "bbox_xyxy": [
+          0,
+          1,
+          63,
+          64
+        ],
+        "component_count_8": 97,
+        "foreground_tokens": 1319,
+        "largest_component_tokens": 1082,
+        "largest_component_fraction": 0.8203184230477635
+      },
+      "protected": {
+        "coverage": 0.15673828125,
+        "bbox_xyxy": [
+          1,
+          1,
+          64,
+          64
+        ],
+        "component_count_8": 111,
+        "foreground_tokens": 642,
+        "largest_component_tokens": 491,
+        "largest_component_fraction": 0.764797507788162
+      },
+      "background": {
+        "coverage": 0.521240234375,
+        "bbox_xyxy": [
+          0,
+          0,
+          64,
+          64
+        ],
+        "component_count_8": 23,
+        "foreground_tokens": 2135,
+        "largest_component_tokens": 2108,
+        "largest_component_fraction": 0.9873536299765808
+      }
+    }
+  },
+  "raw_maps_available": false,
+  "map_diagnostics": null,
+  "output_routing_policy": "native_inside_base_outside_same_input",
+  "skipped_branch_reason": null,
+  "environment": {
+    "python": "3.12.11",
+    "torch": "2.12.0+rocm7.14.0",
+    "cuda": null,
+    "gpu": "AMD Radeon AI PRO R9700",
+    "comfy_revision": "15ef24d1c0333a3eba56c5cd153d8db65363ff8f",
+    "comfy_revision_unavailable_reason": null
+  },
+  "int8_real_machine_validated": false,
+  "image_quality_validated": false,
+  "implementation_revision": "68fc8a9c3db80736bfa9ee0a275e5bd8f928df6c",
+  "implementation_dirty": true,
+  "implementation_source_sha256": "278114c567cfea452c4b7c2a2661c272fc8dcd3234ffaabf55c37d7e19880dd1",
+  "observation": null,
+  "collection_attention_heads": null,
+  "collection_initial_noise_sha256": null,
+  "collection_initial_latent_sha256": null,
+  "collection_full_sigmas_sha256": null,
+  "collection_used_sigmas_sha256": null,
+  "branch_nfe": {
+    "base": 8,
+    "slider": 8
+  },
+  "diagnostic_level": "audit",
+  "linear_audit": null,
+  "step_trace": [
+    {
+      "eval_index": 0,
+      "sigma": 1.0,
+      "input_sha256": "d34bc916b963bc764276c94d48612a226bb24479ee1e15a03217fc8a35eaafa0",
+      "prediction_sha256": "e49d3f45ef9730438bcafea0c80bc6ee8deb65af7c328808fa969661d25c0e54"
+    },
+    {
+      "eval_index": 1,
+      "sigma": 0.956723690032959,
+      "input_sha256": "fe99034e4860c2b003b5f0936e745baf8a54bdc68d4a398a94570f42f5ad7308",
+      "prediction_sha256": "9e28d8ede6a1a8940e33c02043a71410bf5671eb1c03c212e4f562882e43ca5c"
+    },
+    {
+      "eval_index": 2,
+      "sigma": 0.9045307636260986,
+      "input_sha256": "0d1014264ab725a1369855ab731c46745a66d657a52e276e1039e8d9f8e17c65",
+      "prediction_sha256": "47a5dfe429f27de51799878b3aabad4c9d3cd71c16f94de9f36947b63fb54b3d"
+    },
+    {
+      "eval_index": 3,
+      "sigma": 0.8403487801551819,
+      "input_sha256": "47f7f69cd8b1e766053d6b5fbfb90ca5b961b9c5690753a76d873443fa62da0e",
+      "prediction_sha256": "1484fca832db584acace1dfc818517c9f980a2311a0b8f9a2aa7338cb435dd0a"
+    },
+    {
+      "eval_index": 4,
+      "sigma": 0.7595109343528748,
+      "input_sha256": "f3f09fdcae5dc7bb2fe5066fef2d7f7668807596ad7adac46a2a9863f331f32c",
+      "prediction_sha256": "535d7bbe96943c300d3d63df801d55f709b8852a91fe8189baaf0902ab4a4572"
+    },
+    {
+      "eval_index": 5,
+      "sigma": 0.6545668244361877,
+      "input_sha256": "d781b92e825f9500dcc9b6ae3fb36abd4120c0c87bf15c0a5d33b253947aac1c",
+      "prediction_sha256": "4c2491de4609f21bb97a0abd5a30586b53a26710101bfecad5c560d8dc9b65c1"
+    },
+    {
+      "eval_index": 6,
+      "sigma": 0.5128440856933594,
+      "input_sha256": "5e9b1fa7d662e6d5801b72a07a6e5b0975396701ddb9d2f7bec6ffca3aef29c2",
+      "prediction_sha256": "aea27b5d4cb85e7cc4c1c4566e6f663a2dd1a34119e5d17949e0084d545c0b41"
+    },
+    {
+      "eval_index": 7,
+      "sigma": 0.31090107560157776,
+      "input_sha256": "1253acdf08b2fc350bb6637047cff0ecd74514f522c17194e782ccec0375e2e2",
+      "prediction_sha256": "b3c8dc900e4731b5dbd19f0b8ca9286bc3b890ed82774ef6d439e0dd39d4e087"
+    }
+  ],
+  "linear_audit_unavailable_reason": "native_branch_not_instrumented",
+  "prediction_mix_audit": [
+    {
+      "eval_index": 0,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 1,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 2,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 3,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 4,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 5,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 6,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    },
+    {
+      "eval_index": 7,
+      "base_excluded": {
+        "element_count": 177728,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      },
+      "slider_selected": {
+        "element_count": 84416,
+        "nonfinite_count": 0,
+        "rms": 0.0,
+        "max_abs": 0.0,
+        "changed_elements": 0,
+        "computed_delta_rms": 0.0,
+        "rounded_away_elements": 0,
+        "unavailable_reason": null
+      }
+    }
+  ],
+  "first_input_sha256": "d34bc916b963bc764276c94d48612a226bb24479ee1e15a03217fc8a35eaafa0",
+  "conditioning_sha256": "a48cc6316c53b909823fa8a8f50022b7320ee28ee9815257c4444b6d352c0f7b",
+  "first_timestep_sha256": "e1ec6b1368e8e46c1284ddb7df81bf0e358791a7dce1791b12598c8096b863a4",
+  "first_input_shape": [
+    1,
+    16,
+    1,
+    128,
+    128
+  ],
+  "first_input_dtype": "torch.float32",
+  "total_model_nfe": 16,
+  "first_prediction_sha256": "e49d3f45ef9730438bcafea0c80bc6ee8deb65af7c328808fa969661d25c0e54",
+  "final_latent_sha256": "8ceadaff4a89525be387d2bd3a7a397e405c7a7a36495eda8a4acb48ff533911",
+  "final_latent_shape": [
+    1,
+    16,
+    1,
+    128,
+    128
+  ],
+  "final_latent_dtype": "torch.float32",
+  "owned_hooks_removed": true,
+  "elapsed_seconds": 43.748,
+  "artifact_id": "d1dc55faad1145b8be32b2549e8f48ca",
+  "artifacts": {
+    "image": "replay_anchored_s3_b23_s42_00001_.png",
+    "effective_mask": "replay_anchored_s3_b23_s42_00001__effective_mask.png",
+    "tensors": "replay_anchored_s3_b23_s42_00001_.safetensors",
+    "report": "replay_anchored_s3_b23_s42_00001_.json"
+  },
+  "generation": {
+    "checkpoint": "intorealismAsian_k2JAVFLASHV1.safetensors",
+    "weight_dtype": "default",
+    "clip_name": "qwen3vl_4b_bf16.safetensors",
+    "clip_type": "krea2",
+    "clip_device": "default",
+    "vae_name": "qwen_image_vae.safetensors",
+    "style_loras": [
+      {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength": 0.8
+      }
+    ],
+    "prompt": "Photorealistic full-body studio group photograph of exactly two fully clothed adults standing closely together with strongly overlapping silhouettes. An adult woman in a sage-green top and black trousers stands in the foreground, nearer the camera. An adult man in a blue T-shirt and black trousers stands directly behind her, staggered slightly to her right. The woman's body substantially occludes the front of the man's torso, while his face remains fully visible beside her head. Their shoulders, arms and torsos visibly overlap at the center, with no gap between their silhouettes. The man's hand rests lightly on the woman's upper arm in modest, natural contact; the other hands are relaxed and clearly separated. Both faces look at the camera. Exactly two separate heads, anatomically correct hands and limbs, both standing figures framed from head to shoes with both pairs of feet visible and space below the shoes. One continuous pale gray concrete wall and floor, soft even daylight, consistent exposure and natural shadows.",
+    "width": 1024,
+    "height": 1024,
+    "batch_size": 1,
+    "seed": 42,
+    "steps": 8,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "denoise": 1.0,
+    "slider_lora": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+    "strength": 4.0
+  },
+  "complete": true,
+  "provenance_level": "diagnostic_run",
+  "tensor_manifest": {
+    "final_latent": {
+      "sha256": "8ceadaff4a89525be387d2bd3a7a397e405c7a7a36495eda8a4acb48ff533911",
+      "shape": [
+        1,
+        16,
+        1,
+        128,
+        128
+      ],
+      "dtype": "torch.float32"
+    },
+    "first_prediction": {
+      "sha256": "e49d3f45ef9730438bcafea0c80bc6ee8deb65af7c328808fa969661d25c0e54",
+      "shape": [
+        1,
+        16,
+        1,
+        128,
+        128
+      ],
+      "dtype": "torch.float32"
+    },
+    "trace_inputs": {
+      "sha256": "08358403ab462cacf46e45cc1e53be7d3508ed986d909483af3f53a792df7536",
+      "shape": [
+        8,
+        1,
+        16,
+        1,
+        128,
+        128
+      ],
+      "dtype": "torch.float32"
+    },
+    "trace_predictions": {
+      "sha256": "d6d36dc536e9dc42f212930e22f8cebac65fb11c1bfae2bacc2b1146cd34b830",
+      "shape": [
+        8,
+        1,
+        16,
+        1,
+        128,
+        128
+      ],
+      "dtype": "torch.float32"
+    },
+    "trace_sigmas": {
+      "sha256": "bda96007cf4723aa5e96babcb9800e89347ac9cf4e079891271907c304e619ac",
+      "shape": [
+        8
+      ],
+      "dtype": "torch.float32"
+    },
+    "trace_base_predictions": {
+      "sha256": "54e56b246b0d47a7c571d88735337e0c71f2ab256214d32f5f8ee831cc9f9f4b",
+      "shape": [
+        8,
+        1,
+        16,
+        1,
+        128,
+        128
+      ],
+      "dtype": "torch.float32"
+    },
+    "trace_slider_predictions": {
+      "sha256": "d6754708b94f6ac26bb37d3b0390acfa0c8604bedb41bfc3bf1e92547c7a32c3",
+      "shape": [
+        8,
+        1,
+        16,
+        1,
+        128,
+        128
+      ],
+      "dtype": "torch.float32"
+    },
+    "reference_target_mask": {
+      "sha256": "31cfdede8da3918668c47d27a4e8827fc5c82d8655884d8d6325175a1fd077fe",
+      "shape": [
+        1,
+        64,
+        64
+      ],
+      "dtype": "torch.float32"
+    },
+    "reference_protected_mask": {
+      "sha256": "c52da9c6620027dbf251fa9f9f3c7f338fa45024614295e3dfc75aa3b7351cb7",
+      "shape": [
+        1,
+        64,
+        64
+      ],
+      "dtype": "torch.float32"
+    },
+    "reference_background_mask": {
+      "sha256": "ccdb216e487928cf88642aea3bf9f370284530f8ea4f101b7fd199dc85e4859e",
+      "shape": [
+        1,
+        64,
+        64
+      ],
+      "dtype": "torch.float32"
+    }
+  },
+  "artifact_sha256": {
+    "image": "f7e44d1df582f36f886a9d3742706d207a091b9a100dc9a48ddc7e6f7d8baf70",
+    "effective_mask": "ba525489bc1307178aea41c70f6a687500c2b494c01bb6ec2d89833b2fe29c8e",
+    "tensors": "7bd04d292433eba5d4955e611d28f3d954b65d6c53250b0b34401b3c0563dffc"
+  }
+}

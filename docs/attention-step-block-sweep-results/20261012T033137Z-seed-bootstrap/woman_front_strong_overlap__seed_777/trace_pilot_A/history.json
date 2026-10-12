@@ -1,0 +1,174 @@
+{
+  "prompt": [
+    38,
+    "8e29fe89-fd0e-4f08-815a-b675f3917602",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "100": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\attention-step-block-sweep-results\\20261012T033137Z-seed-bootstrap\\woman_front_strong_overlap__seed_777\\pilot_A\\edits\\A\\pilot_s777_00001_.json",
+          "filename_prefix": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A"
+        },
+        "_meta": {
+          "title": "Decode retained trace; zero diffusion NFE"
+        }
+      }
+    },
+    {
+      "create_time": 1791792820396
+    },
+    [
+      "100"
+    ]
+  ],
+  "outputs": {
+    "100": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\sb_20261012T033137Z_seed_bootstrap_woman_front_strong_overlap_seed_777_trace_pilot_A_5e2dc39e315d483b9066ab6c78ff16cf\\manifest.json"
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "8e29fe89-fd0e-4f08-815a-b675f3917602",
+          "timestamp": 1791792820396
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1",
+            "2",
+            "9"
+          ],
+          "prompt_id": "8e29fe89-fd0e-4f08-815a-b675f3917602",
+          "timestamp": 1791792820475
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "8e29fe89-fd0e-4f08-815a-b675f3917602",
+          "timestamp": 1791792833065
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "100": {
+      "node_id": "100",
+      "display_node": "100",
+      "parent_node": null,
+      "real_node_id": "100"
+    }
+  }
+}

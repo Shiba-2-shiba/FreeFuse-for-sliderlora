@@ -1,0 +1,14 @@
+...............................................F................ [ 79%]
+.................                                                        [100%]
+================================== FAILURES ===================================
+_______ test_dangling_output_is_refused_before_platform_exclusive_open ________
+..\tests\test_evaluate_attention_masks.py:296: in test_dangling_output_is_refused_before_platform_exclusive_open
+    assert output.is_symlink() and output.readlink() == absent
+E   AssertionError: assert (True and WindowsPath('//?/C:/ComfyUI/custom_nodes/FreeFuse-for-sliderlora/docs/attention-ablation-results/20261010T190433Z/pytest-temp/test_dangling_output_is_refuse0/absent.json') == WindowsPath('C:/ComfyUI/custom_nodes/FreeFuse-for-sliderlora/docs/attention-ablation-results/20261010T190433Z/pytest-temp/test_dangling_output_is_refuse0/absent.json'))
+E    +  where True = is_symlink()
+E    +    where is_symlink = WindowsPath('C:/ComfyUI/custom_nodes/FreeFuse-for-sliderlora/docs/attention-ablation-results/20261010T190433Z/pytest-temp/test_dangling_output_is_refuse0/report.json').is_symlink
+E    +  and   WindowsPath('//?/C:/ComfyUI/custom_nodes/FreeFuse-for-sliderlora/docs/attention-ablation-results/20261010T190433Z/pytest-temp/test_dangling_output_is_refuse0/absent.json') = readlink()
+E    +    where readlink = WindowsPath('C:/ComfyUI/custom_nodes/FreeFuse-for-sliderlora/docs/attention-ablation-results/20261010T190433Z/pytest-temp/test_dangling_output_is_refuse0/report.json').readlink
+=========================== short test summary info ===========================
+FAILED ..\tests\test_evaluate_attention_masks.py::test_dangling_output_is_refused_before_platform_exclusive_open
+1 failed, 80 passed, 8 subtests passed in 11.42s

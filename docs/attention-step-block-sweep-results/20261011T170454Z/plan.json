@@ -1,0 +1,68 @@
+{
+  "question": "Compare steps 1/2/3 and every late Krea2 block with identical k3 masks",
+  "steps": [
+    1,
+    2,
+    3
+  ],
+  "blocks": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "cases": [
+    {
+      "case": "park",
+      "seed": 444444
+    },
+    {
+      "case": "woman_front_strong_overlap",
+      "seed": 42
+    }
+  ],
+  "collection_branches": [
+    "off",
+    "on"
+  ],
+  "slider_strength": 4.0,
+  "algorithm": "multi_proto_bg k3 using existing context/prototype/confidence code; other variants not requested",
+  "radii": {
+    "fill": 0,
+    "mask_dilate": 0,
+    "selection_dilate": 0
+  },
+  "edit_blocks": [
+    18,
+    22,
+    27
+  ],
+  "edit_steps": [
+    1,
+    2,
+    3
+  ],
+  "edit_selection": "ON target minus fixed OFF step2/block18 protected; protected is fixed OFF step2/block18",
+  "planned_mask_candidates": 168,
+  "planned_edit_images": 18,
+  "uncached_model_nfe_budget": 300,
+  "collection_model_nfe": 12,
+  "limits": "audit overhead excluded from NFE; failed candidates retained and cannot be silently substituted; cache misses/repeated captures recorded separately; no completed OFF/all reference",
+  "implementation_plan": [
+    "Test shared three-step capture and exact existing k3 parity",
+    "Add isolated sweep collect/select/save nodes reusing existing collector/runtime and candidate code",
+    "Verify CPU regression and restore Desktop backend using recorded arguments",
+    "Preflight and run mask-first graphs then predeclared successful image candidates",
+    "Verify all hashes, tap coverage, input controls, fixed protection and exact prediction routing; compare masks/heads and image quality separately"
+  ]
+}

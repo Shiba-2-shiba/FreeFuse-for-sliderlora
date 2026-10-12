@@ -200,11 +200,14 @@ def _summary(candidate, bank):
             "real_background_tokens": int(bank["real_background_mask"].sum()), "diagnostics": bank["diagnostics"]}
 
 
-def _propagate(candidate, q, k, permissions, config):
+def _propagate(candidate, q, k, permissions, config, *, lock_confident=True):
     scores = candidate["scores"].clone()
     initial = scores.clone()
     labels = _labels(initial, config)
     barrier = labels >= 0
+    if not lock_confident:
+        barrier = torch.stack(list(candidate["seeds"].values())).any(dim=0)
+        labels = torch.where(barrier, labels, -1)
     n, heads, width = q.shape[1:]
     selected = config["propagation_heads"]
     chunk = min(config["affinity_chunk_size"], n)
@@ -253,6 +256,7 @@ def _propagate(candidate, q, k, permissions, config):
     result = dict(candidate, scores=scores)
     final_labels = _labels(scores, config)
     info = {"kind": "conditional_image_image_qk", "heads": selected, "head_selection": "provisional_not_validated",
+            "lock_confident": lock_confident,
             "iterations": config["propagation_iterations"], "affinity_threshold_semantics": "relu(weight - threshold * row_max), then row_normalize",
             "empty_row_policy": "restart_initial_scores", "mask_semantics": "boolean_true_allowed_or_additive_bias",
             "largest_affinity_chunk_shape": [chunk, n], "weak_edges_removed": weak_removed, "retained_edges_across_iterations": edges,

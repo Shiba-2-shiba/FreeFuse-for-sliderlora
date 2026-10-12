@@ -1,0 +1,434 @@
+{
+  "prompt": [
+    0,
+    "55754d83-c2cc-48d7-b98a-dd18f565f090",
+    {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+          "weight_dtype": "default"
+        },
+        "_meta": {
+          "title": "Checkpoint"
+        }
+      },
+      "2": {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+          "lora_name": "krea2_darkbrush.safetensors",
+          "strength_model": 0.8,
+          "model": [
+            "1",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared style baseline (all FINAL models)"
+        }
+      },
+      "3": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_bf16.safetensors",
+          "type": "krea2",
+          "device": "default"
+        },
+        "_meta": {
+          "title": "Qwen3-VL CLIP, Krea2 type"
+        }
+      },
+      "4": {
+        "class_type": "Krea2SliderFuseEncode",
+        "inputs": {
+          "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+          "clip": [
+            "3",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared scene: two fully clothed adults"
+        }
+      },
+      "5": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        },
+        "_meta": {
+          "title": "Shared zero negative"
+        }
+      },
+      "7": {
+        "class_type": "EmptySD3LatentImage",
+        "inputs": {
+          "width": 1024,
+          "height": 1024,
+          "batch_size": 1
+        },
+        "_meta": {
+          "title": "Shared EMPTY latent, never collector output"
+        }
+      },
+      "9": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "_meta": {
+          "title": "Shared VAE"
+        }
+      },
+      "60": {
+        "class_type": "Krea2SliderFuseRetainedMask",
+        "inputs": {
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\mask-source-comparison-results\\20261011T104616Z\\park\\edits\\D_union_base_protected\\D_union_base_protected_s444444_00001_.json"
+        },
+        "_meta": {
+          "title": "Verified D control masks"
+        }
+      },
+      "6": {
+        "class_type": "Krea2SliderFuseSubjects",
+        "inputs": {
+          "target_phrase": "woman",
+          "protected_phrase": "man",
+          "target_occurrence": 0,
+          "protected_occurrence": 0,
+          "prompt_info": [
+            "4",
+            1
+          ],
+          "target_mask": [
+            "60",
+            0
+          ],
+          "protected_mask": [
+            "60",
+            1
+          ]
+        },
+        "_meta": {
+          "title": "Fixed D pilot subjects"
+        }
+      },
+      "100": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\mask-source-comparison-results\\20261011T104616Z\\park\\edits\\A_off\\A_off_s444444_00001_.json",
+          "filename_prefix": "td_20261011T185947Z_paired_mix_park_A_off"
+        },
+        "_meta": {
+          "title": "A_off trace"
+        }
+      },
+      "101": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\mask-source-comparison-results\\20261011T104616Z\\park\\edits\\C_on_base_protected\\C_on_base_protected_s444444_00001_.json",
+          "filename_prefix": "td_20261011T185947Z_paired_mix_park_C_on_base_protected"
+        },
+        "_meta": {
+          "title": "C_on_base_protected trace"
+        }
+      },
+      "102": {
+        "class_type": "Krea2SliderFuseTraceDecode",
+        "inputs": {
+          "model": [
+            "2",
+            0
+          ],
+          "vae": [
+            "9",
+            0
+          ],
+          "report_path": "C:\\ComfyUI\\custom_nodes\\FreeFuse-for-sliderlora\\docs\\mask-source-comparison-results\\20261011T104616Z\\park\\edits\\D_union_base_protected\\D_union_base_protected_s444444_00001_.json",
+          "filename_prefix": "td_20261011T185947Z_paired_mix_park_D_union_base_protected"
+        },
+        "_meta": {
+          "title": "D_union_base_protected trace"
+        }
+      }
+    },
+    {
+      "create_time": 1791746639587
+    },
+    [
+      "101",
+      "102",
+      "100"
+    ]
+  ],
+  "outputs": {
+    "101": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\td_20261011T185947Z_paired_mix_park_C_on_base_protected_9107f7f74b7c4bdea416667d34f16b18\\manifest.json"
+      ]
+    },
+    "102": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\td_20261011T185947Z_paired_mix_park_D_union_base_protected_333a5c774d7746c3a9c291125b2bce8c\\manifest.json"
+      ]
+    },
+    "100": {
+      "images": [
+        {
+          "filename": "trace_base_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_base_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_slider_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s1.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s2.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s3.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        },
+        {
+          "filename": "trace_predictions_s8.png",
+          "subfolder": "td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1",
+          "type": "output"
+        }
+      ],
+      "text": [
+        "C:\\ComfyUI\\output\\td_20261011T185947Z_paired_mix_park_A_off_e7a243f3dd3b4e079d1f1395f0ab54a1\\manifest.json"
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "55754d83-c2cc-48d7-b98a-dd18f565f090",
+          "timestamp": 1791746639589
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "55754d83-c2cc-48d7-b98a-dd18f565f090",
+          "timestamp": 1791746639593
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "55754d83-c2cc-48d7-b98a-dd18f565f090",
+          "timestamp": 1791746654459
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "101": {
+      "node_id": "101",
+      "display_node": "101",
+      "parent_node": null,
+      "real_node_id": "101"
+    },
+    "102": {
+      "node_id": "102",
+      "display_node": "102",
+      "parent_node": null,
+      "real_node_id": "102"
+    },
+    "100": {
+      "node_id": "100",
+      "display_node": "100",
+      "parent_node": null,
+      "real_node_id": "100"
+    }
+  }
+}
