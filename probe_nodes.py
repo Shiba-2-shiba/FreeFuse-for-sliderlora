@@ -10,13 +10,14 @@ from PIL import Image
 import torch
 from comfy_api.latest import io
 
-from .nodes import (CATEGORY,DiagnosticsType,PromptType,SubjectsType,
+from .nodes import (CATEGORY,DiagnosticsType,PromptType,SubjectsType,MasksType,
                     Krea2SliderFusePredictionMixSampler)
 from .slider_fuse.conditioning import resolve_phrase
 from .slider_fuse.native_pair import sample_krea2_prediction_mix
 from .slider_fuse.paired_observation import PairedObserver,checked_diagnostic,save_probe,replay_cross,decode_prediction,read_retained_masks
 from .slider_fuse.experimental_artifacts import validate_experimental_prefix
 from .slider_fuse.sampling import tensor_hash
+from .slider_fuse.paired_prefix import sample_paired_pilot
 
 ProbeType=io.Custom("KREA2_SLIDER_FUSE_PAIRED_PROBE")
 
@@ -142,3 +143,55 @@ class Krea2SliderFusePairedProbeSave(io.ComfyNode):
                 images.append({"filename":filename,"subfolder":root.name,"type":"output"})
         (root/"previews.json").write_text(json.dumps(rows,indent=2),encoding="utf-8")
         return io.NodeOutput(ui={"images":images,"text":[str(root/"manifest.json")]})
+
+
+class Krea2SliderFusePairedPrefixPilot(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        schema = Krea2SliderFuseObservedPredictionMix.define_schema()
+        schema.node_id = cls.__name__
+        schema.display_name = "Experimental paired prefix mask pilot (3 of 8 steps)"
+        schema.description = ("Build A-R0 from a paired pilot on the original eight-step schedule. "
+            "Prefix stops after three updates; full_reference retains eight for exact comparison. "
+            "Only masks and validation evidence are returned. Replay from the original latent with eight steps.")
+        for field in schema.inputs:
+            if field.id == "steps":
+                field.default = field.min = field.max = 8
+            if field.id == "mix_scope":
+                field.options = ["target_mask"]
+            if field.id in ("fill_holes_max_area", "mask_dilate_radius", "selection_dilate_radius"):
+                field.default = field.min = field.max = 0
+        schema.inputs.append(io.Combo.Input("pilot_mode", options=["prefix", "full_reference"], default="prefix"))
+        schema.inputs.append(io.String.Input("source_identity_json", optional=True, default="{}",
+            tooltip="Frozen workflow/model provenance for comparison; supplied hashes are not runtime asset verification."))
+        schema.outputs = [MasksType.Output("mask_bank"), ProbeType.Output("probe")]
+        return schema
+
+    @classmethod
+    def fingerprint_inputs(cls, **kwargs):
+        return Krea2SliderFusePredictionMixSampler.fingerprint_inputs(**kwargs)
+
+    @classmethod
+    def execute(cls, lora_name, background_phrase, pilot_mode="prefix", **kwargs):
+        if not lora_name:
+            raise ValueError("Select a Slider for the paired pilot")
+        path = folder_paths.get_full_path_or_raise("loras", lora_name)
+        bank, probe = sample_paired_pilot(lora_path=path, background_phrase=background_phrase,
+                                         pilot_mode=pilot_mode, **kwargs)
+        return io.NodeOutput(bank, probe)
+
+
+class Krea2SliderFusePrefixPilotSave(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(node_id=cls.__name__, display_name="Save paired prefix parity evidence",
+            category=CATEGORY+"/Experimental", is_output_node=True,
+            description="Retain raw taps, actual input/prediction traces, original schedule and R0 masks. No VAE or partial image.",
+            inputs=[ProbeType.Input("probe"), MasksType.Input("mask_bank"), io.String.Input("filename_prefix")], outputs=[])
+
+    @classmethod
+    def execute(cls, probe, mask_bank, filename_prefix):
+        from .slider_fuse.prefix_artifacts import save_prefix_artifacts
+        output = folder_paths.get_output_directory()
+        saved = save_prefix_artifacts(output, filename_prefix, probe, mask_bank)
+        return io.NodeOutput(ui={"text": [str(Path(output)/saved["manifest"])]})

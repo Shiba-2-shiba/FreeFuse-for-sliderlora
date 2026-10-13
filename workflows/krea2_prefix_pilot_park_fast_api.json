@@ -1,0 +1,351 @@
+{
+  "prompt": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "intorealismAsian_k2JAVFLASHV1.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Checkpoint"
+      }
+    },
+    "2": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "lora_name": "krea2_darkbrush.safetensors",
+        "strength_model": 0.8,
+        "model": [
+          "1",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared style baseline (all FINAL models)"
+      }
+    },
+    "3": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_4b_bf16.safetensors",
+        "type": "krea2",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Qwen3-VL CLIP, Krea2 type"
+      }
+    },
+    "4": {
+      "class_type": "Krea2SliderFuseEncode",
+      "inputs": {
+        "prompt": "Photorealistic full-body photograph of exactly two fully clothed adults standing side by side on one continuous park path. On the left is an adult woman in a sage-green top and black trousers. On the right is an adult man in a blue T-shirt and black trousers. Both face the camera with arms relaxed at their sides and a small gap between them. Both entire figures are visible from head to shoes, at the same camera distance and consistent scale. Mature leafy green trees, a park bench in the distance, continuous stone path and grass, soft daylight, coherent perspective, natural ground shadows and anatomically correct hands and limbs.",
+        "clip": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared scene: two fully clothed adults"
+      }
+    },
+    "5": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "4",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Shared zero negative"
+      }
+    },
+    "7": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "Shared EMPTY latent, never collector output"
+      }
+    },
+    "6": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ]
+      }
+    },
+    "8": {
+      "class_type": "Krea2SliderFuseExperimentalMaskCollect",
+      "inputs": {
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "6",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "seed": 444444,
+        "steps": 8,
+        "trial_id": 0,
+        "config_json": "{\"collect_step\": 2, \"collect_block\": 18, \"selected_steps\": [1, 2], \"selected_blocks\": [16, 18], \"top_k_ratio\": 0.2, \"temperature\": 10000.0, \"prototypes\": 3, \"seed_confidence\": 0.65, \"seed_margin\": 0.15, \"mask_confidence\": 0.55, \"mask_margin\": 0.1, \"context_temperature\": 1.0, \"feature_temperature\": 0.15, \"propagation_iterations\": 1, \"propagation_heads\": [0], \"affinity_chunk_size\": 128, \"affinity_threshold\": 0.05, \"propagation_strength\": 0.5}",
+        "background_phrase": "park path",
+        "background_occurrence": 0,
+        "audit_tensors": true
+      }
+    },
+    "18": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSave",
+      "inputs": {
+        "suite": [
+          "8",
+          0
+        ],
+        "filename_prefix": "prefix_pilot_park_fast_bootstrap"
+      }
+    },
+    "60": {
+      "class_type": "Krea2SliderFuseExperimentalMaskSelect",
+      "inputs": {
+        "suite": [
+          "8",
+          0
+        ],
+        "variant": "multi_proto_bg"
+      }
+    },
+    "61": {
+      "class_type": "Krea2SliderFuseMaskPreview",
+      "inputs": {
+        "mask_bank": [
+          "60",
+          0
+        ]
+      }
+    },
+    "62": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "61",
+          0
+        ],
+        "protected_mask": [
+          "61",
+          1
+        ]
+      }
+    },
+    "9": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Shared VAE"
+      }
+    },
+    "200": {
+      "class_type": "Krea2SliderFusePairedPrefixPilot",
+      "inputs": {
+        "strength": 4.0,
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "62",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "trial_id": 0,
+        "mix_scope": "target_mask",
+        "mask_mode": "manual",
+        "diagnostic_level": "audit",
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0,
+        "pilot_mode": "prefix",
+        "background_phrase": "park path",
+        "source_identity_json": "{\"asset_sha256\": {\"slider\": \"6d3f75e1ab9b9a13fea094177fc80bd2dbc598a0b5bacc5ce05eddf6d79e4ecc\"}, \"base_graph_sha256\": \"f695d27cfe3aa9b8f14abccca8ae7c1c7b4b251cef6e1b15175b8a46a5050ee0\", \"case_id\": \"park__seed_444444\"}"
+      }
+    },
+    "205": {
+      "class_type": "Krea2SliderFusePrefixPilotSave",
+      "inputs": {
+        "probe": [
+          "200",
+          1
+        ],
+        "mask_bank": [
+          "200",
+          0
+        ],
+        "filename_prefix": "prefix_pilot_park_fast_prefix"
+      }
+    },
+    "210": {
+      "class_type": "Krea2SliderFuseMaskPreview",
+      "inputs": {
+        "mask_bank": [
+          "200",
+          0
+        ]
+      }
+    },
+    "211": {
+      "class_type": "Krea2SliderFuseSubjects",
+      "inputs": {
+        "target_phrase": "woman",
+        "protected_phrase": "man",
+        "target_occurrence": 0,
+        "protected_occurrence": 0,
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "target_mask": [
+          "210",
+          0
+        ],
+        "protected_mask": [
+          "210",
+          1
+        ]
+      }
+    },
+    "220": {
+      "class_type": "Krea2SliderFusePredictionMixSampler",
+      "inputs": {
+        "strength": 4.0,
+        "collect_step": 2,
+        "collect_block": 18,
+        "top_k_ratio": 0.2,
+        "temperature": 10000.0,
+        "model": [
+          "2",
+          0
+        ],
+        "positive": [
+          "4",
+          0
+        ],
+        "negative": [
+          "5",
+          0
+        ],
+        "prompt_info": [
+          "4",
+          1
+        ],
+        "subjects": [
+          "211",
+          0
+        ],
+        "latent": [
+          "7",
+          0
+        ],
+        "lora_name": "archive\\krea2_deaging_20261001T075826Z_c06cb035.safetensors",
+        "seed": 444444,
+        "steps": 8,
+        "cfg": 1.0,
+        "trial_id": 0,
+        "mix_scope": "target_mask",
+        "mask_mode": "manual",
+        "diagnostic_level": "audit",
+        "fill_holes_max_area": 0,
+        "mask_dilate_radius": 0,
+        "selection_dilate_radius": 0
+      }
+    },
+    "221": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "220",
+          0
+        ],
+        "vae": [
+          "9",
+          0
+        ]
+      }
+    },
+    "222": {
+      "class_type": "Krea2SliderFuseDiagnosticSave",
+      "inputs": {
+        "images": [
+          "221",
+          0
+        ],
+        "latent": [
+          "220",
+          0
+        ],
+        "diagnostics": [
+          "220",
+          2
+        ],
+        "filename_prefix": "prefix_pilot_park_fast_prefix_replay"
+      }
+    }
+  }
+}

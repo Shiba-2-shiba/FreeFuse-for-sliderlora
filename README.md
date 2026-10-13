@@ -141,6 +141,10 @@ python -B -m pytest -q -p no:cacheprovider tests
 
 実装は[計画書](.omx/plans/2026-10-07-krea2-female-only-slider-freefuse.md)に対応します。FreeFuseのアルゴリズム、Anima版の二段階生成・復帰設計を参考にしています。Apache-2.0の出典・変更点は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
 
+### 実験用の paired prefix pilot
+
+[paired prefix pilot の比較手順](docs/prefix-pilot-validation.md)を追加しました。元の8-step sigma列を保ったまま、mask用のpaired pilotだけを最初の3更新で止め、元のlatentから8-step replayします。通常Samplerの既定動作は変更しません。計画上のdiffusion NFEは34→24ですが、実機GPUでの画像一致・速度改善は未検証です。park／strong overlapのcold bootstrap付きfast・compareワークフローを同手順から選べます。
+
 ## ライセンスと出典
 
 このリポジトリのソースは[Apache-2.0](LICENSE)です。[FreeFuse](https://github.com/yaoliliu/FreeFuse)と[FreeFuse-for-anima](https://github.com/Shiba-2-shiba/FreeFuse-for-anima)からの派生・改変箇所、固定コミット、元の権利表示は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)と[NOTICE](NOTICE)に記載しています。独立した派生実装であり、上流の公式版・公認版を意味しません。

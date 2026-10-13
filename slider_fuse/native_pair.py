@@ -215,7 +215,16 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
                                strength, seed, steps=8, cfg=1., mix_scope="target_mask", trial_id=0,
                                diagnostic_level="audit", mask_mode="manual", collect_step=2,
                                collect_block=18, top_k_ratio=.3, temperature=4000.,
-                               fill_holes_max_area=0, mask_dilate_radius=0, selection_dilate_radius=0, _observer=None):
+                               fill_holes_max_area=0, mask_dilate_radius=0, selection_dilate_radius=0, _observer=None, _pilot_steps=None):
+    if _pilot_steps is not None:
+        from .paired_prefix import validate_pilot_options
+        if type(_pilot_steps) is not int or _pilot_steps not in (3, 8) or _observer is None:
+            raise ValueError("Experimental pilot requires an observer and exactly three or eight updates")
+        validate_pilot_options(steps=steps, cfg=cfg, strength=strength, mix_scope=mix_scope,
+            mask_mode=mask_mode, diagnostic_level=diagnostic_level,
+            fill_holes_max_area=fill_holes_max_area, mask_dilate_radius=mask_dilate_radius,
+            selection_dilate_radius=selection_dilate_radius,
+            pilot_mode="prefix" if _pilot_steps == 3 else "full_reference")
     import comfy.sample
     import comfy.samplers
     import comfy.model_management
@@ -320,7 +329,13 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
                                                 restore_base=mask_mode == "auto", **observer_options)
             guider.set_conds(positive, negative); guider.set_cfg(1.)
             with torch.inference_mode():
-                samples = guider.sample(noise, image, comfy.samplers.sampler_object("euler"), sigmas, seed=seed)
+                sampler = comfy.samplers.sampler_object("euler")
+                if _pilot_steps == 3:
+                    from .paired_prefix import PrefixEulerSampler
+                    sampler = PrefixEulerSampler(sampler)
+                # Keep the full schedule visible to CFGGuider/model options. Only the
+                # private sampler adapter truncates Euler's actual updates.
+                samples = guider.sample(noise, image, sampler, sigmas, seed=seed)
                 samples = samples.to(device=comfy.model_management.intermediate_device(),
                                      dtype=comfy.model_management.intermediate_dtype())
             extra = guider.finish_report()
@@ -332,15 +347,30 @@ def sample_krea2_prediction_mix(model, positive, negative, prompt_info, subjects
                               for k, v in bank["raw_maps"].items()})
                 extra.update(original_target_mask=bank["original_masks"]["target"].detach().cpu().clone(),
                              added_target_mask=bank["added_target_mask"].detach().cpu().clone())
-            if report["sampler_nfe"] != steps:
+            expected_steps = steps if _pilot_steps is None else _pilot_steps
+            if report["sampler_nfe"] != expected_steps:
                 raise RuntimeError("Prediction mix did not execute the expected Euler steps")
             report.update(recorder.first_inputs)
             report["total_model_nfe"] = report["phase1_nfe"] + sum(report["branch_nfe"].values())
-            report.update(first_prediction_sha256=tensor_hash(recorder.first_prediction),
-                          final_latent_sha256=tensor_hash(samples), final_latent_shape=list(samples.shape),
-                          final_latent_dtype=str(samples.dtype))
-            result = dict(latent, samples=samples)
-            result.pop("downscale_ratio_spacial", None); result.pop("downscale_ratio_temporal", None)
+            report.update(first_prediction_sha256=tensor_hash(recorder.first_prediction))
+            if _pilot_steps is not None:
+                if report["branch_nfe"] != {"base": _pilot_steps, "slider": _pilot_steps}:
+                    raise RuntimeError("Experimental paired pilot branch counts differ")
+                used_sigmas = sigmas[:_pilot_steps + 1]
+                report.pop("diagnostic_schema_version")
+                report.update(pilot_schema_version=1, pilot_mode="prefix" if _pilot_steps == 3 else "full_reference",
+                    executed_steps=_pilot_steps, generation_complete=_pilot_steps == steps,
+                    partial_latent_discarded=True, used_sigmas_sha256=tensor_hash(used_sigmas),
+                    terminal_sigma=float(used_sigmas[-1]), output_kind="mask_pilot_only")
+                extra.update(initial_noise=noise.detach().cpu().clone(), initial_latent=image.detach().cpu().clone(),
+                    full_sigmas=sigmas.detach().cpu().clone(), used_sigmas=used_sigmas.detach().cpu().clone())
+                result = None  # Neither final image nor resumable partial latent.
+                del samples
+            else:
+                report.update(final_latent_sha256=tensor_hash(samples), final_latent_shape=list(samples.shape),
+                              final_latent_dtype=str(samples.dtype))
+                result = dict(latent, samples=samples)
+                result.pop("downscale_ratio_spacial", None); result.pop("downscale_ratio_temporal", None)
         finally:
             _cleanup(lambda: comfy.model_management.unload_model_and_clones(base, unload_additional_models=False),
                      *(adapter.clear for adapter in adapters.values()))

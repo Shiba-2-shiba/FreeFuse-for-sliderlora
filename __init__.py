@@ -17,7 +17,8 @@ async def comfy_entrypoint():
     from .sweep_nodes import (Krea2SliderFuseAttentionSweepCollect, Krea2SliderFuseAttentionSweepSelect,
                              Krea2SliderFuseAttentionSweepSave)
     from .probe_nodes import (Krea2SliderFuseTraceDecode,Krea2SliderFuseObservedPredictionMix,
-                             Krea2SliderFuseCrossReplay,Krea2SliderFusePairedProbeSave,Krea2SliderFuseRetainedMask)
+                             Krea2SliderFuseCrossReplay,Krea2SliderFusePairedProbeSave,Krea2SliderFuseRetainedMask,
+                             Krea2SliderFusePairedPrefixPilot,Krea2SliderFusePrefixPilotSave)
 
     class SliderFreeFuseExtension(ComfyExtension):
         async def get_node_list(self):
@@ -27,6 +28,7 @@ async def comfy_entrypoint():
                     Krea2SliderFuseExperimentalMaskSave, Krea2SliderFuseAttentionSweepCollect,
                     Krea2SliderFuseAttentionSweepSelect, Krea2SliderFuseAttentionSweepSave,
                     Krea2SliderFuseTraceDecode,Krea2SliderFuseObservedPredictionMix,
-                    Krea2SliderFuseCrossReplay,Krea2SliderFusePairedProbeSave,Krea2SliderFuseRetainedMask]
+                    Krea2SliderFuseCrossReplay,Krea2SliderFusePairedProbeSave,Krea2SliderFuseRetainedMask,
+                    Krea2SliderFusePairedPrefixPilot,Krea2SliderFusePrefixPilotSave]
 
     return SliderFreeFuseExtension()
